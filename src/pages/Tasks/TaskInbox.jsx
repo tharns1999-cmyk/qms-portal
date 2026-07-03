@@ -17,15 +17,22 @@ const TaskInbox = () => {
     checkSLA();
   }, [mockDateOffset, checkSLA]);
 
-  const userTasks = tasks.filter(t => 
-    t.assigneeId === currentUser.id || 
-    (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level))
-  );
+  const isDccAdmin = currentUser.isDcc || currentUser.role === 'DCC_ADMIN' || currentUser.id === 'u5';
+
+  const userTasks = tasks.filter(t => {
+    const isMyTask = t.assigneeId === currentUser.id || 
+    (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level));
+    
+    if (isDccAdmin) {
+      return t.type.startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
+    }
+    return isMyTask;
+  });
 
   const getFilteredTasks = () => {
     let filtered = userTasks;
     if (activeTab !== 'ALL') {
-      filtered = filtered.filter(t => t.type.toUpperCase() === activeTab || (activeTab === 'REVIEW' && t.type === 'EXT_REVIEW') || (activeTab === 'APPROVE' && t.type === 'EXT_APPROVAL'));
+      filtered = filtered.filter(t => t.type.toUpperCase() === activeTab || (activeTab === 'REVIEW' && t.type === 'EXT_REVIEW') || (activeTab === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
     }
     if (searchTerm) {
       filtered = filtered.filter(t => {
@@ -53,7 +60,12 @@ const TaskInbox = () => {
     }
   };
 
-  const tabs = [
+  const tabs = isDccAdmin ? [
+    { id: 'ALL', label: 'All DCC Tasks' },
+    { id: 'DCC_DISTRIBUTE', label: 'Distribution' },
+    { id: 'DCC_RECALL', label: 'Obsolete Recall' },
+    { id: 'DCC_REPLACEMENT', label: 'Copy Replacement' },
+  ] : [
     { id: 'ALL', label: 'All Tasks' },
     { id: 'REVIEW', label: 'Review' },
     { id: 'APPROVE', label: 'Approve' },
@@ -72,8 +84,10 @@ const TaskInbox = () => {
       case 'Approve': navigate(`/tasks/approve/${task.id}`); break;
       case 'Ack': navigate(`/tasks/ack/${task.id}`); break;
       case 'Revise': navigate(`/tasks/revise/${task.id}`); break;
+      case 'DCC_DISTRIBUTE': navigate(`/controlled-copy?tab=ACTION_REQUIRED`); break;
+      case 'DCC_RECALL': navigate(`/controlled-copy?tab=ACTION_REQUIRED`); break;
       case 'DCC_REPLACEMENT': navigate(`/controlled-copy?tab=ACTION_REQUIRED`); break;
-      case 'CC_REPLACEMENT_APPROVAL': navigate(`/controlled-copy?tab=ACTION_REQUIRED`); break;
+      case 'CC_REPLACEMENT_APPROVAL': navigate(`/tasks/approve-replacement/${task.id}`); break;
       default: break;
     }
   };
@@ -86,8 +100,8 @@ const TaskInbox = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 ">Task Inbox</h1>
-          <p className="text-gray-500 ">จัดการงานที่รอการตรวจสอบและอนุมัติ</p>
+          <h1 className="text-2xl font-bold text-gray-800 ">{isDccAdmin ? 'DCC Task Center' : 'Task Inbox'}</h1>
+          <p className="text-gray-500 ">{isDccAdmin ? 'จัดการงานแจกจ่าย และเรียกเก็บเอกสารควบคุม' : 'จัดการงานที่รอการตรวจสอบและอนุมัติ'}</p>
         </div>
         
         {/* Development Mock Tools */}
@@ -181,6 +195,7 @@ const TaskInbox = () => {
                       {(task.type === 'Approve' || task.type === 'EXT_APPROVAL') && <CheckCircle className="w-6 h-6" />}
                       {task.type === 'Ack' && <CheckCircle className="w-6 h-6" />}
                       {task.type === 'Revise' && <FileEdit className="w-6 h-6" />}
+                      {task.type.startsWith('DCC_') && <AlertCircle className="w-6 h-6 text-indigo-500" />}
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -193,7 +208,7 @@ const TaskInbox = () => {
                           </span>
                         )}
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100  text-gray-700 ">
-                          {task.type.replace('EXT_', '')} Task
+                          {task.type.replace('EXT_', '').replace('DCC_', '')} Task
                         </span>
                         <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.color}`}>
                           {risk.icon}
@@ -204,6 +219,8 @@ const TaskInbox = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-500 ">
                         {isExternal ? (
                            <span>สถานะปัจจุบัน: <span className="font-medium text-indigo-600 ">{extDoc?.status}</span></span>
+                        ) : isDccAdmin ? (
+                           <span className="text-gray-600">{task.description || `DCC Action Required for ${displayId}`}</span>
                         ) : (
                           <>
                             <span>Due: <span className="font-medium text-gray-700 ">{task.dueDate}</span></span>

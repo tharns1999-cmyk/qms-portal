@@ -288,38 +288,74 @@ const ControlledCopyRegister = () => {
       )}
 
       {/* HEADER */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 ">ทะเบียนควบคุมสำเนาแจกจ่าย</h2>
-          <p className="text-gray-500  mt-1">Controlled Copy Register & Distribution Management</p>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">ทะเบียนควบคุมสำเนาแจกจ่าย</h2>
+          <p className="text-gray-500 mt-1 text-sm font-medium">Controlled Copy Register & Distribution Management</p>
+        </div>
+      </div>
+      
+      {/* Quick Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
+           <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-semibold">Active Copies</span>
+              <FileText className="w-5 h-5 text-emerald-500" />
+           </div>
+           <span className="text-3xl font-bold text-gray-800">{controlledCopyInstances.filter(i => i.status === 'ACTIVE').length}</span>
+        </div>
+        <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
+           <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-semibold">Pending Distribution</span>
+              <Download className="w-5 h-5 text-indigo-500" />
+           </div>
+           <span className="text-3xl font-bold text-indigo-700">{controlledCopyInstances.filter(i => i.status === 'PENDING_RECEIPT').length}</span>
+        </div>
+        <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
+           <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-semibold">Pending Recall</span>
+              <RefreshCw className="w-5 h-5 text-orange-500" />
+           </div>
+           <span className="text-3xl font-bold text-orange-700">{
+             controlledCopyInstances.filter(i => {
+               if (i.status !== 'ACTIVE') return false;
+               const doc = documents.find(d => d.id === i.docId);
+               return doc && doc.status === 'SUPERSEDED_ARCHIVED';
+             }).length
+           }</span>
+        </div>
+        <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
+           <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-semibold">Replacement Requests</span>
+              <AlertTriangle className="w-5 h-5 text-rose-500" />
+           </div>
+           <span className="text-3xl font-bold text-rose-700">{controlledCopyInstances.filter(i => i.status === 'REPLACEMENT_REQUESTED').length}</span>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-0 overflow-hidden shadow-sm shadow-gray-200/50 ">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xl shadow-gray-200/40">
         
         {/* Tabs */}
-        <div className="flex border-b border-gray-100  bg-gray-50/50  px-2 pt-2">
+        <div className="flex border-b border-gray-100 bg-slate-50/50 px-2 pt-2 gap-2 overflow-x-auto hide-scrollbar">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-6 py-3 text-sm font-medium transition-colors outline-none rounded-t-xl group ${
-                  isActive ? 'text-indigo-700 ' : 'text-gray-500  hover:text-gray-800  '
+                className={`relative px-5 py-3 text-sm font-medium transition-all rounded-t-xl group whitespace-nowrap ${
+                  isActive ? 'text-indigo-700' : 'text-gray-500 hover:text-gray-800 hover:bg-white/50'
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="cc-tab"
-                    className="absolute inset-0 bg-white  border-b-2 border-indigo-600  rounded-t-xl z-0"
+                    className="absolute inset-0 bg-white border-t border-x border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] rounded-t-xl z-0"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-gray-100  opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl z-0" />
-                )}
                 <span className="relative z-10">{tab.label}</span>
+                {isActive && <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white z-20"></div>}
               </button>
             );
           })}
@@ -431,9 +467,9 @@ const ControlledCopyRegister = () => {
         {activeTab !== 'AUDIT_TRAIL' && (
           <>
             {/* Register Filter Bar */}
-            <div className="p-4 flex items-center justify-between bg-white border-b border-gray-100">
+            <div className="p-5 flex flex-col md:flex-row items-center justify-between bg-white border-b border-gray-100 gap-4">
               {activeTab === 'HISTORY' ? (
-                <h3 className="text-lg font-bold text-gray-800">Controlled Copy Registry</h3>
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Layers className="w-5 h-5 text-indigo-500"/> Controlled Copy Registry</h3>
               ) : (
                 <div />
               )}
@@ -538,18 +574,9 @@ const ControlledCopyRegister = () => {
 
                           {inst.status === 'REPLACEMENT_REQUESTED' && currentUser.isDcc && (
                             <div className="flex gap-2">
-                              <button 
-                                onClick={() => handleApproveReplacement(inst)}
-                                className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={() => handleRejectReplacement(inst)}
-                                className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                              >
-                                Reject
-                              </button>
+                              <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                                Waiting for Manager Approval
+                              </span>
                             </div>
                           )}
 

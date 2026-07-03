@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getRequesterName, getReviewerName, getApproverName, getAckNames } from '../../utils/darHelper';
 import ReplacementModal from './ReplacementModal';
 import toast from 'react-hot-toast';
+import fontkit from '@pdf-lib/fontkit';
+import { PDFDocument, rgb, degrees } from 'pdf-lib';
 
 const Library = () => {
   const navigate = useNavigate();
-  const { documents, currentUser, canAccessDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, addNotification } = useStore();
+  const { documents, currentUser, canAccessDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, addNotification, logAction } = useStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('');
@@ -114,6 +116,87 @@ const Library = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleDownloadMaster = async (doc, e) => {
+    e.stopPropagation();
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4
+      
+      const { width, height } = page.getSize();
+      page.drawText('ORIGINAL', {
+        x: width / 2 - 150,
+        y: height / 2,
+        size: 70,
+        color: rgb(1, 0, 0),
+        rotate: degrees(-45),
+        opacity: 0.3,
+      });
+      
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) });
+      page.drawText(`Rev: ${doc.rev}`, { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) });
+      
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.title}_MASTER.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('ดาวน์โหลด Master Document สำเร็จ');
+      logAction('DOWNLOAD_MASTER', `Downloaded Master for ${doc.title}`);
+    } catch (error) {
+      toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
+    }
+  };
+
+  const handleDownloadExternal = async (doc, e) => {
+    e.stopPropagation();
+    try {
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+      
+      let customFont;
+      try {
+        const fontBytes = await fetch('https://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9aAFvmuB_8es.ttf').then(res => res.arrayBuffer());
+        customFont = await pdfDoc.embedFont(fontBytes);
+      } catch(err) {
+        console.warn('Failed to load Thai font', err);
+      }
+
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4
+      const { width, height } = page.getSize();
+      
+      if (customFont) {
+        page.drawText('CONFIDENTIAL', { x: 80, y: height / 2 + 50, size: 50, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+        page.drawText('เอกสารควบคุมภายใน ห้าม COPY', { x: 80, y: height / 2, size: 30, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+      } else {
+         page.drawText('CONFIDENTIAL\nINTERNAL CONTROLLED COPY - DO NOT COPY', {
+          x: 50, y: height / 2, size: 30, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, lineHeight: 40,
+        });
+      }
+      
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) });
+      page.drawText(`Rev: ${doc.rev}`, { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) });
+      
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.title}_EXTERNAL.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('ดาวน์โหลดเอกสารสำหรับหน่วยงานภายนอกสำเร็จ');
+      logAction('DOWNLOAD_EXTERNAL', `Downloaded External Copy for ${doc.title}`);
+    } catch (error) {
+      toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
+    }
+  };
+
   const renderFlatTable = (docs) => (
     <div className="bg-white  rounded-xl shadow-sm border border-gray-100  overflow-hidden">
       <div className="overflow-x-auto min-h-[200px]">
@@ -152,20 +235,14 @@ const Library = () => {
                   {currentUser.isDcc && (
                     <>
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.success('ดาวน์โหลด Master Document สำเร็จ');
-                        }}
+                        onClick={(e) => handleDownloadMaster(doc, e)}
                         className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                         title="Download Master (DCC Only)"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.success('ดาวน์โหลดเอกสารสำหรับหน่วยงานภายนอกสำเร็จ');
-                        }}
+                        onClick={(e) => handleDownloadExternal(doc, e)}
                         className="text-indigo-600  hover:text-indigo-700  p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
                         title="Download for External Use"
                       >

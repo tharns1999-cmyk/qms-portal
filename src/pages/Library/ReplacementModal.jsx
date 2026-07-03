@@ -110,7 +110,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
                 
                 <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-xs flex gap-2 border border-blue-100">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  <p>เมื่อยืนยัน ระบบจะส่งคำขอทดแทนไปยัง DCC เมื่อได้รับอนุมัติ DCC จะทำการยกเลิกสำเนาควบคุมหมายเลข <b>{instance.ccNumber}</b> และออกเอกสารควบคุมหมายเลขใหม่ให้ท่านต่อไป</p>
+                  <p>เมื่อยืนยัน ระบบจะส่งคำขอไปยังผู้จัดการเพื่ออนุมัติ หลังจากนั้น DCC จะทำการเตรียมเอกสารควบคุมใหม่ภายใต้รหัสเดิม (โดยปรับเพิ่ม Issue No.) ให้ท่านต่อไป</p>
                 </div>
               </form>
             </div>

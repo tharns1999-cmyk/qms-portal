@@ -14,6 +14,7 @@ import LibraryDetail from './pages/Library/LibraryDetail';
 import Viewer from './pages/Library/Viewer';
 
 import Reports from './pages/Admin/Reports';
+import ActionLog from './pages/Admin/ActionLog';
 import ComingSoon from './pages/Placeholders/ComingSoon';
 import ControlledCopyRegister from './pages/ControlledCopy/ControlledCopyRegister';
 import ExternalDocsList from './pages/ExternalDocs/ExternalDocsList';
@@ -24,6 +25,7 @@ import TaskReview from './pages/Tasks/TaskReview';
 import TaskApprove from './pages/Tasks/TaskApprove';
 import TaskAck from './pages/Tasks/TaskAck';
 import TaskRevise from './pages/Tasks/TaskRevise';
+import TaskApproveReplacement from './pages/Tasks/TaskApproveReplacement';
 import SLAEngine from './components/SLAEngine';
 
 import { AdminHealth, NotFound } from './pages/Placeholders';
@@ -50,12 +52,14 @@ function App() {
           <Route path="tasks/approve/:id" element={<TaskApprove />} />
           <Route path="tasks/ack/:id" element={<TaskAck />} />
           <Route path="tasks/revise/:id" element={<TaskRevise />} />
+          <Route path="tasks/approve-replacement/:id" element={<TaskApproveReplacement />} />
           
           <Route path="library" element={<Library />} />
           <Route path="library/:id" element={<LibraryDetail />} />
           <Route path="viewer/:docId/:rev" element={<Viewer />} />
           
           <Route path="admin/health" element={<AdminHealth />} />
+          <Route path="admin/action-log" element={<ActionLog />} />
           <Route path="reports" element={<Reports />} />
           
           <Route path="controlled-copy" element={<ControlledCopyRegister />} />

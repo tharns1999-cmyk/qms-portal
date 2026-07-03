@@ -506,7 +506,7 @@ const DarRevisionForm = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="sticky bottom-4 z-40 premium-glass px-6 py-4 flex justify-end gap-3 rounded-2xl mx-auto mt-8">
+        <div className="premium-glass px-6 py-4 flex justify-end gap-3 rounded-2xl mx-auto mt-8">
           <button 
             type="button" 
             onClick={() => navigate('/dashboard')}

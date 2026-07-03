@@ -130,8 +130,8 @@ const Dashboard = () => {
   const actionReviewTasks = tasks.filter(t => t.type === 'Review' && isMyTask(t));
   const actionReviewCount = isAdmin ? dars.filter(d => d.status === 'UNDER_REVIEW').length : actionReviewTasks.length;
 
-  const actionApproveTasks = tasks.filter(t => t.type === 'Approve' && isMyTask(t));
-  const actionApproveCount = isAdmin ? dars.filter(d => d.status === 'PENDING_APPROVAL').length : actionApproveTasks.length;
+  const actionApproveTasks = tasks.filter(t => (t.type === 'Approve' || t.type === 'CC_REPLACEMENT_APPROVAL') && isMyTask(t));
+  const actionApproveCount = isAdmin ? dars.filter(d => d.status === 'PENDING_APPROVAL').length + tasks.filter(t => t.type === 'CC_REPLACEMENT_APPROVAL').length : actionApproveTasks.length;
 
   const actionAckTasks = tasks.filter(t => t.type === 'Acknowledge' && isMyTask(t));
   const actionReplacementTasks = tasks.filter(t => t.type === 'DCC_REPLACEMENT' && isMyTask(t));
@@ -471,53 +471,75 @@ const Dashboard = () => {
         )}
 
         {activeOverviewTab === 'ACTION_REQUIRED' && (
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 ${isAdmin ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-3`}>
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
             
-            {/* Pending Review */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-indigo-600 font-semibold">Pending Review</p>
-                <Clock className="w-4 h-4 text-indigo-400" />
-              </div>
-              <p className="text-2xl font-bold text-gray-800">{actionReviewCount}</p>
-            </motion.div>
-            
-            {/* Pending Approval */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-yellow-600 font-semibold">Pending Approval</p>
-                <AlertCircle className="w-4 h-4 text-yellow-500" />
-              </div>
-              <p className="text-2xl font-bold text-gray-800">{actionApproveCount}</p>
-            </motion.div>
-            
-            {/* Due Soon */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-orange-600 font-semibold">Due Soon</p>
-                {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-1.5 w-1.5 rounded-full bg-orange-500"></span> : <Clock className="w-4 h-4 text-orange-500" />}
-              </div>
-              <p className="text-2xl font-bold text-gray-800">{actionDueSoonCount}</p>
-            </motion.div>
-
-            {/* Overdue */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-red-600 font-semibold">Overdue</p>
-                {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-1.5 w-1.5 rounded-full bg-red-500"></span> : <AlertTriangle className="w-4 h-4 text-red-500" />}
-              </div>
-              <p className="text-2xl font-bold text-gray-800">{actionOverdueCount}</p>
-            </motion.div>
-            
-            {/* DCC Pending (Admin Only) */}
-            {isAdmin && (
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'DCC_PENDING' ? '' : 'DCC_PENDING')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'DCC_PENDING' ? 'premium-card ring-2 ring-purple-300 bg-purple-50' : 'premium-card bg-white'}`}>
-                <div className="flex justify-between items-start mb-1">
-                  <p className="text-xs text-purple-600 font-semibold">DCC Pending</p>
-                  <FileText className="w-4 h-4 text-purple-400" />
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{dccPendingCount}</p>
-              </motion.div>
+            {isAdmin ? (
+              <>
+                {/* DCC Pending Distribution */}
+                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-indigo-600 font-semibold">Pending Distribution</p>
+                    <ClipboardCheck className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{dccPendingCount}</p>
+                </motion.div>
+                
+                {/* DCC Pending Recall */}
+                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-orange-600 font-semibold">Pending Recall</p>
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{pendingRecallCount}</p>
+                </motion.div>
+                
+                {/* DCC Replacements */}
+                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-blue-600 font-semibold">Copy Requests</p>
+                    <FileText className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{replacementRequestCount}</p>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                {/* Pending Review */}
+                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-indigo-600 font-semibold">Pending Review</p>
+                    <Clock className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{actionReviewCount}</p>
+                </motion.div>
+                
+                {/* Pending Approval */}
+                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-yellow-600 font-semibold">Pending Approval</p>
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{actionApproveCount}</p>
+                </motion.div>
+                
+                {/* Due Soon */}
+                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-orange-600 font-semibold">Due Soon</p>
+                    {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-1.5 w-1.5 rounded-full bg-orange-500"></span> : <Clock className="w-4 h-4 text-orange-500" />}
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{actionDueSoonCount}</p>
+                </motion.div>
+    
+                {/* Overdue */}
+                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs text-red-600 font-semibold">Overdue</p>
+                    {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="w-4 h-4 text-red-500" />}
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800">{actionOverdueCount}</p>
+                </motion.div>
+              </>
             )}
           </motion.div>
         )}

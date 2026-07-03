@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Settings, Library, FileText, Copy, Globe, RefreshCcw, Database } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Settings, Library, FileText, Copy, Globe, RefreshCcw, Database, History } from 'lucide-react';
 
 const Sidebar = () => {
   const { currentUser, requestUsers, reviewUsers, approveUsers } = useStore();
@@ -10,8 +10,8 @@ const Sidebar = () => {
   
   const isRequester = requestUsers.some(u => u.id === currentUser.id);
   const isReviewerOrApprover = reviewUsers.some(u => u.id === currentUser.id) || approveUsers.some(u => u.id === currentUser.id);
-  const isAdmin = currentUser.id === 'u5'; // Arun is mock admin
-  const isMasterListAccess = currentUser.level >= 5 || currentUser.isDcc || currentUser.role === 'DCC_ADMIN' || currentUser.id === 'u5';
+  const isAdmin = currentUser.id === 'u5' || currentUser.isDcc || currentUser.role === 'DCC_ADMIN';
+  const isMasterListAccess = currentUser.level >= 5 && !isAdmin;
 
   const NavItem = ({ to, icon: IconComponent, label }) => (
     <NavLink to={to} className="relative flex items-center mx-2 py-3 rounded-xl overflow-hidden transition-all duration-300 ease-fluid active:scale-95 group">
@@ -63,8 +63,7 @@ const Sidebar = () => {
         {/* DCC Admin Menus */}
         {isAdmin && (
           <>
-            <NavItem to="/admin/health" icon={Settings} label="สุขภาพระบบ" />
-            <NavItem to="/reports" icon={FileText} label="Reports" />
+            <NavItem to="/admin/action-log" icon={History} label="Action Log" />
           </>
         )}
 

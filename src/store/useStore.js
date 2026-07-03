@@ -72,6 +72,8 @@ const useStore = create(persist((set, get) => ({
   externalDocuments: [],
   externalAuditTrail: [],
   notifications: [],
+  actionLog: [],
+  copyRequests: [],
   controlledCopyInstances: MOCK_CONTROLLED_COPY_INSTANCES,
   controlledCopyAuditTrail: [],
   mockDateOffset: 0, // Used to simulate passing days for SLA testing
@@ -95,8 +97,23 @@ const useStore = create(persist((set, get) => ({
     return { currentUser: { ...baseUser, department: depts[0] || 'QA', depts } };
   }),
 
-  addNotification: (userId, title, message, link) => set(state => ({
-    notifications: [{ id: Date.now() + Math.random(), userId, title, message, isRead: false, link, timestamp: new Date().toISOString() }, ...state.notifications]
+  logAction: (actionType, details) => set(state => ({
+    actionLog: [{
+      id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      actionType,
+      details,
+      actor: state.currentUser.name,
+      actorId: state.currentUser.id,
+      actorRole: state.currentUser.role || state.currentUser.position,
+      date: new Date().toISOString()
+    }, ...state.actionLog]
+  })),
+
+  addNotification: (userId, title, message, link, relatedTaskId = null) => set(state => ({
+    notifications: [{ id: Date.now() + Math.random(), userId, title, message, isRead: false, link, timestamp: new Date().toISOString(), relatedTaskId }, ...state.notifications]
+  })),
+  markNotificationAsReadByTaskId: (taskId) => set(state => ({
+    notifications: state.notifications.map(n => n.relatedTaskId === taskId ? { ...n, isRead: true } : n)
   })),
   markNotificationAsRead: (id) => set(state => ({
     notifications: state.notifications.map(n => n.id === id ? { ...n, isRead: true } : n)
@@ -288,8 +305,9 @@ const useStore = create(persist((set, get) => ({
       if (task.type === 'EXT_REVIEW' || task.type === 'Review') {
         if (doc.approverId) {
           newDocStatus = 'PENDING_EXT_APPROVAL';
+          const newTaskId = `extt-${Date.now()}-app`;
           newTasks.push({
-            id: `extt-${Date.now()}-app`,
+            id: newTaskId,
             referenceType: 'EXTERNAL_DOC',
             referenceId: doc.id,
             title: doc.title,
@@ -297,7 +315,7 @@ const useStore = create(persist((set, get) => ({
             assigneeId: doc.approverId,
             status: 'PENDING'
           });
-          newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
         } else {
           newDocStatus = 'ACTIVE';
         }
@@ -315,8 +333,9 @@ const useStore = create(persist((set, get) => ({
     // Generate Ack tasks if it just became ACTIVE
     if (newDocStatus === 'ACTIVE' && doc.status !== 'ACTIVE' && doc.acknowledgees && doc.acknowledgees.length > 0) {
       doc.acknowledgees.forEach(uid => {
+        const newTaskId = `extt-${Date.now()}-ack-${uid}`;
         newTasks.push({
-          id: `extt-${Date.now()}-ack-${uid}`,
+          id: newTaskId,
           referenceType: 'EXTERNAL_DOC',
           referenceId: doc.id,
           title: doc.title,
@@ -324,7 +343,7 @@ const useStore = create(persist((set, get) => ({
           assigneeId: uid,
           status: 'PENDING'
         });
-        newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `เอกสารภายนอก "${doc.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `เอกสารภายนอก "${doc.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
       });
     }
 
@@ -410,8 +429,9 @@ const useStore = create(persist((set, get) => ({
 
     if (!dar.isDraft) {
       if (reviewerObj) {
+        const newTaskId = `t-${Date.now()}`;
         newTasks.push({
-          id: `t-${Date.now()}`,
+          id: newTaskId,
           referenceType: 'INTERNAL_DAR', referenceId: newDar.id,
           darId: newDar.id,
           title: newDar.title,
@@ -423,7 +443,7 @@ const useStore = create(persist((set, get) => ({
           cancelDate: cancelDateStr,
           status: 'NORMAL'
         });
-        newNotifications.push({ id: Date.now() + Math.random(), userId: reviewerObj.id, title: 'งานใหม่รอการตรวจสอบ', message: `DAR "${newDar.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: reviewerObj.id, title: 'งานใหม่รอการตรวจสอบ', message: `DAR "${newDar.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
       } else {
         // Skip Review -> PENDING_APPROVAL
         realStatus = 'PENDING_APPROVAL';
@@ -482,7 +502,7 @@ const useStore = create(persist((set, get) => ({
     const dueDateStr = new Date(today.getTime() + 3*24*60*60*1000).toISOString().split('T')[0];
     const cancelDateStr = new Date(today.getTime() + 4*24*60*60*1000).toISOString().split('T')[0];
 
-    let newNotifications = [...state.notifications];
+    let newNotifications = state.notifications.map(n => n.relatedTaskId === taskId ? { ...n, isRead: true } : n);
 
     if (task.type === 'Review') {
       if (action === 'APPROVE') {
@@ -498,51 +518,56 @@ const useStore = create(persist((set, get) => ({
         }
 
         if (approverObj) {
+          const newTaskId = `t-${Date.now()}`;
           newTasks.push({
-            id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Approve', assigneeId: approverObj.id, 
+            id: newTaskId, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Approve', assigneeId: approverObj.id, 
             currentHandlerDepartment: approverObj.dept, currentHandlerLevel: approverObj.level,
             dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
           });
-          newNotifications.push({ id: Date.now() + Math.random(), userId: approverObj.id, title: 'งานใหม่รอการอนุมัติ', message: `DAR "${dar.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: approverObj.id, title: 'งานใหม่รอการอนุมัติ', message: `DAR "${dar.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
         } else {
           newStatus = dar.ackRequirement === 'REQUIRED' ? 'WAITING_ACKNOWLEDGEMENT' : 'APPROVED_WAITING_EFFECTIVE';
           if (newStatus === 'WAITING_ACKNOWLEDGEMENT' && dar.ackUserIds?.length > 0) {
             dar.ackUserIds.forEach(uid => {
+              const newTaskId = `t-${Date.now()}-${uid}`;
               newTasks.push({
-                id: `t-${Date.now()}-${uid}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
+                id: newTaskId, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
                 dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
               });
-              newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+              newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
             });
           }
         }
       } else if (action === 'RETURN') {
         newStatus = 'RETURNED_FOR_REVISION';
+        const newTaskId = `t-${Date.now()}`;
         newTasks.push({
-          id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
+          id: newTaskId, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
           dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
         });
-        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
       }
     } else if (task.type === 'Approve') {
       if (action === 'APPROVE') {
         newStatus = dar.ackRequirement === 'REQUIRED' ? 'WAITING_ACKNOWLEDGEMENT' : 'APPROVED_WAITING_EFFECTIVE';
         if (newStatus === 'WAITING_ACKNOWLEDGEMENT' && dar.ackUserIds?.length > 0) {
           dar.ackUserIds.forEach(uid => {
+            const newTaskId = `t-${Date.now()}-${uid}`;
             newTasks.push({
-              id: `t-${Date.now()}-${uid}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
+              id: newTaskId, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
               dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
             });
-            newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+            newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
           });
         }
       } else if (action === 'RETURN') {
         newStatus = 'RETURNED_FOR_REVISION';
+        const newTaskId = `t-${Date.now()}`;
         newTasks.push({
-          id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
+          id: newTaskId, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
           dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
         });
-        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
       } else if (action === 'REJECT') {
         newStatus = 'REJECTED';
       }
@@ -577,7 +602,16 @@ const useStore = create(persist((set, get) => ({
       tasks: newTasks,
       notifications: newNotifications,
       dars: updatedDars,
-      timeline: newTimeline
+      timeline: newTimeline,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: `WORKFLOW_${action}`,
+        details: `Processed task ${taskId} (${action}) for DAR ${dar.title}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog]
     };
   }),
 
@@ -615,7 +649,128 @@ const useStore = create(persist((set, get) => ({
       notifications: newNotifications,
       timeline: [...state.timeline, {
         id: Date.now(), darId: dar.id, action: 'Resubmitted', user: state.currentUser.name, date: new Date().toLocaleString(), comment: 'Resubmitted after revision'
-      }]
+      }],
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: `DAR_RESUBMIT`,
+        details: `Resubmitted DAR ${dar.title}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog]
+    };
+  }),
+
+  submitCopyRequest: (docId, reason, qty, dept) => set((state) => {
+    const doc = state.documents.find(d => d.id === docId);
+    if (!doc) return state;
+
+    const request = {
+      id: `CR-${Date.now()}`,
+      docId,
+      docTitle: doc.title,
+      requesterId: state.currentUser.id,
+      department: dept,
+      reason,
+      qty,
+      status: 'PENDING_MANAGER_APPROVAL',
+      dateRequested: new Date().toISOString().split('T')[0]
+    };
+
+    const managerObj = state.masterUsers.find(u => u.department === state.currentUser.department && u.level > state.currentUser.level) || 
+                       state.masterUsers.find(u => u.level > state.currentUser.level);
+
+    let newTasks = [...state.tasks];
+    let newNotifications = [...state.notifications];
+
+    if (managerObj) {
+      const newTaskId = `t-${Date.now()}-cra`;
+      newTasks.push({
+        id: newTaskId,
+        title: `อนุมัติเบิกสำเนาเพิ่มเติม (${doc.title})`,
+        type: 'CC_REPLACEMENT_APPROVAL',
+        assigneeId: managerObj.id,
+        status: 'PENDING',
+        requestId: request.id
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: managerObj.id, title: 'อนุมัติเบิกสำเนา', message: `คำขอเบิกสำเนา ${doc.title} รอการอนุมัติ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
+    } else {
+      // If no manager found, go straight to DCC
+      request.status = 'PENDING_DCC_DISTRIBUTION';
+      const newTaskId = `t-${Date.now()}-ccd`;
+      newTasks.push({
+        id: newTaskId,
+        title: `แจกจ่ายสำเนาเพิ่มเติม (${doc.title})`,
+        type: 'DCC_REPLACEMENT',
+        assigneeId: 'U001',
+        status: 'PENDING',
+        requestId: request.id
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: 'U001', title: 'คำขอเบิกสำเนา', message: `มีคำขอเบิกสำเนา ${doc.title} ที่ผ่านการอนุมัติแล้ว`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
+    }
+
+    return {
+      copyRequests: [request, ...state.copyRequests],
+      tasks: newTasks,
+      notifications: newNotifications,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: `COPY_REQUEST_SUBMIT`,
+        details: `Requested ${qty} copies of ${doc.title}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog]
+    };
+  }),
+
+  approveCopyRequest: (taskId, action) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return state;
+
+    const request = state.copyRequests.find(r => r.id === task.requestId);
+    if (!request) return state;
+
+    const newTasks = state.tasks.filter(t => t.id !== taskId);
+    let newNotifications = state.notifications.map(n => n.relatedTaskId === taskId ? { ...n, isRead: true } : n);
+    let newCopyRequests = [...state.copyRequests];
+
+    if (action === 'APPROVE') {
+      const updatedReq = { ...request, status: 'PENDING_DCC_DISTRIBUTION' };
+      newCopyRequests = newCopyRequests.map(r => r.id === request.id ? updatedReq : r);
+      
+      const newTaskId = `t-${Date.now()}-ccd`;
+      newTasks.push({
+        id: newTaskId,
+        title: `แจกจ่ายสำเนาเพิ่มเติม (${request.docTitle})`,
+        type: 'DCC_REPLACEMENT',
+        assigneeId: 'U001',
+        status: 'PENDING',
+        requestId: request.id
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: 'U001', title: 'คำขอเบิกสำเนา', message: `มีคำขอเบิกสำเนา ${request.docTitle} ที่ผ่านการอนุมัติแล้ว`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: request.requesterId, title: 'คำขอเบิกสำเนาได้รับการอนุมัติ', message: `คำขอเบิกสำเนา ${request.docTitle} ได้รับการอนุมัติแล้ว รอ DCC แจกจ่าย`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    } else {
+      const updatedReq = { ...request, status: 'REJECTED' };
+      newCopyRequests = newCopyRequests.map(r => r.id === request.id ? updatedReq : r);
+      newNotifications.push({ id: Date.now() + Math.random(), userId: request.requesterId, title: 'คำขอเบิกสำเนาถูกปฏิเสธ', message: `คำขอเบิกสำเนา ${request.docTitle} ไม่ได้รับการอนุมัติ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    }
+
+    return {
+      tasks: newTasks,
+      notifications: newNotifications,
+      copyRequests: newCopyRequests,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: `COPY_REQUEST_${action}`,
+        details: `Processed Copy Request ${request.id} for ${request.docTitle}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog]
     };
   }),
 
@@ -976,18 +1131,36 @@ const useStore = create(persist((set, get) => ({
       remarks: `User reported: ${reason}`
     };
 
+    const managerObj = state.masterUsers.find(u => u.department === inst.department && u.level > state.currentUser.level) || 
+                       state.masterUsers.find(u => u.level > state.currentUser.level);
+    
+    // Assign to manager if found, else fallback to DCC
+    const assigneeId = managerObj ? managerObj.id : 'U001';
+
     const newTask = {
       id: `task-rep-${Date.now()}-${Math.random()}`,
-      title: `คำขอเอกสารควบคุมทดแทน: ${inst.ccNumber}`,
-      description: `แผนก ${inst.department} ขอสำเนาใหม่สำหรับเอกสาร ${inst.docTitle} เนื่องจาก ${type} (${reason})`,
+      title: `คำขอทดแทนเอกสารควบคุม: ${inst.ccNumber}`,
+      description: `แผนก ${inst.department} ขอทดแทนฉบับใหม่สำหรับเอกสาร ${inst.docTitle} เนื่องจาก ${type} (${reason})`,
       taskType: 'CC_REPLACEMENT_APPROVAL',
-      type: 'CC_REPLACEMENT_APPROVAL', // Maintain compatibility with .type checks just in case
+      type: 'CC_REPLACEMENT_APPROVAL',
       status: 'PENDING',
-      assignedToRole: 'DCC_ADMIN',
-      referenceId: inst.docId,
-      darId: inst.docId, // Also keep darId for compatibility
+      assigneeId: assigneeId,
+      assignedToRole: managerObj ? undefined : 'DCC_ADMIN',
+      instanceId: inst.id,
+      darId: inst.docId,
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       priority: 'HIGH'
+    };
+
+    const notif = {
+      id: `notif-${Date.now()}`,
+      userId: assigneeId,
+      title: 'อนุมัติการขอทดแทนเอกสาร',
+      message: `มีคำขอทดแทนเอกสาร ${inst.ccNumber} รอการอนุมัติ`,
+      isRead: false,
+      link: `/tasks/approve-replacement/${newTask.id}`,
+      timestamp: new Date().toISOString(),
+      relatedTaskId: newTask.id
     };
 
     return {
@@ -995,29 +1168,31 @@ const useStore = create(persist((set, get) => ({
         i.id === instId ? { ...i, status: 'REPLACEMENT_REQUESTED', reportType: type, reportReason: reason, reportRequesterName: state.currentUser.name, reportRequesterId: state.currentUser.id } : i
       ),
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      tasks: [newTask, ...state.tasks]
+      tasks: [newTask, ...state.tasks],
+      notifications: [notif, ...state.notifications]
     };
   }),
 
-  approveCcReplacement: (instId) => set((state) => {
+  approveCcReplacement: (taskId) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return state;
+
+    const instId = task.instanceId;
     const oldInst = state.controlledCopyInstances.find(i => i.id === instId);
     if (!oldInst) return state;
 
-    // Update old instance status to LOST or DAMAGED
     const updatedInstances = state.controlledCopyInstances.map(inst => 
       inst.id === instId ? { ...inst, status: oldInst.reportType } : inst
     );
 
-    // Instead of generating a new CC number, we keep the SAME CC number 
-    // but increment the Issue Number (e.g., I01 -> I02) to track reprints.
     const currentIssue = parseInt(oldInst.issueNumber.replace('I', '')) || 1;
     const nextIssue = `I${String(currentIssue + 1).padStart(2, '0')}`;
     
     const newInst = {
       ...oldInst,
       id: `inst-${Date.now()}`,
-      ccNumber: oldInst.ccNumber, // Keep the same CC Number
-      issueNumber: nextIssue,     // Increment Issue Number
+      ccNumber: oldInst.ccNumber, 
+      issueNumber: nextIssue,    
       status: 'PENDING_RECEIPT',
       dateIssued: new Date().toISOString().split('T')[0],
       reportType: undefined,
@@ -1036,29 +1211,35 @@ const useStore = create(persist((set, get) => ({
       ccNumber: oldInst.ccNumber,
       oldStatus: oldInst.status,
       newStatus: oldInst.reportType,
-      remarks: `Approved replacement for ${oldInst.reportType}. Issue number updated to: ${nextIssue}`
+      remarks: `Manager approved replacement for ${oldInst.reportType}. New Issue: ${nextIssue}`
     };
 
-    // Broadcast Notification to the entire department
-    const targetUsers = state.masterUsers.filter(u => u.dept === oldInst.department);
-    const newNotifs = targetUsers.map(u => ({
-      id: `notif-${Date.now()}-${u.id}-${Math.random()}`,
-      userId: u.id,
-      title: 'อนุมัติคำขอเอกสารควบคุมทดแทน',
-      message: `Admin DCC ได้อนุมัติคำขอสำเนาควบคุมใหม่ (ขอโดย: ${oldInst.reportRequesterName || 'Unknown'}) สำหรับเอกสาร ${oldInst.docTitle}`,
+    const newTasks = state.tasks.filter(t => t.id !== taskId);
+    let newNotifs = state.notifications.map(n => n.relatedTaskId === taskId ? { ...n, isRead: true } : n);
+
+    newNotifs.push({
+      id: `notif-dcc-${Date.now()}`,
+      userId: 'U001',
+      title: 'จัดพิมพ์เอกสารทดแทน',
+      message: `ผู้จัดการได้อนุมัติเอกสารทดแทนสำหรับ ${oldInst.ccNumber} กรุณาจัดพิมพ์และแจกจ่าย`,
       isRead: false,
       link: '/controlled-copy',
       timestamp: new Date().toISOString()
-    }));
+    });
 
     return { 
       controlledCopyInstances: [...updatedInstances, newInst],
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      notifications: [...newNotifs, ...state.notifications]
+      tasks: newTasks,
+      notifications: newNotifs
     };
   }),
 
-  rejectCcReplacement: (instId) => set((state) => {
+  rejectCcReplacement: (taskId, reason) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return state;
+
+    const instId = task.instanceId;
     const inst = state.controlledCopyInstances.find(i => i.id === instId);
     if (!inst) return state;
 
@@ -1072,27 +1253,29 @@ const useStore = create(persist((set, get) => ({
       ccNumber: inst.ccNumber,
       oldStatus: inst.status,
       newStatus: 'ACTIVE',
-      remarks: `Rejected replacement request`
+      remarks: `Manager rejected replacement request. Reason: ${reason}`
     };
 
-    // Broadcast Notification to the entire department
-    const targetUsers = state.masterUsers.filter(u => u.dept === inst.department);
-    const newNotifs = targetUsers.map(u => ({
-      id: `notif-${Date.now()}-${u.id}-${Math.random()}`,
-      userId: u.id,
-      title: 'ปฏิเสธคำขอเอกสารควบคุมทดแทน',
-      message: `Admin DCC ได้ปฏิเสธคำขอสำเนาควบคุมใหม่ (ขอโดย: ${inst.reportRequesterName || 'Unknown'}) สำหรับเอกสาร ${inst.docTitle}`,
+    const newTasks = state.tasks.filter(t => t.id !== taskId);
+    let newNotifs = state.notifications.map(n => n.relatedTaskId === taskId ? { ...n, isRead: true } : n);
+
+    newNotifs.push({
+      id: `notif-rej-${Date.now()}`,
+      userId: inst.reportRequesterId,
+      title: 'ปฏิเสธคำขอทดแทนเอกสาร',
+      message: `คำขอทดแทนเอกสาร ${inst.ccNumber} ถูกปฏิเสธ: ${reason}`,
       isRead: false,
-      link: '/controlled-copy',
+      link: '/dashboard',
       timestamp: new Date().toISOString()
-    }));
+    });
 
     return {
       controlledCopyInstances: state.controlledCopyInstances.map(i => 
         i.id === instId ? { ...i, status: 'ACTIVE', reportType: undefined, reportReason: undefined, reportRequesterName: undefined, reportRequesterId: undefined } : i
       ),
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      notifications: [...newNotifs, ...state.notifications]
+      tasks: newTasks,
+      notifications: newNotifs
     };
   }),
 

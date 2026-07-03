@@ -43,9 +43,7 @@ const DarList = () => {
       const name = user ? user.name : (dar.requester || dar.requesterId);
       return <span className="text-gray-600  font-medium">{name} (Requester)</span>;
     } else if (dar.status === 'APPROVED_WAITING_EFFECTIVE' || dar.status === 'WAITING_EFFECTIVE') {
-      const dcc = masterUsers.find(u => u.isDcc || u.role === 'DCC_ADMIN' || u.id === 'U001');
-      const name = dcc ? dcc.name : 'DCC Admin';
-      return <span className="text-purple-600  font-medium">{name} (DCC)</span>;
+      return <span className="text-gray-400 font-medium">-</span>;
     } else if (dar.status === 'UNDER_REVIEW' || dar.status === 'PENDING_APPROVAL' || dar.status === 'WAITING_ACKNOWLEDGEMENT') {
       const activeTasks = tasks.filter(t => t.darId === dar.id);
       if (activeTasks.length > 0) {

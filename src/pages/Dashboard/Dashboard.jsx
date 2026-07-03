@@ -236,7 +236,7 @@ const Dashboard = () => {
       const user = masterUsers.find(u => u.id === dar.requesterId);
       return <span className="text-gray-600  font-medium">{user ? user.name : dar.requesterId} (Requester)</span>;
     } else if (dar.status === 'APPROVED_WAITING_EFFECTIVE' || dar.status === 'WAITING_EFFECTIVE') {
-      return <span className="text-purple-600  font-medium">DCC Admin</span>;
+      return <span className="text-gray-400 font-medium">-</span>;
     } else if (dar.status === 'UNDER_REVIEW' || dar.status === 'PENDING_APPROVAL' || dar.status === 'WAITING_ACKNOWLEDGEMENT') {
       const activeTasks = tasks.filter(t => t.darId === dar.id);
       if (activeTasks.length > 0) {
@@ -465,45 +465,45 @@ const Dashboard = () => {
             {/* Draft */}
             <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_DRAFT' ? '' : 'MY_DRAFT')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_DRAFT' ? 'premium-card ring-2 ring-gray-300 bg-gray-50' : 'premium-card bg-white'}`}>
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-xs font-semibold text-gray-500">Draft (ร่าง)</h3>
+                <h3 className="text-sm font-semibold text-gray-500">Draft (ร่าง)</h3>
               </div>
-              <span className="text-2xl font-bold text-gray-800">{myDraftCount}</span>
+              <span className="text-3xl font-bold text-gray-800">{myDraftCount}</span>
             </motion.div>
             
             {/* In Progress */}
             <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_IN_PROGRESS' ? '' : 'MY_IN_PROGRESS')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_IN_PROGRESS' ? 'premium-card ring-2 ring-blue-300 bg-blue-50' : 'premium-card bg-white'}`}>
               <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-blue-600 font-semibold">{isAdmin ? 'In Progress (รวม)' : 'In Progress (กำลังดำเนินการ)'}</p>
-                <Clock className="w-4 h-4 text-blue-400" />
+                <p className="text-sm text-blue-600 font-semibold">{isAdmin ? 'In Progress (รวม)' : 'In Progress (กำลังดำเนินการ)'}</p>
+                <Clock className="w-5 h-5 text-blue-400" />
               </div>
-              <p className="text-2xl font-bold text-blue-700">{myInProgressCount}</p>
+              <p className="text-3xl font-bold text-blue-700">{myInProgressCount}</p>
             </motion.div>
             
             {/* Returned */}
             <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_RETURNED' ? '' : 'MY_RETURNED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_RETURNED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
               <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-red-600 font-semibold">{isAdmin ? 'Returned (รวม)' : 'Returned (ให้แก้ไข)'}</p>
-                <AlertCircle className="w-4 h-4 text-red-400" />
+                <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Returned (รวม)' : 'Returned (ให้แก้ไข)'}</p>
+                <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
-              <p className="text-2xl font-bold text-red-700">{myReturnedCount}</p>
+              <p className="text-3xl font-bold text-red-700">{myReturnedCount}</p>
             </motion.div>
 
             {/* Waiting Effective */}
             <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_WAITING' ? '' : 'MY_WAITING')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_WAITING' ? 'premium-card ring-2 ring-green-300 bg-green-50' : 'premium-card bg-white'}`}>
               <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-green-600 font-semibold">{isAdmin ? 'Waiting (รวม)' : 'Waiting (รอประกาศ)'}</p>
-                <CheckCircle className="w-4 h-4 text-green-400" />
+                <p className="text-sm text-green-600 font-semibold">{isAdmin ? 'Waiting (รวม)' : 'Waiting (รอประกาศ)'}</p>
+                <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
-              <p className="text-2xl font-bold text-green-700">{myWaitingCount}</p>
+              <p className="text-3xl font-bold text-green-700">{myWaitingCount}</p>
             </motion.div>
 
             {/* Cancelled (Overdue) */}
             <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_CANCELLED' ? '' : 'MY_CANCELLED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_CANCELLED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
               <div className="flex justify-between items-start mb-1">
-                <p className="text-xs text-red-600 font-semibold">{isAdmin ? 'Cancelled (รวม)' : 'Cancelled (ถูกยกเลิก)'}</p>
-                <Trash2 className="w-4 h-4 text-red-400" />
+                <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Cancelled (รวม)' : 'Cancelled (ถูกยกเลิก)'}</p>
+                <Trash2 className="w-5 h-5 text-red-400" />
               </div>
-              <p className="text-2xl font-bold text-red-700">{myCancelledCount}</p>
+              <p className="text-3xl font-bold text-red-700">{myCancelledCount}</p>
             </motion.div>
           </motion.div>
         )}
@@ -511,74 +511,41 @@ const Dashboard = () => {
         {activeOverviewTab === 'ACTION_REQUIRED' && (
           <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
             
-            {isAdmin ? (
-              <>
-                {/* DCC Pending Distribution */}
-                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-indigo-600 font-semibold">Pending Distribution</p>
-                    <ClipboardCheck className="w-4 h-4 text-indigo-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-800">{dccPendingCount}</p>
-                </motion.div>
-                
-                {/* DCC Pending Recall */}
-                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-orange-600 font-semibold">Pending Recall</p>
-                    <AlertTriangle className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-800">{pendingRecallCount}</p>
-                </motion.div>
-                
-                {/* DCC Replacements */}
-                <motion.div variants={itemVariants} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive premium-card bg-white`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-blue-600 font-semibold">Copy Requests</p>
-                    <FileText className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-800">{replacementRequestCount}</p>
-                </motion.div>
-              </>
-            ) : (
-              <>
                 {/* Pending Review */}
                 <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-indigo-600 font-semibold">Pending Review</p>
-                    <Clock className="w-4 h-4 text-indigo-400" />
+                    <p className="text-sm text-indigo-600 font-semibold">Pending Review</p>
+                    <Clock className="w-5 h-5 text-indigo-400" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{actionReviewCount}</p>
+                  <p className="text-3xl font-bold text-gray-800">{actionReviewCount}</p>
                 </motion.div>
                 
                 {/* Pending Approval */}
                 <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-yellow-600 font-semibold">Pending Approval</p>
-                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    <p className="text-sm text-yellow-600 font-semibold">Pending Approval</p>
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{actionApproveCount}</p>
+                  <p className="text-3xl font-bold text-gray-800">{actionApproveCount}</p>
                 </motion.div>
                 
                 {/* Due Soon */}
                 <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-orange-600 font-semibold">Due Soon</p>
-                    {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-1.5 w-1.5 rounded-full bg-orange-500"></span> : <Clock className="w-4 h-4 text-orange-500" />}
+                    <p className="text-sm text-orange-600 font-semibold">Due Soon</p>
+                    {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-2 w-2 rounded-full bg-orange-500"></span> : <Clock className="w-5 h-5 text-orange-500" />}
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{actionDueSoonCount}</p>
+                  <p className="text-3xl font-bold text-gray-800">{actionDueSoonCount}</p>
                 </motion.div>
     
                 {/* Overdue */}
                 <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-xs text-red-600 font-semibold">Overdue</p>
-                    {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="w-4 h-4 text-red-500" />}
+                    <p className="text-sm text-red-600 font-semibold">Overdue</p>
+                    {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="w-5 h-5 text-red-500" />}
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{actionOverdueCount}</p>
+                  <p className="text-3xl font-bold text-gray-800">{actionOverdueCount}</p>
                 </motion.div>
-              </>
-            )}
           </motion.div>
         )}
       </motion.div>

@@ -39,34 +39,34 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
-          
+
           <Route path="dar/new" element={<DarSelection />} />
           <Route path="dar/new/document" element={<DarNewForm />} />
           <Route path="dar/new/revision" element={<DarRevisionForm />} />
           <Route path="dar/new/obsolete" element={<DarObsoleteForm />} />
           <Route path="dar/list" element={<DarList />} />
           <Route path="dar/:id" element={<DarDetail />} />
-          
+
           <Route path="tasks" element={<TaskInbox />} />
           <Route path="tasks/review/:id" element={<TaskReview />} />
           <Route path="tasks/approve/:id" element={<TaskApprove />} />
           <Route path="tasks/ack/:id" element={<TaskAck />} />
           <Route path="tasks/revise/:id" element={<TaskRevise />} />
           <Route path="tasks/approve-replacement/:id" element={<TaskApproveReplacement />} />
-          
+
           <Route path="library" element={<Library />} />
           <Route path="library/:id" element={<LibraryDetail />} />
           <Route path="viewer/:docId/:rev" element={<Viewer />} />
-          
+
           <Route path="admin/health" element={<AdminHealth />} />
           <Route path="admin/action-log" element={<ActionLog />} />
           <Route path="reports" element={<Reports />} />
-          
+
           <Route path="controlled-copy" element={<ControlledCopyRegister />} />
           <Route path="periodic-review" element={<ComingSoon title="Periodic Review" />} />
           <Route path="external-docs" element={<ExternalDocsList />} />
           <Route path="master-list" element={<MasterList />} />
-          
+
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

@@ -14,25 +14,27 @@ const Sidebar = () => {
   const isMasterListAccess = currentUser.level >= 5 && !isAdmin;
 
   const NavItem = ({ to, icon: IconComponent, label }) => (
-    <NavLink to={to} className="relative flex items-center mx-2 py-3 rounded-xl overflow-hidden transition-all duration-300 ease-fluid active:scale-95 group">
+    <NavLink to={to} className="relative flex items-center mx-3 my-1 py-3 rounded-xl overflow-hidden transition-colors duration-300 group hover:bg-slate-100/60">
       {({ isActive }) => (
         <>
           {isActive && (
             <motion.div
               layoutId="sidebar-active"
-              className="absolute inset-0 bg-indigo-50 rounded-xl z-0"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="absolute inset-0 bg-white shadow-sm border border-slate-200/50 rounded-xl z-0"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}
-          {!isActive && (
-            <div className="absolute inset-0 bg-slate-100  opacity-0 group-hover:opacity-100 transition-opacity z-0 rounded-xl" />
-          )}
-          <div className={`relative z-10 w-12 flex items-center justify-center shrink-0 ${isActive ? 'text-indigo-600 ' : 'text-slate-500  group-hover:text-slate-900 '}`}>
-            <IconComponent className="w-6 h-6" />
+          <div className={`relative z-10 w-14 flex items-center justify-center shrink-0 transition-colors duration-300 ${isActive ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-900'}`}>
+            <IconComponent className="w-[22px] h-[22px]" />
           </div>
-          <span className={`relative z-10 whitespace-nowrap transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'} ${isActive ? 'text-indigo-600  font-medium' : 'text-slate-500  group-hover:text-slate-900 '}`}>
+          <motion.span 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className={`relative z-10 whitespace-nowrap text-[14.5px] tracking-tight ${isActive ? 'text-slate-900 font-semibold' : 'text-slate-600 font-medium group-hover:text-slate-900'}`}
+          >
             {label}
-          </span>
+          </motion.span>
         </>
       )}
     </NavLink>
@@ -40,7 +42,7 @@ const Sidebar = () => {
 
   return (
     <div 
-      className={`bg-white border-r border-slate-200/80 flex flex-col h-full transition-all duration-300 ease-out relative z-40 ${isHovered ? 'w-64' : 'w-16'}`}
+      className={`bg-[#FAFAFA] border-r border-slate-200 flex flex-col h-full transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative z-40 ${isHovered ? 'w-64' : 'w-20'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -83,7 +85,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Dev Reset Button */}
-      <div className="p-2 border-t border-slate-100">
+      <div className="p-3 border-t border-slate-200/60 mt-auto">
         <button
           onClick={() => {
             if(window.confirm('Are you sure you want to reset all mock data? This will clear localStorage and reload the page.')) {
@@ -91,13 +93,20 @@ const Sidebar = () => {
               window.location.reload();
             }
           }}
-          className="w-full flex items-center justify-center p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-colors group relative"
+          className="w-full flex items-center p-3 text-rose-400 hover:bg-rose-50/50 hover:text-rose-600 rounded-xl transition-colors group relative"
           title="Reset System Data (Dev)"
         >
-          <Database className="w-5 h-5 shrink-0" />
-          <span className={`absolute left-14 whitespace-nowrap text-sm font-medium transition-all duration-300 ${isHovered ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+          <div className="w-8 flex items-center justify-center shrink-0">
+            <Database className="w-5 h-5" />
+          </div>
+          <motion.span 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="whitespace-nowrap text-sm font-medium ml-3"
+          >
             Reset Data (Dev)
-          </span>
+          </motion.span>
         </button>
       </div>
     </div>

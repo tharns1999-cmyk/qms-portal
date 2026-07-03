@@ -137,7 +137,8 @@ const useStore = create(persist((set, get) => ({
         title: doc.title,
         type: 'EXT_REVIEW',
         assigneeId: doc.reviewerId,
-        status: 'PENDING'
+        status: 'PENDING',
+        extAction: 'REGISTER'
       });
       newNotifications.push({ id: Date.now() + Math.random(), userId: doc.reviewerId, title: 'งานใหม่รอการตรวจสอบ', message: `เอกสารภายนอก "${doc.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
     } else if (doc.approverId) {
@@ -149,7 +150,8 @@ const useStore = create(persist((set, get) => ({
         title: doc.title,
         type: 'EXT_APPROVAL',
         assigneeId: doc.approverId,
-        status: 'PENDING'
+        status: 'PENDING',
+        extAction: 'REGISTER'
       });
       newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
     }
@@ -173,9 +175,18 @@ const useStore = create(persist((set, get) => ({
     }
 
     return {
-      externalDocuments: [{ ...doc, id: newId, status: initialStatus, ownerId: state.currentUser.id }, ...state.externalDocuments],
+      externalDocuments: [{ ...doc, id: newId, status: initialStatus, ownerId: state.currentUser.id, rev: '01' }, ...state.externalDocuments],
       tasks: newTasks,
       notifications: newNotifications,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'EXT_DOC_REGISTER',
+        details: `Registered new external document: ${doc.title}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: newId,
@@ -188,37 +199,8 @@ const useStore = create(persist((set, get) => ({
     };
   }),
 
-  updateExternalDoc: (id, updates) => set((state) => ({
-    externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, ...updates } : d),
-    externalAuditTrail: [{
-      id: `EXTA-${Date.now()}`,
-      docId: id,
-      action: 'UPDATE',
-      actor: state.currentUser.name,
-      actorId: state.currentUser.id,
-      date: new Date().toISOString(),
-      details: 'Updated external document'
-    }, ...state.externalAuditTrail]
-  })),
-
-  withdrawExternalDoc: (id, reason) => set((state) => {
-    const remainingTasks = state.tasks.filter(t => t.referenceId !== id);
-    return {
-      externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, status: 'WITHDRAWN' } : d),
-      tasks: remainingTasks,
-      externalAuditTrail: [{
-        id: `EXTA-${Date.now()}`,
-        docId: id,
-        action: 'WITHDRAW',
-        actor: state.currentUser.name,
-        actorId: state.currentUser.id,
-        date: new Date().toISOString(),
-        details: reason || 'Withdrawn'
-      }, ...state.externalAuditTrail]
-    };
-  }),
-
-  reviseExternalDoc: (id, updates) => set((state) => {
+  // Triggered when requesting to Update an existing document (create new revision)
+  updateExternalDoc: (id, updates) => set((state) => {
     const oldDoc = state.externalDocuments.find(d => d.id === id);
     if (!oldDoc) return state;
 
@@ -232,61 +214,165 @@ const useStore = create(persist((set, get) => ({
       ...updates,
       id: newId,
       rev: newRevStr,
-      status: 'ACTIVE'
+      status: 'PENDING_EXT_REVIEW',
+      previousDocId: id
     };
 
-    const newNotification = { id: Date.now() + Math.random(), userId: oldDoc.ownerId || state.currentUser.id, title: 'อัปเดตเอกสารภายนอก', message: `เอกสารภายนอก "${newDoc.title}" ถูกอัปเดตเป็น Rev.${newRevStr} แล้ว`, isRead: false, link: '/external-docs', timestamp: new Date().toISOString() };
+    const newTasks = [...state.tasks];
+    const newNotifications = [...state.notifications];
+
+    if (newDoc.reviewerId) {
+      newTasks.push({
+        id: `extt-${Date.now()}-rev`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: newId,
+        title: newDoc.title,
+        type: 'EXT_REVIEW',
+        assigneeId: newDoc.reviewerId,
+        status: 'PENDING',
+        extAction: 'UPDATE'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: newDoc.reviewerId, title: 'งานใหม่รอการตรวจสอบ', message: `คำขออัปเดตเอกสารภายนอก "${newDoc.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    } else {
+      newDoc.status = 'PENDING_EXT_APPROVAL';
+      newTasks.push({
+        id: `extt-${Date.now()}-app`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: newId,
+        title: newDoc.title,
+        type: 'EXT_APPROVAL',
+        assigneeId: newDoc.approverId,
+        status: 'PENDING',
+        extAction: 'UPDATE'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: newDoc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `คำขออัปเดตเอกสารภายนอก "${newDoc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    }
 
     return {
-      externalDocuments: [newDoc, ...state.externalDocuments.map(d => d.id === id ? { ...d, status: 'OBSOLETE_ARCHIVED' } : d)],
-      notifications: [newNotification, ...state.notifications],
+      externalDocuments: [newDoc, ...state.externalDocuments],
+      tasks: newTasks,
+      notifications: newNotifications,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'EXT_DOC_REVISE_REQUEST',
+        details: `Requested update for external document: ${newDoc.title} to Rev ${newRevStr}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: newId,
-        action: 'REVISE',
+        action: 'UPDATE_REQUEST',
         actor: state.currentUser.name,
         actorId: state.currentUser.id,
         date: new Date().toISOString(),
-        details: `Created new revision ${newRevStr} from ${oldDoc.rev}`
+        details: `Requested update to Rev ${newRevStr}`
       }, ...state.externalAuditTrail]
     };
   }),
 
-  obsoleteExternalDoc: (id, reason) => set((state) => {
+  // Handle immediate withdraw/delete (deprecated, keeping empty to avoid crash if called)
+  withdrawExternalDoc: (id, reason) => set(state => state),
+
+  // Handle immediate revise (replaced by updateExternalDoc above)
+  reviseExternalDoc: (id, updates) => set(state => state),
+
+  // Triggered when requesting to Obsolete a document
+  obsoleteExternalDoc: (id, payload) => set((state) => {
     const oldDoc = state.externalDocuments.find(d => d.id === id);
     if (!oldDoc) return state;
 
-    const remainingTasks = state.tasks.filter(t => t.referenceId !== id);
-    
-    const newNotification = { id: Date.now() + Math.random(), userId: oldDoc.ownerId || state.currentUser.id, title: 'ยกเลิกเอกสารภายนอก', message: `เอกสารภายนอก "${oldDoc.title}" ถูกยกเลิกแล้ว`, isRead: false, link: '/external-docs', timestamp: new Date().toISOString() };
+    let newTasks = [...state.tasks];
+    let newNotifications = [...state.notifications];
+    let newStatus = 'PENDING_EXT_REVIEW';
+
+    // Store obsolete request details inside the document temporarily
+    const updatedDoc = {
+      ...oldDoc,
+      status: newStatus,
+      obsoleteReason: payload.reason,
+      obsoleteReviewerId: payload.reviewerId,
+      obsoleteApproverId: payload.approverId
+    };
+
+    if (payload.reviewerId) {
+      newTasks.push({
+        id: `extt-${Date.now()}-rev`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: id,
+        title: oldDoc.title,
+        type: 'EXT_REVIEW',
+        assigneeId: payload.reviewerId,
+        status: 'PENDING',
+        extAction: 'OBSOLETE'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: payload.reviewerId, title: 'ขอยกเลิกเอกสารภายนอก', message: `รอตรวจสอบการยกเลิก "${oldDoc.title}"`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    } else {
+      updatedDoc.status = 'PENDING_EXT_APPROVAL';
+      newTasks.push({
+        id: `extt-${Date.now()}-app`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: id,
+        title: oldDoc.title,
+        type: 'EXT_APPROVAL',
+        assigneeId: payload.approverId,
+        status: 'PENDING',
+        extAction: 'OBSOLETE'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: payload.approverId, title: 'ขอยกเลิกเอกสารภายนอก', message: `รออนุมัติการยกเลิก "${oldDoc.title}"`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    }
 
     return {
-      externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, status: 'OBSOLETE_ARCHIVED' } : d),
-      tasks: remainingTasks,
-      notifications: [newNotification, ...state.notifications],
+      externalDocuments: state.externalDocuments.map(d => d.id === id ? updatedDoc : d),
+      tasks: newTasks,
+      notifications: newNotifications,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'EXT_DOC_OBSOLETE_REQUEST',
+        details: `Requested obsolete for external document: ${oldDoc.title}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: id,
-        action: 'OBSOLETE',
+        action: 'OBSOLETE_REQUEST',
         actor: state.currentUser.name,
         actorId: state.currentUser.id,
         date: new Date().toISOString(),
-        details: reason || 'Document marked as obsolete'
+        details: `Requested obsolete: ${payload.reason}`
       }, ...state.externalAuditTrail]
     };
   }),
 
-  logExternalDownload: (id) => set((state) => ({
-    externalAuditTrail: [{
-      id: `EXTA-${Date.now()}`,
-      docId: id,
-      action: 'DOWNLOAD',
-      actor: state.currentUser.name,
-      actorId: state.currentUser.id,
-      date: new Date().toISOString(),
-      details: 'Downloaded confidential document'
-    }, ...state.externalAuditTrail]
-  })),
+  logExternalDownload: (id) => set((state) => {
+    const doc = state.externalDocuments.find(d => d.id === id);
+    const docTitle = doc ? doc.title : id;
+    return {
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'EXT_DOC_DOWNLOAD',
+        details: `Downloaded external document "${docTitle}"`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog],
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: id,
+        action: 'DOWNLOAD',
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: 'Downloaded confidential document'
+      }, ...state.externalAuditTrail]
+    };
+  }),
 
   processExternalTask: (taskId, action, comment) => set((state) => {
     const taskIndex = state.tasks.findIndex(t => t.id === taskId);
@@ -297,13 +383,20 @@ const useStore = create(persist((set, get) => ({
     if (docIndex === -1) return state;
     
     const doc = state.externalDocuments[docIndex];
+    const isUpdate = task.extAction === 'UPDATE';
+    const isObsolete = task.extAction === 'OBSOLETE';
+    const isRegister = task.extAction === 'REGISTER';
+    
     let newDocStatus = doc.status;
     let newTasks = state.tasks.filter(t => t.id !== taskId);
     let newNotifications = [...state.notifications];
+    let updatedDocs = [...state.externalDocuments];
     
+    // APPROVE Action
     if (action === 'APPROVE') {
-      if (task.type === 'EXT_REVIEW' || task.type === 'Review') {
-        if (doc.approverId) {
+      if (task.type === 'EXT_REVIEW') {
+        const approverId = isObsolete ? doc.obsoleteApproverId : doc.approverId;
+        if (approverId) {
           newDocStatus = 'PENDING_EXT_APPROVAL';
           const newTaskId = `extt-${Date.now()}-app`;
           newTasks.push({
@@ -312,48 +405,52 @@ const useStore = create(persist((set, get) => ({
             referenceId: doc.id,
             title: doc.title,
             type: 'EXT_APPROVAL',
-            assigneeId: doc.approverId,
-            status: 'PENDING'
+            assigneeId: approverId,
+            status: 'PENDING',
+            extAction: task.extAction
           });
-          newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
         } else {
-          newDocStatus = 'ACTIVE';
+          // If no approver, it's fully approved
+          newDocStatus = isObsolete ? 'OBSOLETE_ARCHIVED' : 'ACTIVE';
         }
-      } else if (task.type === 'EXT_APPROVAL' || task.type === 'Approve') {
-        newDocStatus = 'ACTIVE';
-      } else if (task.type === 'Ack') {
-        // Ack doesn't change doc status
+      } else if (task.type === 'EXT_APPROVAL') {
+        newDocStatus = isObsolete ? 'OBSOLETE_ARCHIVED' : 'ACTIVE';
       }
+
+      // If fully approved and it's an UPDATE, obsolete the previous document
+      if (newDocStatus === 'ACTIVE' && isUpdate && doc.previousDocId) {
+        updatedDocs = updatedDocs.map(d => d.id === doc.previousDocId ? { ...d, status: 'OBSOLETE_ARCHIVED' } : d);
+      }
+      
+    // REJECT Action
     } else if (action === 'REJECT') {
-      newDocStatus = 'DRAFT';
-      // Clear all other pending tasks for this doc
+      if (isObsolete) {
+        // Obsolete rejected -> Return to ACTIVE
+        newDocStatus = 'ACTIVE';
+      } else {
+        // Register/Update rejected -> DRAFT/REJECTED
+        newDocStatus = 'REJECTED';
+      }
       newTasks = newTasks.filter(t => t.referenceId !== doc.id);
+      newNotifications.push({ id: Date.now() + Math.random(), userId: doc.ownerId, title: 'คำขอถูกปฏิเสธ', message: `คำขอสำหรับ "${doc.title}" ถูกปฏิเสธ: ${comment}`, isRead: false, link: '/external-docs', timestamp: new Date().toISOString() });
     }
     
-    // Generate Ack tasks if it just became ACTIVE
-    if (newDocStatus === 'ACTIVE' && doc.status !== 'ACTIVE' && doc.acknowledgees && doc.acknowledgees.length > 0) {
-      doc.acknowledgees.forEach(uid => {
-        const newTaskId = `extt-${Date.now()}-ack-${uid}`;
-        newTasks.push({
-          id: newTaskId,
-          referenceType: 'EXTERNAL_DOC',
-          referenceId: doc.id,
-          title: doc.title,
-          type: 'Ack',
-          assigneeId: uid,
-          status: 'PENDING'
-        });
-        newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `เอกสารภายนอก "${doc.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
-      });
-    }
-
-    const updatedDocs = [...state.externalDocuments];
-    updatedDocs[docIndex] = { ...doc, status: newDocStatus };
+    updatedDocs = updatedDocs.map(d => d.id === doc.id ? { ...d, status: newDocStatus } : d);
 
     return {
       tasks: newTasks,
       notifications: newNotifications,
       externalDocuments: updatedDocs,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: `EXT_WORKFLOW_${action}`,
+        details: `Processed task ${taskId} (${action}) for external document "${doc.title}"`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        actorRole: state.currentUser.role || state.currentUser.position,
+        date: new Date().toISOString()
+      }, ...state.actionLog],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: doc.id,
@@ -1131,8 +1228,17 @@ const useStore = create(persist((set, get) => ({
       remarks: `User reported: ${reason}`
     };
 
-    const managerObj = state.masterUsers.find(u => u.department === inst.department && u.level > state.currentUser.level) || 
-                       state.masterUsers.find(u => u.level > state.currentUser.level);
+    const requesterLevel = state.currentUser.level;
+    let managerObj;
+
+    if (requesterLevel >= 5) {
+      managerObj = state.masterUsers.find(u => u.level >= 6 || u.position.includes('General Manager') || u.position.includes('Director'));
+    } else {
+      managerObj = state.masterUsers.find(u => u.depts && u.depts.includes(inst.department) && u.level === 5);
+      if (!managerObj) {
+        managerObj = state.masterUsers.find(u => u.level >= 6 || u.position.includes('General Manager') || u.position.includes('Director'));
+      }
+    }
     
     // Assign to manager if found, else fallback to DCC
     const assigneeId = managerObj ? managerObj.id : 'U001';

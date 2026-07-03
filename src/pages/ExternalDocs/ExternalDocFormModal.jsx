@@ -99,8 +99,13 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.source || !formData.effectiveDate) {
-      toast.error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+    if (!formData.title || !formData.source || !formData.effectiveDate || !formData.reviewerId || !formData.approverId) {
+      toast.error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง Reviewer และ Approver)');
+      return;
+    }
+    
+    if (documentToEdit && !formData.reason) {
+      toast.error('กรุณาระบุเหตุผลในการอัปเดตเอกสาร');
       return;
     }
 
@@ -299,9 +304,21 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
 
               <hr className="border-gray-100 my-2" />
               <h3 className="font-bold text-gray-800 ">ผู้รับผิดชอบตามข้อกำหนดภายนอก (External Rules)</h3>
+              
+              {documentToEdit && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700  mb-1">เหตุผลในการอัปเดต (Reason for Update) <span className="text-red-500">*</span></label>
+                  <textarea
+                    value={formData.reason || ''}
+                    onChange={(e) => handleChange('reason', e.target.value)}
+                    className="input-ios w-full h-24 resize-none"
+                    placeholder="ระบุเหตุผลที่ต้องอัปเดตเอกสารฉบับนี้..."
+                  />
+                </div>
+              )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700  mb-1">External Reviewer (ห้ามเป็น DCC Admin)</label>
+                <label className="block text-sm font-semibold text-gray-700  mb-1">External Reviewer (ห้ามเป็น DCC Admin) <span className="text-red-500">*</span></label>
                 <UserSelector 
                   value={formData.reviewerId}
                   onChange={val => handleChange('reviewerId', val)}
@@ -310,7 +327,7 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700  mb-1">External Approver</label>
+                <label className="block text-sm font-semibold text-gray-700  mb-1">External Approver <span className="text-red-500">*</span></label>
                 <UserSelector 
                   value={formData.approverId}
                   onChange={val => handleChange('approverId', val)}

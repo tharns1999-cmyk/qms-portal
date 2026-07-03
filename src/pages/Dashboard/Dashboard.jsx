@@ -181,6 +181,32 @@ const Dashboard = () => {
     }
   }
 
+  // Inject CC_REPLACEMENT_APPROVAL tasks into the table if viewing ALL or ACTION_APPROVE
+  if (!activeCardFilter || activeCardFilter === 'ACTION_APPROVE') {
+    const replacementTasks = tasks.filter(t => t.type === 'CC_REPLACEMENT_APPROVAL' && isMyTask(t));
+    const formattedReplacements = replacementTasks.map(t => {
+      const inst = controlledCopyInstances.find(i => i.id === t.instanceId);
+      return {
+        isTask: true,
+        id: inst ? inst.ccNumber : t.id,
+        taskId: t.id,
+        title: t.title,
+        type: 'REPLACEMENT',
+        department: inst ? inst.department : '',
+        status: t.status,
+        date: t.dueDate,
+        requesterId: inst ? inst.reportRequesterId : ''
+      };
+    });
+    
+    let validMocks = formattedReplacements;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      validMocks = validMocks.filter(d => d.id.toLowerCase().includes(term) || d.title.toLowerCase().includes(term));
+    }
+    recentDars = [...recentDars, ...validMocks];
+  }
+
   // Calculate dynamic options based on current filtered state BEFORE applying `filterType`
   const availableDarTypes = [...new Set(recentDars.map(d => d.type))].filter(Boolean).sort();
 
@@ -230,6 +256,18 @@ const Dashboard = () => {
   };
 
   const renderActionButtons = (dar) => {
+    if (dar.isTask) {
+      return (
+        <button 
+          onClick={() => navigate(`/tasks/approve-replacement/${dar.taskId}`)}
+          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center border border-blue-200"
+          title="ดำเนินการ (Evaluate)"
+        >
+          <ClipboardCheck className="w-4 h-4" />
+        </button>
+      );
+    }
+    
     const isRequesterOfDar = dar.requesterId === currentUser.id;
     // Check if user has an active task for this DAR
     const activeTask = tasks.find(t => t.darId === dar.id && isMyTask(t));
@@ -674,13 +712,13 @@ const Dashboard = () => {
                           {renderActionButtons(dar)}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          <span className="font-semibold text-blue-600 text-sm cursor-pointer hover:underline group-hover:text-blue-700" onClick={() => navigate(`/dar/${dar.id}`)}>{dar.id}</span>
+                          <span className="font-semibold text-blue-600 text-sm cursor-pointer hover:underline group-hover:text-blue-700" onClick={() => dar.isTask ? navigate(`/tasks/approve-replacement/${dar.taskId}`) : navigate(`/dar/${dar.id}`)}>{dar.id}</span>
                         </td>
                         <td className="px-3 py-2 font-medium text-gray-800 w-full max-w-[200px] md:max-w-xs truncate" title={dar.title}>{dar.title}</td>
                         <td className="px-3 py-2 whitespace-nowrap"><span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[11px] font-semibold">{dar.type}</span></td>
                         {isAdmin && <td className="px-3 py-2 text-gray-700 font-medium">{dar.department}</td>}
                         <td className="px-3 py-2 whitespace-nowrap">{getStatusBadge(dar.status)}</td>
-                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{getCurrentHandler(dar)}</td>
+                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{dar.isTask ? 'Manager' : getCurrentHandler(dar)}</td>
                         <td className="px-3 py-2 text-gray-400 text-xs whitespace-nowrap">{dar.date}</td>
                       </motion.tr>
                     ))}

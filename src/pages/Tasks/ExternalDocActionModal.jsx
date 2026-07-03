@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { X, Check, XCircle, Info, FileText } from 'lucide-react';
 import useStore from '../../store/useStore';
 import { motion } from 'framer-motion';
+import ExternalDocPreviewModal from '../ExternalDocs/ExternalDocPreviewModal';
 
 const ExternalDocActionModal = ({ task, onClose }) => {
   const { externalDocuments, processExternalTask } = useStore();
   const [comment, setComment] = useState('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   // Find the external document for this task
   const doc = externalDocuments.find(d => d.id === task.referenceId);
@@ -25,6 +27,13 @@ const ExternalDocActionModal = ({ task, onClose }) => {
     if (task.type === 'Ack') return 'รับทราบเอกสารภายนอก';
     return 'จัดการเอกสารภายนอก';
   };
+
+  const extActionMapping = {
+    'UPDATE': 'อัปเดตเอกสาร',
+    'OBSOLETE': 'ยกเลิกเอกสาร',
+    'REGISTER': 'ขึ้นทะเบียนใหม่'
+  };
+  const actionLabel = task.extAction ? extActionMapping[task.extAction] || task.extAction : 'ขึ้นทะเบียนใหม่';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -54,7 +63,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800 ">{getActionTitle()}</h2>
-              <p className="text-sm text-gray-500  font-medium">Ref No: {doc.id}</p>
+              <p className="text-sm text-gray-500  font-medium">Ref No: {doc.id} <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full ml-2">{actionLabel}</span></p>
             </div>
           </div>
           <button 
@@ -93,6 +102,23 @@ const ExternalDocActionModal = ({ task, onClose }) => {
               </a>
             </div>
           )}
+
+          {doc.obsoleteReason && task.extAction === 'OBSOLETE' && (
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
+              <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">เหตุผลที่ขอยกเลิก (Obsolete Reason)</span>
+              <p className="text-amber-900 mt-1 text-sm">{doc.obsoleteReason}</p>
+            </div>
+          )}
+          
+          <div className="pt-2">
+            <button
+              onClick={() => setIsPreviewOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-medium transition-colors w-full justify-center"
+            >
+              <FileText className="w-4 h-4" />
+              ดูพรีวิวเอกสาร (Preview PDF)
+            </button>
+          </div>
         </div>
 
         {/* Comment Field (not required for Ack) */}
@@ -146,6 +172,12 @@ const ExternalDocActionModal = ({ task, onClose }) => {
           )}
         </div>
       </motion.div>
+
+      <ExternalDocPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        document={doc}
+      />
     </div>
   );
 };

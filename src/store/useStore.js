@@ -1,0 +1,1172 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { resolveReviewer, resolveApprover } from '../utils/workflowResolver';
+
+// 4 Master Data Tables (Separated as requested)
+export const MASTER_DATA_USER = [
+  { id: 'U001', name: 'Admin QA (DCC)', position: 'Officer', level: 1, isDcc: true, depts: ['QA'] },
+  { id: 'U002', name: 'ธนาวุฒิ สมควรกิจดำรง', position: 'Production Supervisor', level: 4, depts: ['PD'] },
+  { id: 'U003', name: 'กัลยาณี พลไกร', position: 'Production Assistant Manager', level: 5, depts: ['PD', 'QA'] },
+  { id: 'U004', name: 'คุณเรย์', position: 'General Manager', level: 6, depts: [] },
+  { id: 'U005', name: 'บีม', position: 'QAQC Supervisor', level: 4, depts: ['QA'] },
+  { id: 'U006', name: 'รัตนพล', position: 'Engineering Supervisor', level: 4, depts: ['EN'] },
+  { id: 'U007', name: 'ชัยวัฒน์', position: 'Engineering Assistant Manager', level: 5, depts: ['EN'] },
+  { id: 'U008', name: 'คุณกิต', position: 'Finance Director', level: 7, depts: [] },
+  { id: 'U009', name: 'คุณนัท', position: 'Managing Director', level: 8, depts: [] }
+];
+
+export const REQUEST_MASTER_DATA_USER = MASTER_DATA_USER.map(u => ({ id: u.id, name: u.name, depts: u.depts }));
+export const REVIEW_MASTER_DATA_USER = MASTER_DATA_USER.map(u => ({ id: u.id, name: u.name, depts: u.depts }));
+export const APPROVE_MASTER_DATA_USER = MASTER_DATA_USER.map(u => ({ id: u.id, name: u.name, depts: u.depts }));
+
+// Combine mock lists
+const MOCK_DOC_FORMATS = [
+  { id: 1, format: 'WI-[YY]-[RUN_NO]' },
+  { id: 2, format: 'MN-[YY]-[RUN_NO]' },
+];
+
+const MOCK_DARS = [];
+
+const MOCK_TASKS = [];
+
+const MOCK_TIMELINE = [];
+
+// Helper to calculate days from today
+const getOffsetDate = (days) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+};
+
+const MOCK_DOCUMENTS = [];
+
+const MOCK_CONTROLLED_COPY_INSTANCES = [];
+
+export const calculateSLAStatus = (effectiveDate, currentDate) => {
+  if (!effectiveDate) return 'NORMAL';
+  
+  const eff = new Date(effectiveDate);
+  eff.setHours(0,0,0,0);
+  const cur = new Date(currentDate);
+  cur.setHours(0,0,0,0);
+  
+  const diffTime = eff.getTime() - cur.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 'OVERDUE';
+  if (diffDays <= 3) return 'DUE_SOON';
+  return 'NORMAL';
+};
+
+// ================= STORE ================= //
+const useStore = create(persist((set, get) => ({
+  masterUsers: MASTER_DATA_USER,
+  requestUsers: REQUEST_MASTER_DATA_USER,
+  reviewUsers: REVIEW_MASTER_DATA_USER,
+  approveUsers: APPROVE_MASTER_DATA_USER,
+  docFormats: MOCK_DOC_FORMATS,
+  dars: MOCK_DARS,
+  tasks: MOCK_TASKS,
+  timeline: MOCK_TIMELINE,
+  documents: MOCK_DOCUMENTS,
+  externalDocuments: [],
+  externalAuditTrail: [],
+  notifications: [],
+  controlledCopyInstances: MOCK_CONTROLLED_COPY_INSTANCES,
+  controlledCopyAuditTrail: [],
+  mockDateOffset: 0, // Used to simulate passing days for SLA testing
+  
+  setMockDateOffset: (days) => set({ mockDateOffset: days }),
+
+  // Default user is PD Supervisor (U002)
+  currentUser: { ...MASTER_DATA_USER[1], department: 'PD', depts: ['PD'] },
+  
+  setCurrentUser: (userId) => set((state) => {
+    const baseUser = state.masterUsers.find(u => u.id === userId);
+    if (!baseUser) return state;
+    
+    // Find departments from any of the lists
+    const req = state.requestUsers.find(u => u.id === userId);
+    const rev = state.reviewUsers.find(u => u.id === userId);
+    const app = state.approveUsers.find(u => u.id === userId);
+    const depts = req?.depts || rev?.depts || app?.depts || baseUser.depts || [];
+
+    // The primary active department is the first one, or 'QA' as fallback if empty
+    return { currentUser: { ...baseUser, department: depts[0] || 'QA', depts } };
+  }),
+
+  addNotification: (userId, title, message, link) => set(state => ({
+    notifications: [{ id: Date.now() + Math.random(), userId, title, message, isRead: false, link, timestamp: new Date().toISOString() }, ...state.notifications]
+  })),
+  markNotificationAsRead: (id) => set(state => ({
+    notifications: state.notifications.map(n => n.id === id ? { ...n, isRead: true } : n)
+  })),
+  markAllNotificationsAsRead: (userId) => set(state => ({
+    notifications: state.notifications.map(n => n.userId === userId ? { ...n, isRead: true } : n)
+  })),
+  
+  registerExternalDoc: (doc) => set((state) => {
+    const newId = `EXT-${Date.now()}`;
+    let initialStatus = 'ACTIVE';
+    let newTasks = [...state.tasks];
+    let newNotifications = [...state.notifications];
+    
+    if (doc.reviewerId) {
+      initialStatus = 'PENDING_EXT_REVIEW';
+      newTasks.push({
+        id: `extt-${Date.now()}-rev`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: newId,
+        title: doc.title,
+        type: 'EXT_REVIEW',
+        assigneeId: doc.reviewerId,
+        status: 'PENDING'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: doc.reviewerId, title: 'งานใหม่รอการตรวจสอบ', message: `เอกสารภายนอก "${doc.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    } else if (doc.approverId) {
+      initialStatus = 'PENDING_EXT_APPROVAL';
+      newTasks.push({
+        id: `extt-${Date.now()}-app`,
+        referenceType: 'EXTERNAL_DOC',
+        referenceId: newId,
+        title: doc.title,
+        type: 'EXT_APPROVAL',
+        assigneeId: doc.approverId,
+        status: 'PENDING'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    }
+    
+    // Ack tasks can be generated now or after approval. BRS usually requires Ack after Active, 
+    // but for simplicity here we generate them immediately if the status goes ACTIVE, 
+    // or we'll handle Ack in the final approval step.
+    if (initialStatus === 'ACTIVE' && doc.acknowledgees && doc.acknowledgees.length > 0) {
+      doc.acknowledgees.forEach(uid => {
+        newTasks.push({
+          id: `extt-${Date.now()}-ack-${uid}`,
+          referenceType: 'EXTERNAL_DOC',
+          referenceId: newId,
+          title: doc.title,
+          type: 'Ack',
+          assigneeId: uid,
+          status: 'PENDING'
+        });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `เอกสารภายนอก "${doc.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+      });
+    }
+
+    return {
+      externalDocuments: [{ ...doc, id: newId, status: initialStatus, ownerId: state.currentUser.id }, ...state.externalDocuments],
+      tasks: newTasks,
+      notifications: newNotifications,
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: newId,
+        action: 'REGISTER',
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: `Registered external document (Status: ${initialStatus})`
+      }, ...state.externalAuditTrail]
+    };
+  }),
+
+  updateExternalDoc: (id, updates) => set((state) => ({
+    externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, ...updates } : d),
+    externalAuditTrail: [{
+      id: `EXTA-${Date.now()}`,
+      docId: id,
+      action: 'UPDATE',
+      actor: state.currentUser.name,
+      actorId: state.currentUser.id,
+      date: new Date().toISOString(),
+      details: 'Updated external document'
+    }, ...state.externalAuditTrail]
+  })),
+
+  withdrawExternalDoc: (id, reason) => set((state) => {
+    const remainingTasks = state.tasks.filter(t => t.referenceId !== id);
+    return {
+      externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, status: 'WITHDRAWN' } : d),
+      tasks: remainingTasks,
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: id,
+        action: 'WITHDRAW',
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: reason || 'Withdrawn'
+      }, ...state.externalAuditTrail]
+    };
+  }),
+
+  reviseExternalDoc: (id, updates) => set((state) => {
+    const oldDoc = state.externalDocuments.find(d => d.id === id);
+    if (!oldDoc) return state;
+
+    const currentRevNum = parseInt(oldDoc.rev, 10) || 0;
+    const newRevNum = currentRevNum + 1;
+    const newRevStr = newRevNum < 10 ? `0${newRevNum}` : `${newRevNum}`;
+    
+    const newId = `EXT-${Date.now()}`;
+    const newDoc = {
+      ...oldDoc,
+      ...updates,
+      id: newId,
+      rev: newRevStr,
+      status: 'ACTIVE'
+    };
+
+    const newNotification = { id: Date.now() + Math.random(), userId: oldDoc.ownerId || state.currentUser.id, title: 'อัปเดตเอกสารภายนอก', message: `เอกสารภายนอก "${newDoc.title}" ถูกอัปเดตเป็น Rev.${newRevStr} แล้ว`, isRead: false, link: '/external-docs', timestamp: new Date().toISOString() };
+
+    return {
+      externalDocuments: [newDoc, ...state.externalDocuments.map(d => d.id === id ? { ...d, status: 'OBSOLETE_ARCHIVED' } : d)],
+      notifications: [newNotification, ...state.notifications],
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: newId,
+        action: 'REVISE',
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: `Created new revision ${newRevStr} from ${oldDoc.rev}`
+      }, ...state.externalAuditTrail]
+    };
+  }),
+
+  obsoleteExternalDoc: (id, reason) => set((state) => {
+    const oldDoc = state.externalDocuments.find(d => d.id === id);
+    if (!oldDoc) return state;
+
+    const remainingTasks = state.tasks.filter(t => t.referenceId !== id);
+    
+    const newNotification = { id: Date.now() + Math.random(), userId: oldDoc.ownerId || state.currentUser.id, title: 'ยกเลิกเอกสารภายนอก', message: `เอกสารภายนอก "${oldDoc.title}" ถูกยกเลิกแล้ว`, isRead: false, link: '/external-docs', timestamp: new Date().toISOString() };
+
+    return {
+      externalDocuments: state.externalDocuments.map(d => d.id === id ? { ...d, status: 'OBSOLETE_ARCHIVED' } : d),
+      tasks: remainingTasks,
+      notifications: [newNotification, ...state.notifications],
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: id,
+        action: 'OBSOLETE',
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: reason || 'Document marked as obsolete'
+      }, ...state.externalAuditTrail]
+    };
+  }),
+
+  logExternalDownload: (id) => set((state) => ({
+    externalAuditTrail: [{
+      id: `EXTA-${Date.now()}`,
+      docId: id,
+      action: 'DOWNLOAD',
+      actor: state.currentUser.name,
+      actorId: state.currentUser.id,
+      date: new Date().toISOString(),
+      details: 'Downloaded confidential document'
+    }, ...state.externalAuditTrail]
+  })),
+
+  processExternalTask: (taskId, action, comment) => set((state) => {
+    const taskIndex = state.tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return state;
+    
+    const task = state.tasks[taskIndex];
+    const docIndex = state.externalDocuments.findIndex(d => d.id === task.referenceId);
+    if (docIndex === -1) return state;
+    
+    const doc = state.externalDocuments[docIndex];
+    let newDocStatus = doc.status;
+    let newTasks = state.tasks.filter(t => t.id !== taskId);
+    let newNotifications = [...state.notifications];
+    
+    if (action === 'APPROVE') {
+      if (task.type === 'EXT_REVIEW' || task.type === 'Review') {
+        if (doc.approverId) {
+          newDocStatus = 'PENDING_EXT_APPROVAL';
+          newTasks.push({
+            id: `extt-${Date.now()}-app`,
+            referenceType: 'EXTERNAL_DOC',
+            referenceId: doc.id,
+            title: doc.title,
+            type: 'EXT_APPROVAL',
+            assigneeId: doc.approverId,
+            status: 'PENDING'
+          });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: doc.approverId, title: 'งานใหม่รอการอนุมัติ', message: `เอกสารภายนอก "${doc.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        } else {
+          newDocStatus = 'ACTIVE';
+        }
+      } else if (task.type === 'EXT_APPROVAL' || task.type === 'Approve') {
+        newDocStatus = 'ACTIVE';
+      } else if (task.type === 'Ack') {
+        // Ack doesn't change doc status
+      }
+    } else if (action === 'REJECT') {
+      newDocStatus = 'DRAFT';
+      // Clear all other pending tasks for this doc
+      newTasks = newTasks.filter(t => t.referenceId !== doc.id);
+    }
+    
+    // Generate Ack tasks if it just became ACTIVE
+    if (newDocStatus === 'ACTIVE' && doc.status !== 'ACTIVE' && doc.acknowledgees && doc.acknowledgees.length > 0) {
+      doc.acknowledgees.forEach(uid => {
+        newTasks.push({
+          id: `extt-${Date.now()}-ack-${uid}`,
+          referenceType: 'EXTERNAL_DOC',
+          referenceId: doc.id,
+          title: doc.title,
+          type: 'Ack',
+          assigneeId: uid,
+          status: 'PENDING'
+        });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `เอกสารภายนอก "${doc.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+      });
+    }
+
+    const updatedDocs = [...state.externalDocuments];
+    updatedDocs[docIndex] = { ...doc, status: newDocStatus };
+
+    return {
+      tasks: newTasks,
+      notifications: newNotifications,
+      externalDocuments: updatedDocs,
+      externalAuditTrail: [{
+        id: `EXTA-${Date.now()}`,
+        docId: doc.id,
+        action: `TASK_${action}_${task.type.toUpperCase()}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString(),
+        details: comment || `Processed external task (${task.type})`
+      }, ...state.externalAuditTrail]
+    };
+  }),
+
+  addDar: (dar) => set((state) => {
+    // Generate new ID DARXX-MM-YY
+    const date = new Date();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    // Find highest running number for this month
+    const prefix = `DAR`;
+    const suffix = `-${mm}-${yy}`;
+    
+    const existingDarsThisMonth = state.dars.filter(d => d.id.endsWith(suffix));
+    let nextRun = 1;
+    if (existingDarsThisMonth.length > 0) {
+       const runNums = existingDarsThisMonth.map(d => parseInt(d.id.replace(prefix, '').split('-')[0]));
+       nextRun = Math.max(...runNums) + 1;
+    }
+    const newDarId = `${prefix}${String(nextRun).padStart(2, '0')}${suffix}`;
+    
+    // Ensure distributions array is present
+    const distributions = dar.distributions || [];
+    
+    const newDar = { ...dar, id: newDarId, distributions };
+
+    if (newDar.type === 'NEW' || newDar.type === 'NEW_DOCUMENT') {
+      const docPrefix = `${newDar.docType}-${newDar.department}-`;
+      const existingDocs = state.documents.filter(d => d.title.startsWith(docPrefix));
+      const existingDars = state.dars.filter(d => (d.type === 'NEW' || d.type === 'NEW_DOCUMENT') && d.docIdInput && d.docIdInput.startsWith(docPrefix));
+      
+      let maxSeq = 0;
+      existingDocs.forEach(d => {
+        const seqStr = d.title.replace(docPrefix, '');
+        const seq = parseInt(seqStr, 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      });
+      existingDars.forEach(d => {
+        const seqStr = d.docIdInput.replace(docPrefix, '');
+        const seq = parseInt(seqStr, 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      });
+      
+      newDar.docIdInput = `${docPrefix}${String(maxSeq + 1).padStart(3, '0')}`;
+    }
+
+    // When a DAR is added, it needs a Reviewer assigned from the same department
+    // Criteria: candidate.level > requester.level (Nearest Higher)
+    let reviewerObj = null;
+    if (!newDar.manualReviewerId) {
+      reviewerObj = resolveReviewer(newDar.requesterId, newDar.department, state.masterUsers, state.reviewUsers);
+    } else {
+      const u = state.masterUsers.find(m => m.id === newDar.manualReviewerId);
+      if (u) reviewerObj = { id: u.id, level: u.level, dept: newDar.department };
+    }
+
+    const today = new Date();
+    today.setDate(today.getDate() + state.mockDateOffset);
+    const dueDateStr = new Date(today.getTime() + 3*24*60*60*1000).toISOString().split('T')[0];
+    const cancelDateStr = new Date(today.getTime() + 4*24*60*60*1000).toISOString().split('T')[0];
+
+    let newTasks = [...state.tasks];
+    let newNotifications = [...state.notifications];
+    let realStatus = dar.isDraft ? 'DRAFT' : 'UNDER_REVIEW';
+
+    if (!dar.isDraft) {
+      if (reviewerObj) {
+        newTasks.push({
+          id: `t-${Date.now()}`,
+          referenceType: 'INTERNAL_DAR', referenceId: newDar.id,
+          darId: newDar.id,
+          title: newDar.title,
+          type: 'Review',
+          assigneeId: reviewerObj.id,
+          currentHandlerDepartment: reviewerObj.dept,
+          currentHandlerLevel: reviewerObj.level,
+          dueDate: dueDateStr,
+          cancelDate: cancelDateStr,
+          status: 'NORMAL'
+        });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: reviewerObj.id, title: 'งานใหม่รอการตรวจสอบ', message: `DAR "${newDar.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+      } else {
+        // Skip Review -> PENDING_APPROVAL
+        realStatus = 'PENDING_APPROVAL';
+        let approverObj = null;
+        if (!newDar.manualApproverId) {
+          approverObj = resolveApprover(newDar.requesterId, newDar.requesterId, newDar.department, state.masterUsers, state.approveUsers);
+        } else {
+          const u = state.masterUsers.find(m => m.id === newDar.manualApproverId);
+          if (u) approverObj = { id: u.id, level: u.level, dept: newDar.department };
+        }
+        
+        if (approverObj) {
+          newTasks.push({
+            id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: newDar.id, darId: newDar.id, title: newDar.title, type: 'Approve', assigneeId: approverObj.id,
+            currentHandlerDepartment: approverObj.dept, currentHandlerLevel: approverObj.level,
+            dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+          });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: approverObj.id, title: 'งานใหม่รอการอนุมัติ', message: `DAR "${newDar.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        } else {
+          realStatus = dar.ackRequirement === 'REQUIRED' ? 'WAITING_ACKNOWLEDGEMENT' : 'APPROVED_WAITING_EFFECTIVE';
+          if (realStatus === 'WAITING_ACKNOWLEDGEMENT' && dar.ackUserIds?.length > 0) {
+            dar.ackUserIds.forEach(uid => {
+              newTasks.push({
+                id: `t-${Date.now()}-${uid}`, referenceType: 'INTERNAL_DAR', referenceId: newDar.id, darId: newDar.id, title: newDar.title, type: 'Ack', assigneeId: uid, 
+                dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+              });
+              newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${newDar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+            });
+          }
+        }
+      }
+    }
+
+    return { 
+      dars: [...state.dars, { ...newDar, status: realStatus }],
+      tasks: newTasks,
+      notifications: newNotifications,
+      timeline: [...state.timeline, { 
+        id: Date.now(), darId: newDar.id, action: 'Created', user: state.currentUser.name, date: new Date().toLocaleString(), comment: 'Submitted request' 
+      }]
+    };
+  }),
+
+  processWorkflow: (taskId, action, comment) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return state;
+
+    const dar = state.dars.find(d => d.id === task.darId);
+    if (!dar) return state;
+
+    const newTasks = state.tasks.filter(t => t.id !== taskId);
+    let newStatus = dar.status;
+
+    const today = new Date();
+    today.setDate(today.getDate() + state.mockDateOffset);
+    const dueDateStr = new Date(today.getTime() + 3*24*60*60*1000).toISOString().split('T')[0];
+    const cancelDateStr = new Date(today.getTime() + 4*24*60*60*1000).toISOString().split('T')[0];
+
+    let newNotifications = [...state.notifications];
+
+    if (task.type === 'Review') {
+      if (action === 'APPROVE') {
+        newStatus = 'PENDING_APPROVAL';
+        
+        // Find Approver (Rule: candidate.level > reviewer.level, Nearest Higher)
+        let approverObj = null;
+        if (!dar.manualApproverId) {
+          approverObj = resolveApprover(dar.requesterId, task.assigneeId, dar.department, state.masterUsers, state.approveUsers);
+        } else {
+          const u = state.masterUsers.find(m => m.id === dar.manualApproverId);
+          if (u) approverObj = { id: u.id, level: u.level, dept: dar.department };
+        }
+
+        if (approverObj) {
+          newTasks.push({
+            id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Approve', assigneeId: approverObj.id, 
+            currentHandlerDepartment: approverObj.dept, currentHandlerLevel: approverObj.level,
+            dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+          });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: approverObj.id, title: 'งานใหม่รอการอนุมัติ', message: `DAR "${dar.title}" รอการอนุมัติจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+        } else {
+          newStatus = dar.ackRequirement === 'REQUIRED' ? 'WAITING_ACKNOWLEDGEMENT' : 'APPROVED_WAITING_EFFECTIVE';
+          if (newStatus === 'WAITING_ACKNOWLEDGEMENT' && dar.ackUserIds?.length > 0) {
+            dar.ackUserIds.forEach(uid => {
+              newTasks.push({
+                id: `t-${Date.now()}-${uid}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
+                dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+              });
+              newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+            });
+          }
+        }
+      } else if (action === 'RETURN') {
+        newStatus = 'RETURNED_FOR_REVISION';
+        newTasks.push({
+          id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
+          dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+        });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+      }
+    } else if (task.type === 'Approve') {
+      if (action === 'APPROVE') {
+        newStatus = dar.ackRequirement === 'REQUIRED' ? 'WAITING_ACKNOWLEDGEMENT' : 'APPROVED_WAITING_EFFECTIVE';
+        if (newStatus === 'WAITING_ACKNOWLEDGEMENT' && dar.ackUserIds?.length > 0) {
+          dar.ackUserIds.forEach(uid => {
+            newTasks.push({
+              id: `t-${Date.now()}-${uid}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Ack', assigneeId: uid, 
+              dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+            });
+            newNotifications.push({ id: Date.now() + Math.random(), userId: uid, title: 'โปรดรับทราบเอกสาร', message: `DAR "${dar.title}" บังคับใช้แล้ว โปรดรับทราบ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+          });
+        }
+      } else if (action === 'RETURN') {
+        newStatus = 'RETURNED_FOR_REVISION';
+        newTasks.push({
+          id: `t-${Date.now()}`, referenceType: 'INTERNAL_DAR', referenceId: dar.id, darId: dar.id, title: dar.title, type: 'Revise', assigneeId: dar.requesterId, 
+          dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+        });
+        newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'DAR ถูกส่งกลับแก้ไข', message: `DAR "${dar.title}" ถูกส่งกลับให้คุณแก้ไข`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+      } else if (action === 'REJECT') {
+        newStatus = 'REJECTED';
+      }
+    } else if (task.type === 'Ack') {
+      if (action === 'ACKNOWLEDGE') {
+        // Check if there are other pending Ack tasks for this DAR
+        const remainingAcks = newTasks.filter(t => t.darId === dar.id && t.type === 'Ack');
+        if (remainingAcks.length === 0) {
+          newStatus = 'APPROVED_WAITING_EFFECTIVE';
+        }
+      }
+    }
+
+    const updatedDars = state.dars.map(d => d.id === dar.id ? { ...d, status: newStatus } : d);
+    
+    let timelineActionLabel = action;
+    if (action === 'APPROVE') {
+      timelineActionLabel = task.type === 'Review' ? 'Reviewed' : 'Approved';
+    } else if (action === 'RETURN') {
+      timelineActionLabel = 'Returned for Revision';
+    } else if (action === 'REJECT') {
+      timelineActionLabel = 'Rejected';
+    } else if (action === 'ACKNOWLEDGE') {
+      timelineActionLabel = 'Acknowledged';
+    }
+
+    const newTimeline = [...state.timeline, {
+      id: Date.now(), darId: dar.id, action: timelineActionLabel, user: state.currentUser.name, date: new Date().toLocaleString(), comment: comment || '-', isChat: false, userId: state.currentUser.id
+    }];
+
+    return {
+      tasks: newTasks,
+      notifications: newNotifications,
+      dars: updatedDars,
+      timeline: newTimeline
+    };
+  }),
+
+  resubmitDar: (darId, updatedData, taskId) => set((state) => {
+    const dar = state.dars.find(d => d.id === darId);
+    if (!dar) return state;
+
+    const newTasks = state.tasks.filter(t => t.id !== taskId);
+    const updatedDars = state.dars.map(d => d.id === darId ? { ...d, ...updatedData, status: 'UNDER_REVIEW' } : d);
+    let newNotifications = [...state.notifications];
+
+    // Re-assign Reviewer
+    const assignedReviewerId = resolveReviewer(dar.requesterId, dar.department, state.masterUsers, state.reviewUsers);
+
+    if (assignedReviewerId) {
+      const today = new Date();
+      today.setDate(today.getDate() + state.mockDateOffset);
+      newTasks.push({
+        id: `t-${Date.now()}`,
+        referenceType: 'INTERNAL_DAR', referenceId: dar.id,
+        darId: dar.id,
+        title: updatedData.title || dar.title,
+        type: 'Review',
+        assigneeId: assignedReviewerId,
+        dueDate: new Date(today.getTime() + 3*24*60*60*1000).toISOString().split('T')[0],
+        cancelDate: new Date(today.getTime() + 4*24*60*60*1000).toISOString().split('T')[0],
+        status: 'NORMAL'
+      });
+      newNotifications.push({ id: Date.now() + Math.random(), userId: assignedReviewerId, title: 'งานใหม่รอการตรวจสอบ', message: `DAR "${updatedData.title || dar.title}" ถูกส่งมาใหม่ รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString() });
+    }
+
+    return {
+      dars: updatedDars,
+      tasks: newTasks,
+      notifications: newNotifications,
+      timeline: [...state.timeline, {
+        id: Date.now(), darId: dar.id, action: 'Resubmitted', user: state.currentUser.name, date: new Date().toLocaleString(), comment: 'Resubmitted after revision'
+      }]
+    };
+  }),
+
+  simulatedDate: new Date().toISOString().split('T')[0],
+  
+  simulateNextDay: () => {
+    set((state) => {
+      const current = new Date(state.simulatedDate);
+      current.setDate(current.getDate() + 1);
+      return { simulatedDate: current.toISOString().split('T')[0] };
+    });
+    useStore.getState().checkSLA(); // Trigger engine
+  },
+
+  // Auto-evaluation engine (runs on every tick/app load)
+  checkSLA: () => set((state) => {
+    const todayStr = state.simulatedDate;
+    const today = new Date(todayStr);
+
+    // 1. Check DAR Overdue Cancellation
+    const activeStatuses = ['DRAFT', 'UNDER_REVIEW', 'PENDING_APPROVAL', 'RETURNED_FOR_REVISION', 'WAITING_ACKNOWLEDGEMENT'];
+    const tasksToCheck = state.tasks.filter(t => t.referenceType !== 'EXTERNAL_DOC');
+    
+    // Only internal DARs are subject to this SLA cancellation (BR-TASK-004)
+    const darIdsToCancel = state.dars
+      .filter(d => activeStatuses.includes(d.status))
+      .filter(d => calculateSLAStatus(d.effectiveDate, todayStr) === 'OVERDUE')
+      .map(d => d.id);
+    
+    // Recalculate Task Status colors based on parent DAR's SLA
+    const newTasks = state.tasks.filter(t => !darIdsToCancel.includes(t.darId)).map(t => {
+      const dar = state.dars.find(d => d.id === t.darId);
+      const sla = dar && activeStatuses.includes(dar.status) ? calculateSLAStatus(dar.effectiveDate, todayStr) : 'NORMAL';
+      return { ...t, status: sla };
+    });
+
+    let newDars = state.dars.map(d => darIdsToCancel.includes(d.id) ? { ...d, status: 'CANCELLED_OVERDUE' } : d);
+    let newDocuments = [...state.documents];
+    const newTimeline = [...state.timeline];
+
+    darIdsToCancel.forEach(darId => {
+      newTimeline.push({
+        id: Date.now() + Math.random(), darId, action: 'System Cancel', user: 'System (SLA Engine)', date: new Date().toLocaleString(), comment: 'Auto-cancelled due to Overdue Effective Date'
+      });
+    });
+
+    // 2. Check Automatic Lifecycle Execution (No DCC Publish)
+    const waitingEffectiveDars = newDars.filter(d => d.status === 'APPROVED_WAITING_EFFECTIVE' && d.effectiveDate <= todayStr);
+    
+    let newControlledCopyInstances = [...state.controlledCopyInstances];
+    let newAuditTrail = [...state.controlledCopyAuditTrail];
+    let newNotifications = [...state.notifications];
+    
+    if (waitingEffectiveDars.length > 0) {
+      waitingEffectiveDars.forEach(dar => {
+        // Mark DAR as completed
+        newDars = newDars.map(d => d.id === dar.id ? { ...d, status: 'COMPLETED' } : d);
+        
+        // Generate document entries
+        if (dar.type === 'NEW' || dar.type === 'NEW_DOCUMENT') {
+          const newDoc = {
+            id: `doc-${Date.now()}-${Math.random()}`,
+            darId: dar.id,
+            title: dar.docIdInput || 'TBD',
+            name: dar.title,
+            status: 'EFFECTIVE',
+            rev: '00',
+            department: dar.department,
+            controlledCopy: 0,
+            effectiveDate: dar.effectiveDate || todayStr,
+            distributions: dar.distributions || []
+          };
+          newDocuments.push(newDoc);
+          newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'เอกสารบังคับใช้แล้ว', message: `เอกสารใหม่ "${dar.title}" มีผลบังคับใช้แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
+
+          // Auto-generate Controlled Copies for distributions
+          if (newDoc.distributions && newDoc.distributions.length > 0) {
+              
+              // Create Task for DCC to distribute
+              newTasks.push({
+                id: `task-dist-${Date.now()}-${Math.random()}`,
+                title: `แจกจ่ายเอกสาร Controlled Copy (NEW)`,
+                description: `กรุณาพิมพ์และแจกจ่ายสำเนาควบคุมสำหรับเอกสาร ${newDoc.title} จำนวน ${newDoc.distributions.length} แผนก`,
+                type: 'DCC_DISTRIBUTE',
+                status: 'PENDING',
+                assigneeId: 'U001',
+                dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                priority: 'HIGH',
+                darId: dar.id
+              });
+
+              newDoc.distributions.forEach((dist, idx) => {
+              const deptName = dist.departmentId || dist.dept;
+              const nextCcNum = `CC-${String(idx + 1).padStart(3, '0')}`;
+              const newInst = {
+                id: `inst-${Date.now()}-${idx}`,
+                docId: newDoc.id,
+                docTitle: newDoc.title,
+                docName: newDoc.name,
+                rev: newDoc.rev,
+                ccNumber: nextCcNum,
+                department: deptName,
+                issueNumber: 'I01',
+                status: 'PENDING_RECEIPT',
+                dateIssued: todayStr
+              };
+              newControlledCopyInstances.push(newInst);
+              
+              newAuditTrail.push({
+                id: `audit-${Date.now()}-${idx}`,
+                timestamp: new Date().toISOString(),
+                user: 'System (SLA Engine)',
+                action: 'AUTO_GENERATE',
+                docTitle: newInst.docTitle,
+                docRev: newInst.rev,
+                ccNumber: newInst.ccNumber,
+                oldStatus: '-',
+                newStatus: newInst.status,
+                remarks: `Auto-generated CC for ${dist.dept} department upon document effective`
+              });
+            });
+          }
+        } else if (dar.type === 'REVISION') {
+          // Find old revision
+          const oldDoc = newDocuments.find(doc => doc.id === dar.docIdRef && doc.status === 'EFFECTIVE');
+          if (oldDoc) {
+             // Archive old revision
+             newDocuments = newDocuments.map(doc => doc.id === oldDoc.id ? { ...doc, status: 'SUPERSEDED_ARCHIVED' } : doc);
+             
+             // Create new revision
+             const currentRevNum = parseInt(oldDoc.rev, 10) || 0;
+             const newRevNum = currentRevNum + 1;
+             const newRevStr = newRevNum < 10 ? `0${newRevNum}` : `${newRevNum}`;
+             
+             const newDoc = {
+               id: `doc-${Date.now()}-${Math.random()}`,
+               darId: dar.id,
+               title: oldDoc.title,
+               name: dar.title || oldDoc.name,
+               status: 'EFFECTIVE',
+               rev: newRevStr,
+               department: dar.department,
+               controlledCopy: oldDoc.controlledCopy || 0,
+               effectiveDate: dar.effectiveDate || todayStr,
+               distributions: dar.distributions && dar.distributions.length > 0 ? dar.distributions : (oldDoc.distributions || [])
+             };
+             newDocuments.push(newDoc);
+             newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'ฉบับปรับปรุงบังคับใช้แล้ว', message: `เอกสารปรับปรุง "${dar.title}" มีผลบังคับใช้เป็น Rev.${newDoc.rev} แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
+
+             // Auto-generate Controlled Copies for distributions
+             if (newDoc.distributions && newDoc.distributions.length > 0) {
+               
+               // Create Task for DCC to distribute
+               newTasks.push({
+                 id: `task-dist-${Date.now()}-${Math.random()}`,
+                 title: `แจกจ่ายเอกสาร Controlled Copy (Rev.${newDoc.rev})`,
+                 description: `กรุณาพิมพ์และแจกจ่ายสำเนาควบคุมสำหรับเอกสาร ${newDoc.title} จำนวน ${newDoc.distributions.length} แผนก`,
+                 type: 'DCC_DISTRIBUTE',
+                 status: 'PENDING',
+                 assigneeId: 'U001',
+                 dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                 priority: 'HIGH',
+                 darId: dar.id
+               });
+
+               // Create Task for DCC to recall old revision
+               newTasks.push({
+                 id: `task-recall-${Date.now()}-${Math.random()}`,
+                 title: `เรียกคืนเอกสาร Controlled Copy (Rev.${oldDoc.rev})`,
+                 description: `เอกสาร ${oldDoc.title} มีการอัปเดตเป็น Rev.${newDoc.rev} แล้ว กรุณาเรียกคืนเอกสารฉบับเก่า (Rev.${oldDoc.rev}) จากแผนกที่เกี่ยวข้อง`,
+                 type: 'DCC_RECALL',
+                 status: 'PENDING',
+                 assigneeId: 'U001',
+                 dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                 priority: 'HIGH',
+                 darId: dar.id
+               });
+
+               // Reset CC numbering for new revision
+               let maxCcNum = 0;
+               
+               newDoc.distributions.forEach((dist, idx) => {
+                 const deptName = dist.departmentId || dist.dept;
+                 maxCcNum += 1;
+                 const nextCcNum = `CC-${String(maxCcNum).padStart(3, '0')}`;
+                 const newInst = {
+                   id: `inst-${Date.now()}-${idx}`,
+                   docId: newDoc.id,
+                   docTitle: newDoc.title,
+                   docName: newDoc.name,
+                   rev: newDoc.rev,
+                   ccNumber: nextCcNum,
+                   department: deptName,
+                   issueNumber: 'I01',
+                   status: 'PENDING_RECEIPT',
+                   dateIssued: todayStr
+                 };
+                 newControlledCopyInstances.push(newInst);
+                 
+                 newAuditTrail.push({
+                   id: `audit-${Date.now()}-${idx}`,
+                   timestamp: new Date().toISOString(),
+                   user: 'System (SLA Engine)',
+                   action: 'AUTO_GENERATE',
+                   docTitle: newInst.docTitle,
+                   docRev: newInst.rev,
+                   ccNumber: newInst.ccNumber,
+                   oldStatus: '-',
+                   newStatus: newInst.status,
+                   remarks: `Auto-generated CC for ${dist.dept} department upon new revision effective`
+                 });
+               });
+             }
+          }
+        } else if (dar.type === 'OBSOLETE') {
+           newDocuments = newDocuments.map(doc => (doc.id === dar.docIdRef && doc.status === 'EFFECTIVE') ? { ...doc, status: 'OBSOLETE_ARCHIVED' } : doc);
+           newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'ยกเลิกเอกสารสำเร็จ', message: `เอกสาร "${dar.title}" ถูกยกเลิกและย้ายไปเก็บที่ Archive แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
+        }
+
+        newTimeline.push({
+          id: Date.now() + Math.random(), darId: dar.id, action: 'Auto Publish', user: 'System (Lifecycle Engine)', date: new Date().toLocaleString(), comment: 'Document changed to EFFECTIVE status automatically'
+        });
+      });
+    }
+
+    // Only update state if something changed
+    if (darIdsToCancel.length === 0 && waitingEffectiveDars.length === 0 && JSON.stringify(newTasks) === JSON.stringify(state.tasks)) {
+      return state;
+    }
+
+    return { 
+      tasks: newTasks, 
+      dars: newDars, 
+      documents: newDocuments, 
+      timeline: newTimeline,
+      controlledCopyInstances: newControlledCopyInstances,
+      controlledCopyAuditTrail: newAuditTrail,
+      notifications: newNotifications
+    };
+  }),
+
+  addComment: (darId, commentStr, user) => set((state) => {
+    const newTimeline = [...state.timeline, {
+      id: Date.now(), darId: darId, action: 'Comment', user: user.name, date: new Date().toLocaleString(), comment: commentStr, isChat: true, userId: user.id
+    }];
+    return { timeline: newTimeline };
+  }),
+
+  deleteDar: (darId) => set((state) => {
+    return {
+      dars: state.dars.filter(d => d.id !== darId),
+      tasks: state.tasks.filter(t => t.darId !== darId),
+      timeline: state.timeline.filter(t => t.darId !== darId)
+    };
+  }),
+
+  // Phase 1.5 Departmental Access Control
+  canAccessDocument: (userId, documentDept, distributions = []) => {
+    // We need to look up the user dynamically to get their updated properties
+    const user = MASTER_DATA_USER.find(u => u.id === userId);
+    if (!user) return false;
+    
+    if (documentDept === user.dept) return true;
+    if (distributions && distributions.some(d => d.dept === user.dept || d.departmentId === user.dept)) return true;
+    if (user.level >= 5) return true; // Global view for Asst. Manager and above
+    if (user.isDcc) return true; // DCC Admin view metadata
+    return false;
+  },
+  
+  canDownloadDocument: (doc, user) => {
+    // 100% View-Only for normal users. Only DCC can download.
+    return !!user.isDcc;
+  },
+
+  // --- CONTROLLED COPY METHODS ---
+  issueControlledCopy: (docTitle, dept) => set((state) => {
+    const doc = state.documents.find(d => d.title === docTitle && d.status === 'EFFECTIVE');
+    if (!doc) return state;
+
+    // Find next CC number for this doc
+    const existingCopies = state.controlledCopyInstances.filter(c => c.docTitle === docTitle);
+    const nextCcNum = `CC-${String(existingCopies.length + 1).padStart(3, '0')}`;
+
+    const newInst = {
+      id: `inst-${Date.now()}`,
+      docId: doc.id,
+      docTitle: doc.title,
+      docName: doc.name,
+      rev: doc.rev,
+      ccNumber: nextCcNum,
+      department: dept,
+      issueNumber: 'I01',
+      status: 'PENDING_RECEIPT',
+      dateIssued: new Date().toISOString().split('T')[0]
+    };
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: 'ISSUE_COPY',
+      docTitle: newInst.docTitle,
+      docRev: newInst.rev,
+      ccNumber: newInst.ccNumber,
+      oldStatus: '-',
+      newStatus: newInst.status,
+      remarks: `Issued new controlled copy to ${dept}`
+    };
+
+    return { 
+      controlledCopyInstances: [...state.controlledCopyInstances, newInst],
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail]
+    };
+  }),
+
+  confirmCcReceipt: (instId) => set((state) => {
+    const inst = state.controlledCopyInstances.find(i => i.id === instId);
+    if (!inst) return state;
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: 'CONFIRM_RECEIPT',
+      docTitle: inst.docTitle,
+      docRev: inst.rev,
+      ccNumber: inst.ccNumber,
+      oldStatus: inst.status,
+      newStatus: 'ACTIVE',
+      remarks: 'User confirmed receipt of document'
+    };
+
+    const newNotification = { id: Date.now() + Math.random(), userId: state.currentUser.id, title: 'รับเอกสารควบคุมสำเร็จ', message: `คุณได้ยืนยันการรับเอกสาร ${inst.ccNumber} (${inst.docTitle}) เรียบร้อยแล้ว`, isRead: false, link: '/controlled-copy', timestamp: new Date().toISOString() };
+
+    return {
+      controlledCopyInstances: state.controlledCopyInstances.map(i => 
+        i.id === instId ? { ...i, status: 'ACTIVE' } : i
+      ),
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      notifications: [newNotification, ...state.notifications]
+    };
+  }),
+
+  reportCcDamagedLost: (instId, type, reason) => set((state) => {
+    const inst = state.controlledCopyInstances.find(i => i.id === instId);
+    if (!inst) return state;
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: type === 'LOST' ? 'REPORT_LOST' : 'REPORT_DAMAGED',
+      docTitle: inst.docTitle,
+      docRev: inst.rev,
+      ccNumber: inst.ccNumber,
+      oldStatus: inst.status,
+      newStatus: 'REPLACEMENT_REQUESTED',
+      remarks: `User reported: ${reason}`
+    };
+
+    const newTask = {
+      id: `task-rep-${Date.now()}-${Math.random()}`,
+      title: `คำขอเอกสารควบคุมทดแทน: ${inst.ccNumber}`,
+      description: `แผนก ${inst.department} ขอสำเนาใหม่สำหรับเอกสาร ${inst.docTitle} เนื่องจาก ${type} (${reason})`,
+      taskType: 'CC_REPLACEMENT_APPROVAL',
+      type: 'CC_REPLACEMENT_APPROVAL', // Maintain compatibility with .type checks just in case
+      status: 'PENDING',
+      assignedToRole: 'DCC_ADMIN',
+      referenceId: inst.docId,
+      darId: inst.docId, // Also keep darId for compatibility
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      priority: 'HIGH'
+    };
+
+    return {
+      controlledCopyInstances: state.controlledCopyInstances.map(i => 
+        i.id === instId ? { ...i, status: 'REPLACEMENT_REQUESTED', reportType: type, reportReason: reason, reportRequesterName: state.currentUser.name, reportRequesterId: state.currentUser.id } : i
+      ),
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      tasks: [newTask, ...state.tasks]
+    };
+  }),
+
+  approveCcReplacement: (instId) => set((state) => {
+    const oldInst = state.controlledCopyInstances.find(i => i.id === instId);
+    if (!oldInst) return state;
+
+    // Update old instance status to LOST or DAMAGED
+    const updatedInstances = state.controlledCopyInstances.map(inst => 
+      inst.id === instId ? { ...inst, status: oldInst.reportType } : inst
+    );
+
+    // Instead of generating a new CC number, we keep the SAME CC number 
+    // but increment the Issue Number (e.g., I01 -> I02) to track reprints.
+    const currentIssue = parseInt(oldInst.issueNumber.replace('I', '')) || 1;
+    const nextIssue = `I${String(currentIssue + 1).padStart(2, '0')}`;
+    
+    const newInst = {
+      ...oldInst,
+      id: `inst-${Date.now()}`,
+      ccNumber: oldInst.ccNumber, // Keep the same CC Number
+      issueNumber: nextIssue,     // Increment Issue Number
+      status: 'PENDING_RECEIPT',
+      dateIssued: new Date().toISOString().split('T')[0],
+      reportType: undefined,
+      reportReason: undefined,
+      reportRequesterName: undefined,
+      reportRequesterId: undefined
+    };
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: 'APPROVE_REPLACEMENT',
+      docTitle: oldInst.docTitle,
+      docRev: oldInst.rev,
+      ccNumber: oldInst.ccNumber,
+      oldStatus: oldInst.status,
+      newStatus: oldInst.reportType,
+      remarks: `Approved replacement for ${oldInst.reportType}. Issue number updated to: ${nextIssue}`
+    };
+
+    // Broadcast Notification to the entire department
+    const targetUsers = state.masterUsers.filter(u => u.dept === oldInst.department);
+    const newNotifs = targetUsers.map(u => ({
+      id: `notif-${Date.now()}-${u.id}-${Math.random()}`,
+      userId: u.id,
+      title: 'อนุมัติคำขอเอกสารควบคุมทดแทน',
+      message: `Admin DCC ได้อนุมัติคำขอสำเนาควบคุมใหม่ (ขอโดย: ${oldInst.reportRequesterName || 'Unknown'}) สำหรับเอกสาร ${oldInst.docTitle}`,
+      isRead: false,
+      link: '/controlled-copy',
+      timestamp: new Date().toISOString()
+    }));
+
+    return { 
+      controlledCopyInstances: [...updatedInstances, newInst],
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      notifications: [...newNotifs, ...state.notifications]
+    };
+  }),
+
+  rejectCcReplacement: (instId) => set((state) => {
+    const inst = state.controlledCopyInstances.find(i => i.id === instId);
+    if (!inst) return state;
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: 'REJECT_REPLACEMENT',
+      docTitle: inst.docTitle,
+      docRev: inst.rev,
+      ccNumber: inst.ccNumber,
+      oldStatus: inst.status,
+      newStatus: 'ACTIVE',
+      remarks: `Rejected replacement request`
+    };
+
+    // Broadcast Notification to the entire department
+    const targetUsers = state.masterUsers.filter(u => u.dept === inst.department);
+    const newNotifs = targetUsers.map(u => ({
+      id: `notif-${Date.now()}-${u.id}-${Math.random()}`,
+      userId: u.id,
+      title: 'ปฏิเสธคำขอเอกสารควบคุมทดแทน',
+      message: `Admin DCC ได้ปฏิเสธคำขอสำเนาควบคุมใหม่ (ขอโดย: ${inst.reportRequesterName || 'Unknown'}) สำหรับเอกสาร ${inst.docTitle}`,
+      isRead: false,
+      link: '/controlled-copy',
+      timestamp: new Date().toISOString()
+    }));
+
+    return {
+      controlledCopyInstances: state.controlledCopyInstances.map(i => 
+        i.id === instId ? { ...i, status: 'ACTIVE', reportType: undefined, reportReason: undefined, reportRequesterName: undefined, reportRequesterId: undefined } : i
+      ),
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      notifications: [...newNotifs, ...state.notifications]
+    };
+  }),
+
+  recallControlledCopy: (instId) => set((state) => {
+    const inst = state.controlledCopyInstances.find(i => i.id === instId);
+    if (!inst) return state;
+
+    const auditLog = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      user: state.currentUser.name,
+      action: 'RECALL_COPY',
+      docTitle: inst.docTitle,
+      docRev: inst.rev,
+      ccNumber: inst.ccNumber,
+      oldStatus: inst.status,
+      newStatus: 'RECALLED',
+      remarks: `Recalled copy due to obsolescence or new revision`
+    };
+
+    return {
+      controlledCopyInstances: state.controlledCopyInstances.map(i => 
+        i.id === instId ? { ...i, status: 'RECALLED', dateRecalled: new Date().toISOString().split('T')[0] } : i
+      ),
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail]
+    };
+  }),
+
+  distributeDocument: (docId, deptId) => set((state) => {
+    let updatedDocs = [...state.documents];
+    const docIndex = updatedDocs.findIndex(d => d.id === docId);
+    
+    if (docIndex > -1) {
+      const doc = updatedDocs[docIndex];
+      const updatedDistributions = (doc.distributions || []).map(dist => {
+        const dId = dist.departmentId || dist.dept;
+        if (dId === deptId) {
+          return { ...dist, isDistributed: true, distributedAt: new Date().toISOString() };
+        }
+        return dist;
+      });
+      updatedDocs[docIndex] = { ...doc, distributions: updatedDistributions };
+    }
+    
+    return { documents: updatedDocs };
+  }),
+
+  distributeAllDocument: (docId) => set((state) => {
+    let updatedDocs = [...state.documents];
+    const docIndex = updatedDocs.findIndex(d => d.id === docId);
+    
+    if (docIndex > -1) {
+      const doc = updatedDocs[docIndex];
+      const updatedDistributions = (doc.distributions || []).map(dist => {
+        return { ...dist, isDistributed: true, distributedAt: new Date().toISOString() };
+      });
+      updatedDocs[docIndex] = { ...doc, distributions: updatedDistributions };
+    }
+    
+    return { documents: updatedDocs };
+  })
+}), {
+  name: 'qms-storage-uat-v2',
+  partialize: (state) => ({
+    currentUser: state.currentUser,
+    tasks: state.tasks,
+    notifications: state.notifications,
+    dars: state.dars,
+    timeline: state.timeline,
+    documents: state.documents,
+    externalDocuments: state.externalDocuments,
+    controlledCopyInstances: state.controlledCopyInstances,
+    controlledCopyAuditTrail: state.controlledCopyAuditTrail
+  })
+}));
+
+export default useStore;

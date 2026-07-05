@@ -50,7 +50,7 @@ const DARComments = ({ darId, requesterId }) => {
                   </div>
                 ) : (
                   <div className={`flex gap-2 max-w-[85%] ${alignRight ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <UserCircle className="w-8 h-8 text-gray-400  shrink-0" />
+                    <UserCircle className="text-gray-400 shrink-0" size={32} strokeWidth={1.25}/>
                     <div>
                       <div className={`flex items-baseline gap-2 mb-1 ${alignRight ? 'justify-end' : 'justify-start'}`}>
                         <span className="text-xs font-semibold text-gray-700 ">{item.user}</span>
@@ -82,7 +82,7 @@ const DARComments = ({ darId, requesterId }) => {
             disabled={!newComment.trim()}
             className="absolute right-1 top-1 p-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
           >
-            <Send className="w-4 h-4" />
+            <Send size={24} strokeWidth={1.25}/>
           </button>
         </form>
       </div>

@@ -32,7 +32,7 @@ const DistributionManager = ({ ownerDept, distributions = [], oldDistributions =
       <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-t-2xl">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100  rounded-lg">
-            <Settings className="w-5 h-5 text-blue-600 " />
+            <Settings className="text-blue-600" size={24} strokeWidth={1.25}/>
           </div>
           <div>
             <h3 className="font-semibold text-gray-800 ">Distribution Management</h3>
@@ -77,7 +77,7 @@ const DistributionManager = ({ ownerDept, distributions = [], oldDistributions =
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors
                   ${isSelected && !isRemoved ? 'bg-blue-500 text-white' : isRemoved ? 'bg-red-500 text-white' : 'bg-slate-100  text-slate-400 '}
                 `}>
-                  {isRemoved ? <X className="w-3.5 h-3.5" /> : <Check className={`w-3.5 h-3.5 ${isSelected ? 'opacity-100' : 'opacity-0'}`} />}
+                  {isRemoved ? <X className="w-3.5 h-3.5" size={24} strokeWidth={1.25}/> : <Check className={`w-3.5 h-3.5 ${isSelected ? 'opacity-100' : 'opacity-0'}`} size={24} strokeWidth={1.25}/>}
                 </div>
               </motion.div>
             );
@@ -86,15 +86,14 @@ const DistributionManager = ({ ownerDept, distributions = [], oldDistributions =
         
         {distributions.length === 0 && !oldDistributions && (
           <div className="mt-4 p-4 text-center text-gray-500  bg-gray-50  rounded-xl border border-dashed border-gray-300  flex flex-col items-center justify-center gap-2">
-            <ShieldAlert className="w-6 h-6 text-yellow-500 " />
+            <ShieldAlert className="text-yellow-500" size={28} strokeWidth={1.25}/>
             <p>ไม่ได้เลือกแผนกใดเลย (เอกสารจะถูกใช้งานเฉพาะแผนก {ownerDept} เท่านั้น)</p>
           </div>
         )}
 
         <div className="mt-6 p-4 bg-blue-50/50  rounded-xl border border-blue-100 ">
           <h4 className="text-sm font-semibold text-blue-800  mb-2 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            Centralized DCC Rules
+            <ShieldAlert size={20} strokeWidth={1.25}/> Centralized DCC Rules
           </h4>
           <ul className="text-sm text-blue-700/80  space-y-1 ml-6 list-disc">
             <li><strong>Soft Copy:</strong> ผู้ใช้งานแผนกที่เลือกจะสามารถดูเอกสารในรูปแบบ View-only (ลายน้ำสีน้ำเงิน) ผ่านระบบได้ทันทีเมื่อเอกสารประกาศใช้</li>

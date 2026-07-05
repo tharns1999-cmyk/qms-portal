@@ -15,7 +15,6 @@ import Viewer from './pages/Library/Viewer';
 
 import Reports from './pages/Admin/Reports';
 import ActionLog from './pages/Admin/ActionLog';
-import ComingSoon from './pages/Placeholders/ComingSoon';
 import ControlledCopyRegister from './pages/ControlledCopy/ControlledCopyRegister';
 import ExternalDocsList from './pages/ExternalDocs/ExternalDocsList';
 
@@ -63,7 +62,6 @@ function App() {
           <Route path="reports" element={<Reports />} />
 
           <Route path="controlled-copy" element={<ControlledCopyRegister />} />
-          <Route path="periodic-review" element={<ComingSoon title="Periodic Review" />} />
           <Route path="external-docs" element={<ExternalDocsList />} />
           <Route path="master-list" element={<MasterList />} />
 

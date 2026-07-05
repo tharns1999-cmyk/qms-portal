@@ -112,7 +112,7 @@ const MasterList = () => {
       <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800  flex items-center gap-2">
-            <Database className="w-6 h-6 text-indigo-600 " /> ทะเบียนเอกสารควบคุมหลัก (Master List Registry)
+            <Database className="text-indigo-600" size={28} strokeWidth={1.25}/> ทะเบียนเอกสารควบคุมหลัก (Master List Registry)
           </h2>
           <p className="text-gray-500  mt-1">ระบบคลังข้อมูลส่วนกลางสำหรับตรวจสอบและส่งออกทะเบียนเอกสาร</p>
         </div>
@@ -176,7 +176,7 @@ const MasterList = () => {
 
           <div className="flex items-center gap-2 relative flex-1 min-w-[200px]">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 " />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
               <input 
                 type="text"
                 placeholder="ค้นหารหัส หรือชื่อเอกสาร..."
@@ -195,7 +195,7 @@ const MasterList = () => {
               title="ล้างตัวกรอง"
               className="p-1.5 text-gray-400  hover:text-red-500  hover:bg-red-50/50 rounded-lg transition-all duration-300 ease-out active:scale-95"
             >
-              <FilterX className="w-4 h-4" />
+              <FilterX size={24} strokeWidth={1.25}/>
             </button>
           </div>
 
@@ -203,7 +203,7 @@ const MasterList = () => {
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-4 py-2 btn-ios-primary text-sm ml-auto !bg-green-600 hover:!bg-green-700"
           >
-            <Download className="w-4 h-4" /> Export to Excel
+            <Download size={20} strokeWidth={1.25}/> Export to Excel
           </button>
         </div>
       </div>
@@ -259,7 +259,7 @@ const MasterList = () => {
                         className="text-blue-500  hover:text-blue-700  p-1.5 bg-blue-50/50 hover:bg-blue-100 rounded-lg transition-all duration-300 ease-out active:scale-95"
                         title="Preview Document"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye size={24} strokeWidth={1.25}/>
                       </button>
                     </td>
                   </tr>
@@ -294,11 +294,11 @@ const MasterList = () => {
                 }}
                 className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-200/50 rounded-full transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X size={24} strokeWidth={1.25}/>
               </button>
             </div>
             <div className="flex-1 bg-gray-200/50 flex flex-col items-center justify-center p-8">
-              <FileText className="w-16 h-16 text-gray-400  mb-4 opacity-50" />
+              <FileText className="text-gray-400 mb-4 opacity-50" size={64} strokeWidth={1.25}/>
               <p className="text-gray-500  font-medium">PDF Preview Simulator</p>
               <p className="text-gray-400  text-sm mt-2">Displaying document: {previewDoc.id}</p>
             </div>

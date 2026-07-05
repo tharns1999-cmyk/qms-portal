@@ -63,9 +63,17 @@ const ControlledCopyRegister = () => {
     }, 500);
   };
 
+  const actionRequiredCount = useMemo(() => {
+    return controlledCopyInstances.filter(inst => {
+      const doc = documents.find(d => d.id === inst.docId);
+      const isRecall = doc && doc.status === 'SUPERSEDED_ARCHIVED' && inst.status === 'ACTIVE';
+      return inst.status === 'PENDING_RECEIPT' || inst.status === 'REPLACEMENT_REQUESTED' || isRecall;
+    }).length;
+  }, [controlledCopyInstances, documents]);
+
   // Tabs
   const tabs = [
-    { id: 'ACTION_REQUIRED', label: 'Action Required' },
+    { id: 'ACTION_REQUIRED', label: 'Action Required', count: actionRequiredCount },
     { id: 'ACTIVE', label: 'Active Copies' },
     { id: 'HISTORY', label: 'History & Register' },
     { id: 'AUDIT_TRAIL', label: 'Audit Trail' }
@@ -300,21 +308,21 @@ const ControlledCopyRegister = () => {
         <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
            <div className="flex justify-between items-start mb-2">
               <span className="text-gray-500 text-sm font-semibold">Active Copies</span>
-              <FileText className="w-5 h-5 text-emerald-500" />
+              <FileText className="text-emerald-500" size={24} strokeWidth={1.25}/>
            </div>
            <span className="text-3xl font-bold text-gray-800">{controlledCopyInstances.filter(i => i.status === 'ACTIVE').length}</span>
         </div>
         <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
            <div className="flex justify-between items-start mb-2">
               <span className="text-gray-500 text-sm font-semibold">Pending Distribution</span>
-              <Download className="w-5 h-5 text-indigo-500" />
+              <Download className="text-indigo-500" size={24} strokeWidth={1.25}/>
            </div>
            <span className="text-3xl font-bold text-indigo-700">{controlledCopyInstances.filter(i => i.status === 'PENDING_RECEIPT').length}</span>
         </div>
         <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
            <div className="flex justify-between items-start mb-2">
               <span className="text-gray-500 text-sm font-semibold">Pending Recall</span>
-              <RefreshCw className="w-5 h-5 text-orange-500" />
+              <RefreshCw className="text-orange-500" size={24} strokeWidth={1.25}/>
            </div>
            <span className="text-3xl font-bold text-orange-700">{
              controlledCopyInstances.filter(i => {
@@ -327,7 +335,7 @@ const ControlledCopyRegister = () => {
         <div className="premium-card bg-white p-5 border-none shadow-sm flex flex-col">
            <div className="flex justify-between items-start mb-2">
               <span className="text-gray-500 text-sm font-semibold">Replacement Requests</span>
-              <AlertTriangle className="w-5 h-5 text-rose-500" />
+              <AlertTriangle className="text-rose-500" size={24} strokeWidth={1.25}/>
            </div>
            <span className="text-3xl font-bold text-rose-700">{controlledCopyInstances.filter(i => i.status === 'REPLACEMENT_REQUESTED').length}</span>
         </div>
@@ -335,40 +343,64 @@ const ControlledCopyRegister = () => {
 
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xl shadow-gray-200/40">
         
-        {/* Tabs */}
-        <div className="flex border-b border-gray-100 bg-slate-50/50 px-2 pt-2 gap-2 overflow-x-auto hide-scrollbar">
-          {tabs.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-5 py-3 text-sm font-medium transition-all rounded-t-xl group whitespace-nowrap ${
-                  isActive ? 'text-indigo-700' : 'text-gray-500 hover:text-gray-800 hover:bg-white/50'
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="cc-tab"
-                    className="absolute inset-0 bg-white border-t border-x border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] rounded-t-xl z-0"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{tab.label}</span>
-                {isActive && <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white z-20"></div>}
-              </button>
-            );
-          })}
+        {/* Tabs & Search */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between border-b border-gray-200 bg-white px-4 pt-3 gap-4">
+          <div className="flex gap-6 overflow-x-auto hide-scrollbar w-full md:w-auto">
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative py-3 text-sm font-medium transition-all group whitespace-nowrap flex items-center gap-2 ${
+                    isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="relative z-10">{tab.label}</span>
+                  {tab.count > 0 && (
+                    <span className={`relative z-10 text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                      isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                  {isActive && (
+                    <motion.div
+                      layoutId="cc-tab-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-600 rounded-t-md z-0"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search bar integrated with tabs */}
+          {activeTab !== 'AUDIT_TRAIL' && (
+            <div className="relative w-full md:w-80 shrink-0 pb-2 md:pb-2 px-2 md:px-4">
+              <Search className="absolute left-5 md:left-7 top-[40%] md:top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
+              <input 
+                type="text"
+                placeholder="Search by Document No, CC Number, Dept..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setRegisterPage(1); }}
+                className="w-full pl-9 pr-10 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm shadow-sm"
+              />
+              {searchTerm && (
+                <button onClick={() => { setSearchTerm(''); setRegisterPage(1); }} className="absolute right-5 md:right-7 top-[40%] md:top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <X size={18} strokeWidth={1.25}/>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {activeTab === 'AUDIT_TRAIL' && (
           <div className="border-b border-gray-100 bg-gray-50/50 pb-4">
-            <h3 className="text-lg font-bold px-6 pt-6 pb-2 text-gray-800 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-indigo-500" /> Audit Trail (ประวัติการดำเนินการ)
-            </h3>
-            <div className="px-6 py-2 flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div className="px-6 pt-5 pb-3 flex flex-col md:flex-row gap-3 items-center justify-between">
               <div className="relative w-full md:w-96">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
                 <input 
                   type="text"
                   placeholder="Search by Doc No, CC No, User, Action..."
@@ -377,8 +409,8 @@ const ControlledCopyRegister = () => {
                   className="w-full pl-9 pr-10 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm shadow-sm"
                 />
                 {auditSearchTerm && (
-                  <button onClick={() => { setAuditSearchTerm(''); setAuditPage(1); }} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors">
-                    <X className="w-4 h-4" />
+                  <button onClick={() => { setAuditSearchTerm(''); setAuditPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                    <X size={18} strokeWidth={1.25}/>
                   </button>
                 )}
               </div>
@@ -386,7 +418,7 @@ const ControlledCopyRegister = () => {
                 onClick={handleExportCSV}
                 className="px-4 py-2 border border-slate-200 text-slate-700 bg-white rounded-lg hover:bg-slate-50 active:scale-[0.97] transition-all flex items-center gap-2 text-sm font-medium shadow-sm"
               >
-                <Download className="w-4 h-4" /> Export CSV
+                <Download size={20} strokeWidth={1.25}/> Export CSV
               </button>
             </div>
             
@@ -429,7 +461,7 @@ const ControlledCopyRegister = () => {
                   {currentAuditLogs.length === 0 && (
                     <tr>
                       <td colSpan="7" className="px-6 py-12 text-center">
-                        <div className="text-gray-300 mb-2 flex justify-center"><Layers className="w-10 h-10" /></div>
+                        <div className="text-gray-300 mb-2 flex justify-center"><Layers size={40} strokeWidth={1.25}/></div>
                         <p className="text-gray-400 font-medium">ไม่มีประวัติการดำเนินการ</p>
                       </td>
                     </tr>
@@ -447,14 +479,14 @@ const ControlledCopyRegister = () => {
                       disabled={auditPage === 1}
                       className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft size={24} strokeWidth={1.25}/>
                     </button>
                     <button 
                       onClick={() => setAuditPage(p => Math.min(totalAuditPages, p + 1))}
                       disabled={auditPage === totalAuditPages}
                       className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight size={24} strokeWidth={1.25}/>
                     </button>
                   </div>
                 </div>
@@ -466,29 +498,6 @@ const ControlledCopyRegister = () => {
         {/* Register Area */}
         {activeTab !== 'AUDIT_TRAIL' && (
           <>
-            {/* Register Filter Bar */}
-            <div className="p-5 flex flex-col md:flex-row items-center justify-between bg-white border-b border-gray-100 gap-4">
-              {activeTab === 'HISTORY' ? (
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Layers className="w-5 h-5 text-indigo-500"/> Controlled Copy Registry</h3>
-              ) : (
-                <div />
-              )}
-          <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-            <input 
-              type="text"
-              placeholder="Search by Document No, CC Number, Dept..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setRegisterPage(1); }}
-              className="w-full pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
-            />
-            {searchTerm && (
-              <button onClick={() => { setSearchTerm(''); setRegisterPage(1); }} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* Register Table */}
         <div className="overflow-x-auto bg-white">
@@ -537,7 +546,7 @@ const ControlledCopyRegister = () => {
                       <td className="px-6 py-4">
                         <div className="flex flex-col items-start gap-1">
                           {getStatusBadge(inst.status)}
-                          {needsRecall && <span className="text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> RECALL REQUIRED</span>}
+                          {needsRecall && <span className="text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 flex items-center gap-1"><AlertTriangle size={20} strokeWidth={1.25}/> RECALL REQUIRED</span>}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -549,7 +558,7 @@ const ControlledCopyRegister = () => {
                               className="px-2 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center gap-1 transition-colors shadow-sm shadow-blue-200"
                               title="Print & Distribute"
                             >
-                              <Download className="w-3 h-3" /> Distribute
+                              <Download size={20} strokeWidth={1.25}/> Distribute
                             </button>
                           )}
                           
@@ -559,7 +568,7 @@ const ControlledCopyRegister = () => {
                               className="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors"
                               title="Report Damaged / Lost"
                             >
-                              <AlertTriangle className="w-4 h-4" />
+                              <AlertTriangle size={24} strokeWidth={1.25}/>
                             </button>
                           )}
 
@@ -568,7 +577,7 @@ const ControlledCopyRegister = () => {
                               onClick={() => { setSelectedInstance(inst); setRecallModalOpen(true); }}
                               className="px-2 py-1 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded flex items-center gap-1 transition-colors shadow-sm shadow-red-200"
                             >
-                              <RefreshCw className="w-3 h-3" /> Return
+                              <RefreshCw size={20} strokeWidth={1.25}/> Return
                             </button>
                           )}
 
@@ -592,7 +601,7 @@ const ControlledCopyRegister = () => {
               {currentRegisterInstances.length === 0 && (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center">
-                    <div className="text-gray-300 mb-2 flex justify-center"><Layers className="w-10 h-10" /></div>
+                    <div className="text-gray-300 mb-2 flex justify-center"><Layers size={40} strokeWidth={1.25}/></div>
                     <p className="text-gray-400 font-medium">ไม่มีข้อมูลสำเนาในหมวดหมู่นี้</p>
                   </td>
                 </tr>
@@ -612,14 +621,14 @@ const ControlledCopyRegister = () => {
                   disabled={registerPage === 1}
                   className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft size={24} strokeWidth={1.25}/>
                 </button>
                 <button 
                   onClick={() => setRegisterPage(p => Math.min(totalRegisterPages, p + 1))}
                   disabled={registerPage === totalRegisterPages}
                   className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight size={24} strokeWidth={1.25}/>
                 </button>
               </div>
             </div>
@@ -640,7 +649,7 @@ const ControlledCopyRegister = () => {
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-gray-200"
             >
               <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h3 className="font-semibold text-gray-800  flex items-center gap-2"><FileDown className="w-5 h-5 text-indigo-600 "/> Issue Controlled Copy</h3>
+                <h3 className="font-semibold text-gray-800  flex items-center gap-2"><FileDown className="text-indigo-600" size={20} strokeWidth={1.25}/> Issue Controlled Copy</h3>
                 <button onClick={() => setIssueModalOpen(false)} className="text-gray-400  hover:text-gray-600 ">&times;</button>
               </div>
               <form onSubmit={handleIssue} className="p-6 space-y-4">
@@ -654,7 +663,7 @@ const ControlledCopyRegister = () => {
                   <input type="text" required placeholder="e.g. QA" value={issueDept} onChange={e => setIssueDept(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIssueModalOpen(false)} className="px-4 py-2 btn-ios-secondary text-gray-500"><X className="w-4 h-4" /> Cancel</button>
+                  <button type="button" onClick={() => setIssueModalOpen(false)} className="px-4 py-2 btn-ios-secondary text-gray-500"><X size={20} strokeWidth={1.25}/> Cancel</button>
                   <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-[0.97] transition-all shadow-sm shadow-indigo-200">Issue & Print PDF</button>
                 </div>
               </form>
@@ -674,7 +683,7 @@ const ControlledCopyRegister = () => {
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-gray-200"
             >
               <div className="px-6 py-4 border-b border-gray-100 bg-rose-50/50 flex justify-between items-center">
-                <h3 className="font-semibold text-rose-800 flex items-center gap-2"><AlertTriangle className="w-5 h-5"/> Report Document</h3>
+                <h3 className="font-semibold text-rose-800 flex items-center gap-2"><AlertTriangle size={20} strokeWidth={1.25}/> Report Document</h3>
                 <button onClick={() => { setReportModalOpen(false); setSelectedInstance(null); }} className="text-gray-400  hover:text-gray-600 ">&times;</button>
               </div>
               <form onSubmit={handleReport} className="p-6 space-y-4">
@@ -694,7 +703,7 @@ const ControlledCopyRegister = () => {
                 </div>
                 <p className="text-xs text-rose-500">ระบบจะยกเลิกฉบับเดิม และเตรียมออก Issue ถัดไปอัตโนมัติภายใต้ CC Number เดิม</p>
                 <div className="pt-2 flex justify-end gap-3">
-                  <button type="button" onClick={() => { setReportModalOpen(false); setSelectedInstance(null); }} className="px-4 py-2 btn-ios-secondary text-gray-500"><X className="w-4 h-4" /> Cancel</button>
+                  <button type="button" onClick={() => { setReportModalOpen(false); setSelectedInstance(null); }} className="px-4 py-2 btn-ios-secondary text-gray-500"><X size={20} strokeWidth={1.25}/> Cancel</button>
                   <button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 active:scale-[0.97] transition-all shadow-sm shadow-rose-200">Confirm Report</button>
                 </div>
               </form>
@@ -714,13 +723,13 @@ const ControlledCopyRegister = () => {
               className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-200"
             >
               <div className="px-6 py-4 border-b border-gray-100 bg-red-50/50 flex justify-between items-center">
-                <h3 className="font-semibold text-red-800 flex items-center gap-2"><RefreshCw className="w-5 h-5"/> Confirm Return</h3>
+                <h3 className="font-semibold text-red-800 flex items-center gap-2"><RefreshCw size={20} strokeWidth={1.25}/> Confirm Return</h3>
                 <button onClick={() => { setRecallModalOpen(false); setSelectedInstance(null); }} className="text-gray-400  hover:text-gray-600 ">&times;</button>
               </div>
               <div className="p-6 space-y-4 text-center">
                 <p className="text-gray-700 ">คุณได้รับเอกสาร <strong>{selectedInstance.ccNumber}</strong> คืนจากแผนก <strong>{selectedInstance.department}</strong> แล้วใช่หรือไม่?</p>
                 <div className="pt-4 flex justify-center gap-3">
-                  <button type="button" onClick={() => { setRecallModalOpen(false); setSelectedInstance(null); }} className="px-4 py-2 btn-ios-secondary text-gray-500"><X className="w-4 h-4" /> Cancel</button>
+                  <button type="button" onClick={() => { setRecallModalOpen(false); setSelectedInstance(null); }} className="px-4 py-2 btn-ios-secondary text-gray-500"><X size={20} strokeWidth={1.25}/> Cancel</button>
                   <button onClick={handleRecall} className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 active:scale-[0.97] transition-all shadow-sm shadow-red-200">Confirm Return</button>
                 </div>
               </div>

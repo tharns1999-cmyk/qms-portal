@@ -55,11 +55,11 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100  bg-slate-50/50  flex items-center justify-between">
             <div className="flex items-center gap-2 text-amber-600 ">
-              <AlertTriangle className="w-5 h-5" />
+              <AlertTriangle size={24} strokeWidth={1.25}/>
               <h2 className="text-lg font-bold">ขอยกเลิกเอกสารภายนอก (Obsolete)</h2>
             </div>
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100  rounded-full transition-colors">
-              <X className="w-5 h-5" />
+              <X size={24} strokeWidth={1.25}/>
             </button>
           </div>
 
@@ -121,8 +121,7 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
               form="obsolete-doc-form"
               className="px-5 py-2 rounded-xl text-white font-medium bg-amber-500 hover:bg-amber-600 transition-all duration-300 ease-fluid active:scale-95 flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
-              ขอยกเลิกเอกสาร
+              <Save size={20} strokeWidth={1.25}/> ขอยกเลิกเอกสาร
             </button>
           </div>
         </motion.div>

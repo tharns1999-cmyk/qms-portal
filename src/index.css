@@ -22,6 +22,14 @@ h1, h2, h3, h4, h5, h6 {
 @layer components {
   /* Minimalist / Flat UI Classes */
   
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
   .premium-glass {
     @apply bg-white/95 backdrop-blur-md border-b border-slate-200/80 z-50;
   }

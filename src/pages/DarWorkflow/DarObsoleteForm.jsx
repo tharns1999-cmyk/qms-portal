@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
-import { FileMinus, Search, User, Calendar, X, FilterX, Settings, Trash2, ShieldAlert, FileText } from 'lucide-react';
+import { Calendar, X, Settings, Trash2, ShieldAlert, FileText } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
-
-const ALL_DEPTS = ['ST', 'HSE', 'WH', 'MKT', 'PC', 'QA/QC', 'PD', 'EN', 'HR&GA'];
 
 const DarObsoleteForm = () => {
   const navigate = useNavigate();
@@ -142,16 +140,16 @@ const DarObsoleteForm = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Trash2 className="w-8 h-8 text-red-600 " />
+        <Trash2 className="text-red-600" size={32} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอยกเลิกเอกสาร (Obsolete DAR)</h2>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Section 1: Select Effective Document */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-gray-500 " />
+            <Settings className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 1: Select Effective Document</h3>
           </div>
           <div className="p-6">
@@ -172,7 +170,7 @@ const DarObsoleteForm = () => {
             {selectedDoc && (
               <div className="mt-6 bg-red-50/50 p-5 rounded-lg border border-red-100 grid grid-cols-2 md:grid-cols-5 gap-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                  <Trash2 className="w-32 h-32 text-red-900" />
+                  <Trash2 className="text-red-900" size={24} strokeWidth={1.25}/>
                 </div>
                 <div className="relative z-10">
                   <p className="text-xs text-gray-500  mb-1">รหัสเอกสาร</p>
@@ -191,7 +189,7 @@ const DarObsoleteForm = () => {
                   <p className="font-semibold text-gray-800 ">{selectedDoc.effectiveDate || 'N/A'}</p>
                 </div>
                 <div className="relative z-10 col-span-2 md:col-span-5 border-t border-red-100 pt-3 mt-1 flex items-center gap-2">
-                  <ShieldAlert className={`w-5 h-5 ${selectedDoc.controlledCopy > 0 ? 'text-red-600 ' : 'text-green-600 '}`} />
+                  <ShieldAlert className={`${selectedDoc.controlledCopy > 0 ? 'text-red-600 ' : 'text-green-600 '}`} size={24} strokeWidth={1.25} />
                   <span className="text-sm font-medium text-gray-700 ">จำนวนสำเนาควบคุมในระบบ (Controlled Copy): </span>
                   <span className={`text-base font-bold ${selectedDoc.controlledCopy > 0 ? 'text-red-600 ' : 'text-green-600 '}`}>{selectedDoc.controlledCopy} ฉบับ</span>
                 </div>
@@ -203,7 +201,7 @@ const DarObsoleteForm = () => {
         {/* Section 2: Obsolete Rationale */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gray-500 " />
+            <FileText className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 2: Obsolete Rationale</h3>
           </div>
           <div className="p-6 space-y-6">
@@ -256,14 +254,14 @@ const DarObsoleteForm = () => {
         {selectedDoc && (
           <div className={`bg-white rounded-xl shadow-sm border ${selectedDoc.controlledCopy > 0 ? 'border-red-300 ring-1 ring-red-100' : 'border-gray-100'} overflow-hidden transition-all duration-300`}>
             <div className={`px-6 py-4 border-b flex items-center gap-2 ${selectedDoc.controlledCopy > 0 ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}>
-              <ShieldAlert className={`w-5 h-5 ${selectedDoc.controlledCopy > 0 ? 'text-red-600 ' : 'text-gray-500 '}`} />
+              <ShieldAlert className={`${selectedDoc.controlledCopy > 0 ? 'text-red-600 ' : 'text-gray-500 '}`} size={24} strokeWidth={1.25} />
               <h3 className={`font-semibold ${selectedDoc.controlledCopy > 0 ? 'text-red-800' : 'text-gray-800 '}`}>Section 3: Recall Plan (แผนเรียกคืนสำเนา)</h3>
             </div>
             <div className="p-6">
               {selectedDoc.controlledCopy > 0 ? (
                 <div className="space-y-4">
                   <div className="bg-red-50 p-3 rounded text-sm text-red-800 border border-red-100 flex gap-2">
-                    <ShieldAlert className="w-5 h-5 shrink-0" />
+                    <ShieldAlert className="shrink-0" size={24} strokeWidth={1.25}/>
                     <p>เอกสารฉบับนี้มี <b>สำเนาควบคุม (Controlled Copy) แจกจ่ายอยู่ {selectedDoc.controlledCopy} ฉบับ</b> คุณจำเป็นต้องระบุแผนการเรียกคืนหรือสื่อสารให้ผู้ถือครองสำเนาทราบ เพื่อป้องกันการนำเอกสารที่ถูกยกเลิกไปใช้งานผิดพลาด</p>
                   </div>
                   <div>
@@ -291,7 +289,7 @@ const DarObsoleteForm = () => {
         {/* Section 4: Effective Control & Ack */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500 " />
+            <Calendar className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 4: Effective Control & Acknowledgement</h3>
           </div>
           <div className="p-6 space-y-6">
@@ -332,7 +330,7 @@ const DarObsoleteForm = () => {
                       value={formData.ackUserId} 
                       onChange={(id) => setFormData({...formData, ackUserId: id})} 
                       error={errors.ackUserId} 
-                      users={masterUsers} 
+                      users={masterUsers.filter(u => u.id !== currentUser.id && !u.isDcc && u.role !== 'DCC_ADMIN')} 
                     />
                   </div>
                   {errors.ackUserId && <p className="text-red-500  text-xs mt-2">{errors.ackUserId}</p>}
@@ -364,7 +362,7 @@ const DarObsoleteForm = () => {
             onClick={() => navigate('/dashboard')}
             className="btn-ios-secondary text-gray-500"
           >
-            <X className="w-4 h-4" /> ยกเลิก (Cancel)
+            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
           </button>
           <button 
             type="button" 
@@ -377,7 +375,7 @@ const DarObsoleteForm = () => {
             type="submit" 
             className="px-8 py-2.5 btn-ios-primary text-lg !bg-red-600 hover:!bg-red-700"
           >
-            <Trash2 className="w-5 h-5" /> ส่งคำขอยกเลิก (Submit)
+            <Trash2 size={20} strokeWidth={1.25}/> ส่งคำขอยกเลิก (Submit)
           </button>
         </div>
       </form>

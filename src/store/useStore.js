@@ -27,10 +27,6 @@ const MOCK_DOC_FORMATS = [
 
 const MOCK_DARS = [];
 
-const MOCK_TASKS = [];
-
-const MOCK_TIMELINE = [];
-
 // Helper to calculate days from today
 const getOffsetDate = (days) => {
   const d = new Date();
@@ -38,7 +34,56 @@ const getOffsetDate = (days) => {
   return d.toISOString().split('T')[0];
 };
 
-const MOCK_DOCUMENTS = [];
+const MOCK_TASKS = [];
+
+const MOCK_TIMELINE = [];
+
+const MOCK_DOCUMENTS = [
+  {
+    id: 'DOC-PROD-001',
+    darId: 'DAR01-01-22',
+    title: 'QM-QA-001',
+    name: 'คู่มือคุณภาพ (Quality Manual)',
+    status: 'EFFECTIVE',
+    rev: '05',
+    department: 'QA',
+    controlledCopy: 5,
+    effectiveDate: '2022-05-20'
+  },
+  {
+    id: 'DOC-PROD-002',
+    darId: 'DAR02-01-22',
+    title: 'QP-QA-001',
+    name: 'ขั้นตอนการจัดการข้อร้องเรียนลูกค้า',
+    status: 'EFFECTIVE',
+    rev: '02',
+    department: 'QA',
+    controlledCopy: 2,
+    effectiveDate: '2022-10-15'
+  },
+  {
+    id: 'DOC-PROD-003',
+    darId: 'DAR03-01-22',
+    title: 'WI-PD-005',
+    name: 'วิธีการเดินเครื่องจักรบรรจุ รุ่น M-200',
+    status: 'EFFECTIVE',
+    rev: '01',
+    department: 'PD',
+    controlledCopy: 4,
+    effectiveDate: '2023-02-10'
+  },
+  {
+    id: 'DOC-PROD-004',
+    darId: 'DAR04-01-22',
+    title: 'WI-EN-002',
+    name: 'วิธีการบำรุงรักษาเชิงป้องกันรายเดือน',
+    status: 'EFFECTIVE',
+    rev: '03',
+    department: 'EN',
+    controlledCopy: 1,
+    effectiveDate: '2023-03-05'
+  }
+];
 
 const MOCK_CONTROLLED_COPY_INSTANCES = [];
 
@@ -56,6 +101,45 @@ export const calculateSLAStatus = (effectiveDate, currentDate) => {
   if (diffDays < 0) return 'OVERDUE';
   if (diffDays <= 3) return 'DUE_SOON';
   return 'NORMAL';
+};
+
+const cleanupDccTasks = (tasks, instances, documents) => {
+  const hasPendingDist = instances.some(i => i.status === 'PENDING_RECEIPT');
+  const hasPendingRecall = instances.some(i => {
+    if (i.status !== 'ACTIVE') return false;
+    const doc = documents.find(d => d.id === i.docId);
+    return doc && doc.status === 'SUPERSEDED_ARCHIVED';
+  });
+  const hasPendingReplacements = instances.some(i => i.status === 'REPLACEMENT_REQUESTED');
+
+  return tasks.filter(t => {
+     if (t.type === 'DCC_DISTRIBUTE') {
+        const doc = documents.find(d => d.darId === t.darId);
+        if (doc) {
+           return instances.some(i => i.docId === doc.id && i.status === 'PENDING_RECEIPT');
+        }
+        return hasPendingDist;
+     }
+     if (t.type === 'DCC_RECALL') {
+        if (!hasPendingRecall) return false;
+        const newDoc = documents.find(d => d.darId === t.darId);
+        if (newDoc) {
+           const oldDoc = documents.find(d => d.title === newDoc.title && d.status === 'SUPERSEDED_ARCHIVED');
+           if (oldDoc) {
+              return instances.some(i => i.docId === oldDoc.id && i.status === 'ACTIVE');
+           }
+        }
+        return true; 
+     }
+     if (t.type === 'DCC_REPLACEMENT') {
+        if (t.requestId) {
+           const inst = instances.find(i => i.id === t.requestId);
+           if (inst) return inst.status === 'REPLACEMENT_REQUESTED';
+        }
+        return hasPendingReplacements;
+     }
+     return true;
+  });
 };
 
 // ================= STORE ================= //
@@ -94,7 +178,9 @@ const useStore = create(persist((set, get) => ({
     const depts = req?.depts || rev?.depts || app?.depts || baseUser.depts || [];
 
     // The primary active department is the first one, or 'QA' as fallback if empty
-    return { currentUser: { ...baseUser, department: depts[0] || 'QA', depts } };
+    return { 
+      currentUser: { ...baseUser, department: depts[0] || 'QA', depts }
+    };
   }),
 
   logAction: (actionType, details) => set(state => ({
@@ -463,6 +549,97 @@ const useStore = create(persist((set, get) => ({
     };
   }),
 
+  addDarAndReturnId: (dar) => {
+    let newDarId = '';
+    set((state) => {
+      const date = new Date();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yy = String(date.getFullYear()).slice(-2);
+      const prefix = `DAR`;
+      const suffix = `-${mm}-${yy}`;
+      
+      const existingDarsThisMonth = state.dars.filter(d => d.id.endsWith(suffix));
+      let nextRun = 1;
+      if (existingDarsThisMonth.length > 0) {
+         const runNums = existingDarsThisMonth.map(d => parseInt(d.id.replace(prefix, '').split('-')[0]));
+         nextRun = Math.max(...runNums) + 1;
+      }
+      newDarId = `${prefix}${String(nextRun).padStart(2, '0')}${suffix}`;
+      
+      const distributions = dar.distributions || [];
+      const newDar = { ...dar, id: newDarId, distributions };
+
+      const today = new Date();
+      today.setDate(today.getDate() + state.mockDateOffset);
+      const dueDateStr = new Date(today.getTime() + 3*24*60*60*1000).toISOString().split('T')[0];
+      const cancelDateStr = new Date(today.getTime() + 4*24*60*60*1000).toISOString().split('T')[0];
+
+      let newTasks = [...state.tasks];
+      let newNotifications = [...state.notifications];
+      let realStatus = dar.isDraft ? 'DRAFT' : 'UNDER_REVIEW';
+      
+      // Generate Reviewer Task
+      if (!dar.isDraft) {
+        const resolveReviewer = (reqId, dept, masters, reviewers) => {
+          const reqUser = masters.find(u => u.id === reqId);
+          if (!reqUser) return null;
+          const candidates = reviewers.filter(u => u.department === dept && u.level > reqUser.level);
+          if (candidates.length === 0) return null;
+          candidates.sort((a,b) => a.level - b.level);
+          return { id: candidates[0].id, level: candidates[0].level, dept: candidates[0].department };
+        };
+        
+        let reviewerObj = resolveReviewer(newDar.requesterId, newDar.department, state.masterUsers, state.reviewUsers);
+        
+        if (reviewerObj) {
+          const newTaskId = `t-${Date.now()}`;
+          newTasks.push({
+            id: newTaskId,
+            referenceType: 'INTERNAL_DAR', referenceId: newDar.id,
+            darId: newDar.id, title: newDar.title, type: 'Review',
+            assigneeId: reviewerObj.id,
+            currentHandlerDepartment: reviewerObj.dept,
+            currentHandlerLevel: reviewerObj.level,
+            dueDate: dueDateStr, cancelDate: cancelDateStr, status: 'NORMAL'
+          });
+          newNotifications.push({ id: Date.now() + Math.random(), userId: reviewerObj.id, title: 'งานใหม่รอการตรวจสอบ', message: `DAR "${newDar.title}" รอการตรวจสอบจากคุณ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
+        } else {
+           realStatus = 'PENDING_APPROVAL';
+           // Not fully replicating the approver fallback here, assuming standard DARs will find a reviewer in demo
+        }
+      }
+
+      return { 
+        dars: [...state.dars, { ...newDar, status: realStatus }],
+        tasks: newTasks,
+        notifications: newNotifications,
+        timeline: [...state.timeline, { 
+          id: Date.now(), darId: newDar.id, action: 'Created', user: state.currentUser.name, date: new Date().toLocaleString(), comment: 'Submitted request' 
+        }],
+        actionLog: [{
+          id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          actionType: 'DAR_SUBMIT',
+          actor: state.currentUser.name,
+          details: `Submitted DAR ${newDar.id}`,
+          timestamp: new Date().toISOString()
+        }, ...(state.actionLog || [])]
+      };
+    });
+    return newDarId;
+  },
+
+  updateTask: (taskId, updates) => set((state) => {
+    const newTasks = state.tasks.map(t => {
+      // Note: task processing starts here
+      // Check both id and taskId
+      if (t.id === taskId || t.taskId === taskId) {
+        return { ...t, ...updates };
+      }
+      return t;
+    });
+    return { tasks: newTasks };
+  }),
+
   addDar: (dar) => set((state) => {
     // Generate new ID DARXX-MM-YY
     const date = new Date();
@@ -580,9 +757,20 @@ const useStore = create(persist((set, get) => ({
       notifications: newNotifications,
       timeline: [...state.timeline, { 
         id: Date.now(), darId: newDar.id, action: 'Created', user: state.currentUser.name, date: new Date().toLocaleString(), comment: 'Submitted request' 
-      }]
+      }],
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'DAR_SUBMIT',
+        actor: state.currentUser.name,
+        details: `Submitted DAR ${newDar.id}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
+
+  removeTask: (taskId) => set((state) => ({
+    tasks: state.tasks.filter(t => t.id !== taskId)
+  })),
 
   processWorkflow: (taskId, action, comment) => set((state) => {
     const task = state.tasks.find(t => t.id === taskId);
@@ -673,7 +861,15 @@ const useStore = create(persist((set, get) => ({
         // Check if there are other pending Ack tasks for this DAR
         const remainingAcks = newTasks.filter(t => t.darId === dar.id && t.type === 'Ack');
         if (remainingAcks.length === 0) {
-          newStatus = 'APPROVED_WAITING_EFFECTIVE';
+          const today = new Date();
+          today.setDate(today.getDate() + state.mockDateOffset);
+          const todayStr = today.toISOString().split('T')[0];
+          
+          if (dar.effectiveDate && dar.effectiveDate <= todayStr) {
+            newStatus = 'COMPLETED';
+          } else {
+            newStatus = 'APPROVED_WAITING_EFFECTIVE';
+          }
         }
       }
     }
@@ -695,7 +891,7 @@ const useStore = create(persist((set, get) => ({
       id: Date.now(), darId: dar.id, action: timelineActionLabel, user: state.currentUser.name, date: new Date().toLocaleString(), comment: comment || '-', isChat: false, userId: state.currentUser.id
     }];
 
-    return {
+    const newState = {
       tasks: newTasks,
       notifications: newNotifications,
       dars: updatedDars,
@@ -710,6 +906,8 @@ const useStore = create(persist((set, get) => ({
         date: new Date().toISOString()
       }, ...state.actionLog]
     };
+
+    return newState;
   }),
 
   resubmitDar: (darId, updatedData, taskId) => set((state) => {
@@ -720,7 +918,6 @@ const useStore = create(persist((set, get) => ({
     const updatedDars = state.dars.map(d => d.id === darId ? { ...d, ...updatedData, status: 'UNDER_REVIEW' } : d);
     let newNotifications = [...state.notifications];
 
-    // Re-assign Reviewer
     const assignedReviewerId = resolveReviewer(dar.requesterId, dar.department, state.masterUsers, state.reviewUsers);
 
     if (assignedReviewerId) {
@@ -793,7 +990,6 @@ const useStore = create(persist((set, get) => ({
       });
       newNotifications.push({ id: Date.now() + Math.random(), userId: managerObj.id, title: 'อนุมัติเบิกสำเนา', message: `คำขอเบิกสำเนา ${doc.title} รอการอนุมัติ`, isRead: false, link: '/tasks', timestamp: new Date().toISOString(), relatedTaskId: newTaskId });
     } else {
-      // If no manager found, go straight to DCC
       request.status = 'PENDING_DCC_DISTRIBUTION';
       const newTaskId = `t-${Date.now()}-ccd`;
       newTasks.push({
@@ -879,25 +1075,21 @@ const useStore = create(persist((set, get) => ({
       current.setDate(current.getDate() + 1);
       return { simulatedDate: current.toISOString().split('T')[0] };
     });
-    useStore.getState().checkSLA(); // Trigger engine
+    useStore.getState().checkSLA();
   },
 
-  // Auto-evaluation engine (runs on every tick/app load)
   checkSLA: () => set((state) => {
     const todayStr = state.simulatedDate;
     const today = new Date(todayStr);
 
-    // 1. Check DAR Overdue Cancellation
     const activeStatuses = ['DRAFT', 'UNDER_REVIEW', 'PENDING_APPROVAL', 'RETURNED_FOR_REVISION', 'WAITING_ACKNOWLEDGEMENT'];
     const tasksToCheck = state.tasks.filter(t => t.referenceType !== 'EXTERNAL_DOC');
     
-    // Only internal DARs are subject to this SLA cancellation (BR-TASK-004)
     const darIdsToCancel = state.dars
       .filter(d => activeStatuses.includes(d.status))
       .filter(d => calculateSLAStatus(d.effectiveDate, todayStr) === 'OVERDUE')
       .map(d => d.id);
     
-    // Recalculate Task Status colors based on parent DAR's SLA
     const newTasks = state.tasks.filter(t => !darIdsToCancel.includes(t.darId)).map(t => {
       const dar = state.dars.find(d => d.id === t.darId);
       const sla = dar && activeStatuses.includes(dar.status) ? calculateSLAStatus(dar.effectiveDate, todayStr) : 'NORMAL';
@@ -914,7 +1106,6 @@ const useStore = create(persist((set, get) => ({
       });
     });
 
-    // 2. Check Automatic Lifecycle Execution (No DCC Publish)
     const waitingEffectiveDars = newDars.filter(d => d.status === 'APPROVED_WAITING_EFFECTIVE' && d.effectiveDate <= todayStr);
     
     let newControlledCopyInstances = [...state.controlledCopyInstances];
@@ -923,10 +1114,8 @@ const useStore = create(persist((set, get) => ({
     
     if (waitingEffectiveDars.length > 0) {
       waitingEffectiveDars.forEach(dar => {
-        // Mark DAR as completed
         newDars = newDars.map(d => d.id === dar.id ? { ...d, status: 'COMPLETED' } : d);
         
-        // Generate document entries
         if (dar.type === 'NEW' || dar.type === 'NEW_DOCUMENT') {
           const newDoc = {
             id: `doc-${Date.now()}-${Math.random()}`,
@@ -943,10 +1132,8 @@ const useStore = create(persist((set, get) => ({
           newDocuments.push(newDoc);
           newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'เอกสารบังคับใช้แล้ว', message: `เอกสารใหม่ "${dar.title}" มีผลบังคับใช้แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
 
-          // Auto-generate Controlled Copies for distributions
           if (newDoc.distributions && newDoc.distributions.length > 0) {
               
-              // Create Task for DCC to distribute
               newTasks.push({
                 id: `task-dist-${Date.now()}-${Math.random()}`,
                 title: `แจกจ่ายเอกสาร Controlled Copy (NEW)`,
@@ -991,13 +1178,10 @@ const useStore = create(persist((set, get) => ({
             });
           }
         } else if (dar.type === 'REVISION') {
-          // Find old revision
           const oldDoc = newDocuments.find(doc => doc.id === dar.docIdRef && doc.status === 'EFFECTIVE');
           if (oldDoc) {
-             // Archive old revision
              newDocuments = newDocuments.map(doc => doc.id === oldDoc.id ? { ...doc, status: 'SUPERSEDED_ARCHIVED' } : doc);
              
-             // Create new revision
              const currentRevNum = parseInt(oldDoc.rev, 10) || 0;
              const newRevNum = currentRevNum + 1;
              const newRevStr = newRevNum < 10 ? `0${newRevNum}` : `${newRevNum}`;
@@ -1017,10 +1201,8 @@ const useStore = create(persist((set, get) => ({
              newDocuments.push(newDoc);
              newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'ฉบับปรับปรุงบังคับใช้แล้ว', message: `เอกสารปรับปรุง "${dar.title}" มีผลบังคับใช้เป็น Rev.${newDoc.rev} แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
 
-             // Auto-generate Controlled Copies for distributions
              if (newDoc.distributions && newDoc.distributions.length > 0) {
                
-               // Create Task for DCC to distribute
                newTasks.push({
                  id: `task-dist-${Date.now()}-${Math.random()}`,
                  title: `แจกจ่ายเอกสาร Controlled Copy (Rev.${newDoc.rev})`,
@@ -1033,7 +1215,6 @@ const useStore = create(persist((set, get) => ({
                  darId: dar.id
                });
 
-               // Create Task for DCC to recall old revision
                newTasks.push({
                  id: `task-recall-${Date.now()}-${Math.random()}`,
                  title: `เรียกคืนเอกสาร Controlled Copy (Rev.${oldDoc.rev})`,
@@ -1046,7 +1227,6 @@ const useStore = create(persist((set, get) => ({
                  darId: dar.id
                });
 
-               // Reset CC numbering for new revision
                let maxCcNum = 0;
                
                newDoc.distributions.forEach((dist, idx) => {
@@ -1093,7 +1273,6 @@ const useStore = create(persist((set, get) => ({
       });
     }
 
-    // Only update state if something changed
     if (darIdsToCancel.length === 0 && waitingEffectiveDars.length === 0 && JSON.stringify(newTasks) === JSON.stringify(state.tasks)) {
       return state;
     }
@@ -1116,11 +1295,40 @@ const useStore = create(persist((set, get) => ({
     return { timeline: newTimeline };
   }),
 
+  cancelDar: (darId) => {
+    set((state) => {
+      const updatedDars = state.dars.map(d => d.id === darId ? { ...d, status: 'CANCELLED' } : d);
+      return { dars: updatedDars };
+    });
+    
+    set((state) => {
+      return {
+        dars: state.dars.filter(d => d.id !== darId),
+        tasks: state.tasks.filter(t => t.darId !== darId),
+        timeline: state.timeline.filter(t => t.darId !== darId),
+        actionLog: [{
+          id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          actionType: 'DAR_CANCEL',
+          actor: state.currentUser.name,
+          details: `Cancelled DAR ${darId}`,
+          timestamp: new Date().toISOString()
+        }, ...(state.actionLog || [])]
+      };
+    });
+  },
+
   deleteDar: (darId) => set((state) => {
     return {
       dars: state.dars.filter(d => d.id !== darId),
       tasks: state.tasks.filter(t => t.darId !== darId),
-      timeline: state.timeline.filter(t => t.darId !== darId)
+      timeline: state.timeline.filter(t => t.darId !== darId),
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'DAR_DELETE',
+        actor: state.currentUser.name,
+        details: `Deleted DAR ${darId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1179,7 +1387,14 @@ const useStore = create(persist((set, get) => ({
 
     return { 
       controlledCopyInstances: [...state.controlledCopyInstances, newInst],
-      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail]
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_ISSUE',
+        actor: state.currentUser.name,
+        details: `Issued controlled copy for ${docTitle}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1202,12 +1417,21 @@ const useStore = create(persist((set, get) => ({
 
     const newNotification = { id: Date.now() + Math.random(), userId: state.currentUser.id, title: 'รับเอกสารควบคุมสำเร็จ', message: `คุณได้ยืนยันการรับเอกสาร ${inst.ccNumber} (${inst.docTitle}) เรียบร้อยแล้ว`, isRead: false, link: '/controlled-copy', timestamp: new Date().toISOString() };
 
+    const newInstances = state.controlledCopyInstances.map(i => 
+      i.id === instId ? { ...i, status: 'ACTIVE' } : i
+    );
     return {
-      controlledCopyInstances: state.controlledCopyInstances.map(i => 
-        i.id === instId ? { ...i, status: 'ACTIVE' } : i
-      ),
+      controlledCopyInstances: newInstances,
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      notifications: [newNotification, ...state.notifications]
+      notifications: [newNotification, ...state.notifications],
+      tasks: cleanupDccTasks(state.tasks, newInstances, state.documents),
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_RECEIPT',
+        actor: state.currentUser.name,
+        details: `Confirmed receipt for copy ${instId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1269,13 +1493,21 @@ const useStore = create(persist((set, get) => ({
       relatedTaskId: newTask.id
     };
 
+    const newInstances = state.controlledCopyInstances.map(i => 
+      i.id === instId ? { ...i, status: 'REPLACEMENT_REQUESTED', reportType: type, reportReason: reason, reportRequesterName: state.currentUser.name, reportRequesterId: state.currentUser.id } : i
+    );
     return {
-      controlledCopyInstances: state.controlledCopyInstances.map(i => 
-        i.id === instId ? { ...i, status: 'REPLACEMENT_REQUESTED', reportType: type, reportReason: reason, reportRequesterName: state.currentUser.name, reportRequesterId: state.currentUser.id } : i
-      ),
+      controlledCopyInstances: newInstances,
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      tasks: [newTask, ...state.tasks],
-      notifications: [notif, ...state.notifications]
+      tasks: cleanupDccTasks([newTask, ...state.tasks], newInstances, state.documents),
+      notifications: [notif, ...state.notifications],
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_REPORT',
+        actor: state.currentUser.name,
+        details: `Reported copy ${instId} as ${type}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1333,11 +1565,19 @@ const useStore = create(persist((set, get) => ({
       timestamp: new Date().toISOString()
     });
 
+    const finalInstances = [...updatedInstances, newInst];
     return { 
-      controlledCopyInstances: [...updatedInstances, newInst],
+      controlledCopyInstances: finalInstances,
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
-      tasks: newTasks,
-      notifications: newNotifs
+      tasks: cleanupDccTasks(newTasks, finalInstances, state.documents),
+      notifications: newNotifs,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_REPLACE_APPROVE',
+        actor: state.currentUser.name,
+        details: `Approved replacement for task ${taskId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1381,7 +1621,14 @@ const useStore = create(persist((set, get) => ({
       ),
       controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
       tasks: newTasks,
-      notifications: newNotifs
+      notifications: newNotifs,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_REPLACE_REJECT',
+        actor: state.currentUser.name,
+        details: `Rejected replacement for task ${taskId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1402,11 +1649,20 @@ const useStore = create(persist((set, get) => ({
       remarks: `Recalled copy due to obsolescence or new revision`
     };
 
+    const newInstances = state.controlledCopyInstances.map(i => 
+      i.id === instId ? { ...i, status: 'RECALLED', dateRecalled: new Date().toISOString().split('T')[0] } : i
+    );
     return {
-      controlledCopyInstances: state.controlledCopyInstances.map(i => 
-        i.id === instId ? { ...i, status: 'RECALLED', dateRecalled: new Date().toISOString().split('T')[0] } : i
-      ),
-      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail]
+      controlledCopyInstances: newInstances,
+      controlledCopyAuditTrail: [auditLog, ...state.controlledCopyAuditTrail],
+      tasks: cleanupDccTasks(state.tasks, newInstances, state.documents),
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'CC_RECALL',
+        actor: state.currentUser.name,
+        details: `Recalled copy ${instId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1426,7 +1682,16 @@ const useStore = create(persist((set, get) => ({
       updatedDocs[docIndex] = { ...doc, distributions: updatedDistributions };
     }
     
-    return { documents: updatedDocs };
+    return { 
+      documents: updatedDocs,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'DOC_DISTRIBUTE',
+        actor: state.currentUser.name,
+        details: `Distributed document ${docId} to ${deptId}`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
+    };
   }),
 
   distributeAllDocument: (docId) => set((state) => {
@@ -1441,10 +1706,36 @@ const useStore = create(persist((set, get) => ({
       updatedDocs[docIndex] = { ...doc, distributions: updatedDistributions };
     }
     
-    return { documents: updatedDocs };
-  })
+    return { 
+      documents: updatedDocs,
+      actionLog: [{
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'DOC_DISTRIBUTE_ALL',
+        actor: state.currentUser.name,
+        details: `Distributed document ${docId} to all departments`,
+        timestamp: new Date().toISOString()
+      }, ...(state.actionLog || [])]
+    };
+  }),
+
+  // Expose Setters for Demo Data Loader
+  setTasks: (tasks) => set({ tasks }),
+  setDars: (dars) => set({ dars }),
+  setTimeline: (timeline) => set({ timeline })
 }), {
-  name: 'qms-storage-uat-v2',
+  name: 'qms-storage-uat-v4',
+  version: 1,
+  migrate: (persistedState, version) => {
+    if (version === 0 || !version) {
+      // User requested to clear all mock tasks stuck in users' inboxes
+      persistedState.tasks = [];
+      persistedState.dars = [];
+      persistedState.timeline = [];
+      persistedState.actionLog = [];
+      persistedState.notifications = [];
+    }
+    return persistedState;
+  },
   partialize: (state) => ({
     currentUser: state.currentUser,
     tasks: state.tasks,
@@ -1454,7 +1745,8 @@ const useStore = create(persist((set, get) => ({
     documents: state.documents,
     externalDocuments: state.externalDocuments,
     controlledCopyInstances: state.controlledCopyInstances,
-    controlledCopyAuditTrail: state.controlledCopyAuditTrail
+    controlledCopyAuditTrail: state.controlledCopyAuditTrail,
+    actionLog: state.actionLog
   })
 }));
 

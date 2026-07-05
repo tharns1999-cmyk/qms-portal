@@ -5,7 +5,7 @@ const ComingSoon = ({ title }) => {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
       <div className="w-20 h-20 bg-blue-100 text-blue-600  rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-        <Hammer className="w-10 h-10" />
+        <Hammer size={40} strokeWidth={1.25}/>
       </div>
       <h2 className="text-3xl font-bold text-gray-800  mb-4">{title}</h2>
       <p className="text-gray-500  max-w-md text-lg">

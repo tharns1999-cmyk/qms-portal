@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import useStore from '../../store/useStore';
 import { 
   AlertCircle, Clock, CheckCircle, FileText, Activity, 
-  Search, Plus, FileEdit, Library, BarChart3, TrendingUp, Briefcase,
+  Search, Plus, FileEdit, Library, BarChart3, TrendingUp, Briefcase, Copy,
   FilterX, Trash2, Edit, ClipboardCheck, Eye, Download, ShieldAlert, AlertTriangle, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -263,7 +263,7 @@ const Dashboard = () => {
           className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center border border-blue-200"
           title="ดำเนินการ (Evaluate)"
         >
-          <ClipboardCheck className="w-4 h-4" />
+          <ClipboardCheck size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -285,7 +285,7 @@ const Dashboard = () => {
             className="p-1.5 text-blue-600  hover:text-blue-700  hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-blue-200"
             title="ดำเนินการต่อ (Resume)"
           >
-            <Edit className="w-4 h-4" />
+            <Edit size={24} strokeWidth={1.25}/>
           </button>
           <button 
             onClick={() => {
@@ -296,7 +296,7 @@ const Dashboard = () => {
             className="p-1.5 text-gray-400  hover:text-red-600  hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-red-200"
             title="ลบทิ้ง (Discard)"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 size={24} strokeWidth={1.25}/>
           </button>
         </div>
       );
@@ -312,7 +312,7 @@ const Dashboard = () => {
           className="p-1.5 text-blue-600  bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center border border-blue-200"
           title="ดำเนินการ (Evaluate)"
         >
-          <ClipboardCheck className="w-4 h-4" />
+          <ClipboardCheck size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -324,7 +324,7 @@ const Dashboard = () => {
           className="p-1.5 text-purple-600  bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors flex items-center justify-center border border-purple-200"
           title="ดำเนินการ (Evaluate DCC)"
         >
-          <ClipboardCheck className="w-4 h-4" />
+          <ClipboardCheck size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -337,7 +337,7 @@ const Dashboard = () => {
           className="p-1.5 text-orange-600  hover:text-orange-700  bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors flex items-center justify-center border border-orange-200"
           title="แก้ไขคำขอ (Edit)"
         >
-          <Edit className="w-4 h-4" />
+          <Edit size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -349,7 +349,7 @@ const Dashboard = () => {
         className="p-1.5 text-gray-500  hover:text-gray-700  hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-gray-300"
         title="ดูรายละเอียด (View Details)"
       >
-        <Eye className="w-4 h-4" />
+        <Eye size={24} strokeWidth={1.25}/>
       </button>
     );
   };
@@ -377,17 +377,17 @@ const Dashboard = () => {
     >
 
       {/* Section 1: Context Indicator & Header */}
-      <div className="premium-card p-8 border-none">
+      <div className="premium-card p-4 border-none">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 ">ยินดีต้อนรับ, {currentUser.name.split(' ')[0]}</h2>
             <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700  rounded-lg text-sm font-medium border border-blue-100  ">
-              <Briefcase className="w-4 h-4" />
+              <Briefcase size={24} strokeWidth={1.25}/>
               <span>คุณกำลังดูข้อมูลในบทบาท: {currentUser.position} | แผนก: {currentUser.department}</span>
             </div>
             {isAdmin && (
               <div className="mt-2 ml-3 inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-700  rounded-lg text-sm font-medium border border-orange-100  ">
-                <Clock className="w-4 h-4" />
+                <Clock size={24} strokeWidth={1.25}/>
                 <span>Simulated Date: {simulatedDate}</span>
               </div>
             )}
@@ -398,31 +398,31 @@ const Dashboard = () => {
             {isAdmin ? (
               <>
                 <button onClick={() => navigate('/master-list')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
-                  <Library className="w-4 h-4" /> DCC Master Registry
+                  <Library size={20} strokeWidth={1.25}/> DCC Master Registry
                 </button>
                 <button onClick={simulateNextDay} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-xl text-white font-medium transition-transform duration-300 active:scale-95 text-sm">
-                  <Clock className="w-4 h-4" /> Simulate Next Day
+                  <Clock size={20} strokeWidth={1.25}/> Simulate Next Day
                 </button>
                 <button onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
-                  จัดการทั้งหมด <ChevronRight className="w-4 h-4" /> Document Distribution Log
+                  จัดการทั้งหมด <ChevronRight size={20} strokeWidth={1.25}/> Document Distribution Log
                 </button>
               </>
             ) : currentUser.level <= 3 ? (
               <>
                 <button onClick={() => navigate('/dar/new')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
-                  <Plus className="w-4 h-4" /> สร้างเอกสารใหม่ (Draft)
+                  <Plus size={20} strokeWidth={1.25}/> สร้างเอกสารใหม่ (Draft)
                 </button>
                 <button onClick={() => navigate('/dar/new/revision')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-blue-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
-                  <FileEdit className="w-4 h-4" /> ขอแก้ไขเอกสาร (Revision)
+                  <FileEdit size={20} strokeWidth={1.25}/> ขอแก้ไขเอกสาร (Revision)
                 </button>
               </>
             ) : (
               <>
                 <button onClick={() => navigate('/tasks')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
-                  <Activity className="w-4 h-4" /> ตรวจสอบคิวงาน (Task Inbox)
+                  <Activity size={20} strokeWidth={1.25}/> ตรวจสอบคิวงาน (Task Inbox)
                 </button>
                 <button onClick={() => navigate('/library')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
-                  <Library className="w-4 h-4" /> ดูคลังเอกสารแผนก
+                  <Library size={20} strokeWidth={1.25}/> ดูคลังเอกสารแผนก
                 </button>
               </>
             )}
@@ -430,185 +430,211 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Section 2: System Overview (Tabs & Compact Grid) */}
+      {/* Section 2: System Overview (Unified for Admin, Tabs for Users) */}
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 pb-2">
           <div className="flex space-x-4">
-            <button
-              onClick={() => { setActiveOverviewTab('ALL_REQUESTS'); setActiveCardFilter(''); }}
-              className={`pb-2 px-1 text-sm font-bold transition-all relative ${activeOverviewTab === 'ALL_REQUESTS' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              <span className="flex items-center gap-2"><Briefcase className="w-4 h-4" /> {isAdmin ? "สถานะการขออนุมัติทั้งหมด (All Requests)" : "คำขอของฉัน (My Requests)"}</span>
-              {activeOverviewTab === 'ALL_REQUESTS' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-md" />}
-            </button>
-            <button
-              onClick={() => { setActiveOverviewTab('ACTION_REQUIRED'); setActiveCardFilter(''); }}
-              className={`pb-2 px-1 text-sm font-bold transition-all relative ${currentUser.level <= 3 && !isAdmin ? 'opacity-50 cursor-not-allowed' : ''} ${activeOverviewTab === 'ACTION_REQUIRED' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-              disabled={currentUser.level <= 3 && !isAdmin}
-            >
-              <span className="flex items-center gap-2">
-                <Activity className="w-4 h-4" /> งานที่ต้องจัดการ (Action Required)
-                {myTasks.length > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-1 animate-pulse">
-                    {myTasks.length}
+            {isAdmin ? (
+              <>
+                <button
+                  onClick={() => { setActiveOverviewTab('ALL_REQUESTS'); setActiveCardFilter(''); }}
+                  className={`pb-2 px-1 text-sm font-bold transition-all relative ${activeOverviewTab === 'ALL_REQUESTS' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  <span className="flex items-center gap-2"><Briefcase size={20} strokeWidth={1.25}/> ภาพรวมระบบ (System Overview)</span>
+                  {activeOverviewTab === 'ALL_REQUESTS' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-md" />}
+                </button>
+                <button
+                  onClick={() => { setActiveOverviewTab('DOC_CONTROL'); setActiveCardFilter(''); }}
+                  className={`pb-2 px-1 text-sm font-bold transition-all relative ${activeOverviewTab === 'DOC_CONTROL' ? 'text-teal-600' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Copy size={20} strokeWidth={1.25}/> งานควบคุมเอกสาร (Document Control)
+                    {(pendingPrintCount + pendingRecallCount + replacementRequestCount) > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-1 animate-pulse">
+                        {pendingPrintCount + pendingRecallCount + replacementRequestCount}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-              {activeOverviewTab === 'ACTION_REQUIRED' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-md" />}
-            </button>
+                  {activeOverviewTab === 'DOC_CONTROL' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-600 rounded-t-md" />}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setActiveOverviewTab('ALL_REQUESTS'); setActiveCardFilter(''); }}
+                  className={`pb-2 px-1 text-sm font-bold transition-all relative ${activeOverviewTab === 'ALL_REQUESTS' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  <span className="flex items-center gap-2"><Briefcase size={20} strokeWidth={1.25}/> คำขอของฉัน (My Requests)</span>
+                  {activeOverviewTab === 'ALL_REQUESTS' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-md" />}
+                </button>
+                <button
+                  onClick={() => { setActiveOverviewTab('ACTION_REQUIRED'); setActiveCardFilter(''); }}
+                  className={`pb-2 px-1 text-sm font-bold transition-all relative ${currentUser.level <= 3 ? 'opacity-50 cursor-not-allowed' : ''} ${activeOverviewTab === 'ACTION_REQUIRED' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                  disabled={currentUser.level <= 3}
+                >
+                  <span className="flex items-center gap-2">
+                    <Activity size={20} strokeWidth={1.25}/> งานที่ต้องจัดการ (Action Required)
+                    {myTasks.length > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-1 animate-pulse">
+                        {myTasks.length}
+                      </span>
+                    )}
+                  </span>
+                  {activeOverviewTab === 'ACTION_REQUIRED' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-md" />}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
         {activeOverviewTab === 'ALL_REQUESTS' && (
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {/* Draft */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_DRAFT' ? '' : 'MY_DRAFT')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_DRAFT' ? 'premium-card ring-2 ring-gray-300 bg-gray-50' : 'premium-card bg-white'}`}>
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-gray-500">Draft (ร่าง)</h3>
-              </div>
-              <span className="text-3xl font-bold text-gray-800">{myDraftCount}</span>
-            </motion.div>
-            
-            {/* In Progress */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_IN_PROGRESS' ? '' : 'MY_IN_PROGRESS')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_IN_PROGRESS' ? 'premium-card ring-2 ring-blue-300 bg-blue-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-sm text-blue-600 font-semibold">{isAdmin ? 'In Progress (รวม)' : 'In Progress (กำลังดำเนินการ)'}</p>
-                <Clock className="w-5 h-5 text-blue-400" />
-              </div>
-              <p className="text-3xl font-bold text-blue-700">{myInProgressCount}</p>
-            </motion.div>
-            
-            {/* Returned */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_RETURNED' ? '' : 'MY_RETURNED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_RETURNED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Returned (รวม)' : 'Returned (ให้แก้ไข)'}</p>
-                <AlertCircle className="w-5 h-5 text-red-400" />
-              </div>
-              <p className="text-3xl font-bold text-red-700">{myReturnedCount}</p>
-            </motion.div>
+          <div className="mb-2">
+            {isAdmin && <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">สถานะคำขอเอกสาร (Document Requests)</h4>}
+            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {/* Draft */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_DRAFT' ? '' : 'MY_DRAFT')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_DRAFT' ? 'premium-card ring-2 ring-gray-300 bg-gray-50' : 'premium-card bg-white'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-semibold text-gray-500">Draft (ร่าง)</h3>
+                </div>
+                <span className="text-4xl font-bold text-gray-800">{myDraftCount}</span>
+              </motion.div>
+              
+              {/* In Progress */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_IN_PROGRESS' ? '' : 'MY_IN_PROGRESS')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_IN_PROGRESS' ? 'premium-card ring-2 ring-blue-300 bg-blue-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-blue-600 font-semibold">{isAdmin ? 'In Progress (รวม)' : 'In Progress (กำลังดำเนินการ)'}</p>
+                  <Clock className="text-blue-400" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-blue-700">{myInProgressCount}</p>
+              </motion.div>
+              
+              {/* Returned */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_RETURNED' ? '' : 'MY_RETURNED')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_RETURNED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Returned (รวม)' : 'Returned (ให้แก้ไข)'}</p>
+                  <AlertCircle className="text-red-400" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-red-700">{myReturnedCount}</p>
+              </motion.div>
 
-            {/* Waiting Effective */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_WAITING' ? '' : 'MY_WAITING')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_WAITING' ? 'premium-card ring-2 ring-green-300 bg-green-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-sm text-green-600 font-semibold">{isAdmin ? 'Waiting (รวม)' : 'Waiting (รอประกาศ)'}</p>
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              </div>
-              <p className="text-3xl font-bold text-green-700">{myWaitingCount}</p>
-            </motion.div>
+              {/* Waiting Effective */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_WAITING' ? '' : 'MY_WAITING')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_WAITING' ? 'premium-card ring-2 ring-green-300 bg-green-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-green-600 font-semibold">{isAdmin ? 'Waiting (รวม)' : 'Waiting (รอประกาศ)'}</p>
+                  <CheckCircle className="text-green-400" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-green-700">{myWaitingCount}</p>
+              </motion.div>
 
-            {/* Cancelled (Overdue) */}
-            <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_CANCELLED' ? '' : 'MY_CANCELLED')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_CANCELLED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Cancelled (รวม)' : 'Cancelled (ถูกยกเลิก)'}</p>
-                <Trash2 className="w-5 h-5 text-red-400" />
-              </div>
-              <p className="text-3xl font-bold text-red-700">{myCancelledCount}</p>
+              {/* Cancelled (Overdue) */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_CANCELLED' ? '' : 'MY_CANCELLED')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_CANCELLED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Cancelled (รวม)' : 'Cancelled (ถูกยกเลิก)'}</p>
+                  <Trash2 className="text-red-400" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-red-700">{myCancelledCount}</p>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
 
-        {activeOverviewTab === 'ACTION_REQUIRED' && (
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
-            
-                {/* Pending Review */}
-                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm text-indigo-600 font-semibold">Pending Review</p>
-                    <Clock className="w-5 h-5 text-indigo-400" />
+        {(!isAdmin && activeOverviewTab === 'ACTION_REQUIRED') && (
+          <div className="mb-2 mt-4">
+            {isAdmin && <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">งานที่ต้องตรวจสอบ (Action Required)</h4>}
+            <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 md:grid-cols-4 gap-3`}>
+              
+              {/* Pending Review */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-indigo-600 font-semibold">Pending Review</p>
+                  <Clock className="text-indigo-400" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-gray-800">{actionReviewCount}</p>
+              </motion.div>
+              
+              {/* Pending Approval */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-yellow-600 font-semibold">Pending Approval</p>
+                  <AlertCircle className="text-yellow-500" size={24} strokeWidth={1.25}/>
+                </div>
+                <p className="text-4xl font-bold text-gray-800">{actionApproveCount}</p>
+              </motion.div>
+              
+              {/* Due Soon */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-orange-600 font-semibold">Due Soon</p>
+                  {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-2 w-2 rounded-full bg-orange-500"></span> : <Clock className="text-orange-500" size={24} strokeWidth={1.25}/>}
+                </div>
+                <p className="text-4xl font-bold text-gray-800">{actionDueSoonCount}</p>
+              </motion.div>
+  
+              {/* Overdue */}
+              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-sm text-red-600 font-semibold">Overdue</p>
+                  {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="text-red-500" size={24} strokeWidth={1.25}/>}
+                </div>
+                <p className="text-4xl font-bold text-gray-800">{actionOverdueCount}</p>
+              </motion.div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAdmin && activeOverviewTab === 'DOC_CONTROL' && (
+          <div className="mb-2">
+            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">งานควบคุมสำเนาแจกจ่าย (Controlled Copy Tasks)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Pending Print & Issue */}
+              <motion.div variants={itemVariants}
+                onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
+                className="premium-card p-4 flex flex-col justify-between group bg-teal-50 border border-teal-100 jelly-interactive"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-teal-800 font-semibold text-sm">รอพิมพ์แจกจ่าย (Pending Print)</p>
+                  <div className="p-1 bg-teal-500/20 rounded-xl">
+                    <FileText className="text-teal-700" size={24} strokeWidth={1.25}/>
                   </div>
-                  <p className="text-3xl font-bold text-gray-800">{actionReviewCount}</p>
-                </motion.div>
-                
-                {/* Pending Approval */}
-                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm text-yellow-600 font-semibold">Pending Approval</p>
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                </div>
+                <p className="text-4xl font-bold mb-1 text-teal-900">{pendingPrintCount}</p>
+              </motion.div>
+
+              {/* Pending Recall */}
+              <motion.div variants={itemVariants}
+                onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
+                className="p-4 border border-rose-100 bg-rose-50 rounded-2xl jelly-interactive flex flex-col justify-between"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-rose-800 font-semibold text-sm">รอเรียกคืน (Pending Recall)</p>
+                  <div className="p-1 bg-rose-500/20 rounded-xl">
+                    <Clock className="text-rose-700" size={24} strokeWidth={1.25}/>
                   </div>
-                  <p className="text-3xl font-bold text-gray-800">{actionApproveCount}</p>
-                </motion.div>
-                
-                {/* Due Soon */}
-                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm text-orange-600 font-semibold">Due Soon</p>
-                    {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-2 w-2 rounded-full bg-orange-500"></span> : <Clock className="w-5 h-5 text-orange-500" />}
+                </div>
+                <p className="text-4xl font-bold mb-1 text-rose-900">{pendingRecallCount}</p>
+              </motion.div>
+
+              {/* Replacement Requests */}
+              <motion.div variants={itemVariants}
+                onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
+                className="p-4 border border-amber-100 bg-amber-50 rounded-2xl jelly-interactive flex flex-col justify-between"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-amber-800 font-semibold text-sm">คำขอทดแทน (Replacement)</p>
+                  <div className="p-1 bg-amber-500/20 rounded-xl">
+                    <AlertTriangle className="text-amber-700" size={24} strokeWidth={1.25}/>
                   </div>
-                  <p className="text-3xl font-bold text-gray-800">{actionDueSoonCount}</p>
-                </motion.div>
-    
-                {/* Overdue */}
-                <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-6 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm text-red-600 font-semibold">Overdue</p>
-                    {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="w-5 h-5 text-red-500" />}
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800">{actionOverdueCount}</p>
-                </motion.div>
-          </motion.div>
+                </div>
+                <p className="text-4xl font-bold mb-1 text-amber-900">{replacementRequestCount}</p>
+              </motion.div>
+            </div>
+          </div>
         )}
       </motion.div>
 
-      {/* Group 3: Controlled Copy Tasks (Admin Only) */}
-      {isAdmin && (
-        <motion.div variants={containerVariants} initial="hidden" animate="show" className="mt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-indigo-600" /> งานควบคุมสำเนาแจกจ่าย (Controlled Copy Tasks)
-            </h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Pending Print & Issue */}
-            <motion.div variants={itemVariants}
-              onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-              className="premium-card p-8 flex flex-col justify-between group bg-teal-50 border border-teal-100 jelly-interactive"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <p className="text-teal-800 font-semibold text-sm">รอพิมพ์แจกจ่าย (Pending Print)</p>
-                <div className="p-1.5 bg-teal-500/20 rounded-xl">
-                  <FileText className="w-5 h-5 text-teal-700" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mb-1 text-teal-900">{pendingPrintCount}</p>
-              <p className="text-xs text-teal-700/80">เอกสารใหม่ที่รอการแจกจ่าย Hard Copy</p>
-            </motion.div>
-
-            {/* Pending Recall */}
-            <motion.div variants={itemVariants}
-              onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-              className="p-4 border border-rose-100 bg-rose-50 rounded-2xl jelly-interactive"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <p className="text-rose-800 font-semibold text-sm">รอเรียกคืน (Pending Recall)</p>
-                <div className="p-1.5 bg-rose-500/20 rounded-xl">
-                  <Clock className="w-5 h-5 text-rose-700" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mb-1 text-rose-900">{pendingRecallCount}</p>
-              <p className="text-xs text-rose-700/80">เอกสารล้าสมัยที่รอแผนกต่างๆ นำมาคืน</p>
-            </motion.div>
-
-            {/* Replacement Requests */}
-            <motion.div variants={itemVariants}
-              onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-              className="p-4 border border-amber-100 bg-amber-50 rounded-2xl jelly-interactive"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <p className="text-amber-800 font-semibold text-sm">คำขอทดแทน (Replacement)</p>
-                <div className="p-1.5 bg-amber-500/20 rounded-xl">
-                  <AlertTriangle className="w-5 h-5 text-amber-700" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mb-1 text-amber-900">{replacementRequestCount}</p>
-              <p className="text-xs text-amber-700/80">คำขอเอกสารชำรุด/สูญหายรออนุมัติ</p>
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-
       {/* Section 5: Recent DARs Table */}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
         
         {/* Section 5: Recent DARs Table */}
@@ -616,12 +642,12 @@ const Dashboard = () => {
           <div className="premium-card overflow-hidden h-full flex flex-col border-none">
             <div className="p-3 border-b border-slate-200/50 bg-white flex flex-col md:flex-row justify-between items-center gap-3">
               <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" /> Recent Action Items
+                <FileText className="text-blue-600" size={20} strokeWidth={1.25}/> Recent Action Items
               </h3>
               
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <div className="relative flex-1 md:w-48">
-                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 " />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
                   <input 
                     type="text"
                     placeholder="ค้นหา DAR No..."
@@ -652,7 +678,7 @@ const Dashboard = () => {
                   title="ล้างตัวกรอง"
                   className="p-1.5 text-gray-400  hover:text-red-500  hover:bg-red-50/50 rounded-lg transition-all duration-300 ease-fluid active:scale-[0.97]"
                 >
-                  <FilterX className="w-4 h-4" />
+                  <FilterX size={24} strokeWidth={1.25}/>
                 </button>
               </div>
             </div>

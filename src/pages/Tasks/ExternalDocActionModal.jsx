@@ -59,7 +59,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600  flex items-center justify-center shadow-inner">
-              <FileText className="w-6 h-6" />
+              <FileText size={28} strokeWidth={1.25}/>
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800 ">{getActionTitle()}</h2>
@@ -70,7 +70,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
             onClick={onClose}
             className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-100 rounded-xl transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X size={24} strokeWidth={1.25}/>
           </button>
         </div>
 
@@ -115,8 +115,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
               onClick={() => setIsPreviewOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-medium transition-colors w-full justify-center"
             >
-              <FileText className="w-4 h-4" />
-              ดูพรีวิวเอกสาร (Preview PDF)
+              <FileText size={20} strokeWidth={1.25}/> ดูพรีวิวเอกสาร (Preview PDF)
             </button>
           </div>
         </div>
@@ -141,7 +140,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
             onClick={onClose}
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <X className="w-4 h-4" /> ยกเลิก (Cancel)
+            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
           </button>
           
           {task.type === 'Ack' ? (
@@ -149,8 +148,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
               onClick={() => handleAction('APPROVE')} // internally maps to ACKNOWLEDGE if handled properly, or we pass ACKNOWLEDGE directly. Wait, in processExternalTask we use action === 'APPROVE' for Ack but let's pass 'APPROVE' and processExternalTask handles Ack under APPROVE.
               className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-transform duration-300 ease-out active:scale-95 border border-transparent"
             >
-              <Check className="w-5 h-5" />
-              รับทราบ (Acknowledge)
+              <Check size={20} strokeWidth={1.25}/> รับทราบ (Acknowledge)
             </button>
           ) : (
             <>
@@ -158,15 +156,13 @@ const ExternalDocActionModal = ({ task, onClose }) => {
                 onClick={() => handleAction('REJECT')}
                 className="flex items-center gap-2 px-6 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold transition-transform duration-300 ease-out active:scale-95 border border-transparent"
               >
-                <XCircle className="w-5 h-5" />
-                ส่งกลับ (Reject)
+                <XCircle size={20} strokeWidth={1.25}/> ส่งกลับ (Reject)
               </button>
               <button
                 onClick={() => handleAction('APPROVE')}
                 className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-transform duration-300 ease-out active:scale-95 border border-transparent"
               >
-                <Check className="w-5 h-5" />
-                อนุมัติ (Approve)
+                <Check size={20} strokeWidth={1.25}/> อนุมัติ (Approve)
               </button>
             </>
           )}

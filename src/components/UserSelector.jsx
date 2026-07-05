@@ -50,12 +50,12 @@ const UserSelector = ({ value, onChange, error, users = [] }) => {
             onClick={handleClear}
             className="text-gray-400  hover:text-red-500  ml-2 transition-all duration-300 ease-out active:scale-95 p-1 rounded-lg"
           >
-            <X className="w-5 h-5" />
+            <X size={24} strokeWidth={1.25}/>
           </button>
         </div>
       ) : (
         <div className="relative">
-          <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 " />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
           <input
             type="text"
             value={searchQuery}

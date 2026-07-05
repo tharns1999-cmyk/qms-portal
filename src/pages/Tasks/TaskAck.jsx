@@ -47,18 +47,18 @@ const TaskAck = () => {
       className="max-w-4xl mx-auto space-y-6"
     >
       <button onClick={() => navigate('/tasks')} className="flex items-center text-gray-500  hover:text-blue-600  transition-colors">
-        <ChevronLeft className="w-5 h-5" /> กลับหน้า Inbox
+        <ChevronLeft size={20} strokeWidth={1.25}/> กลับหน้า Inbox
       </button>
 
       <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8 text-indigo-600 " />
+        <FileText className="text-indigo-600" size={32} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800 ">Acknowledge Task: {dar.id}</h2>
       </div>
 
       <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
         <div className="flex items-start gap-4">
           <div className="bg-indigo-100 p-3 rounded-full text-indigo-600 ">
-            <Eye className="w-6 h-6" />
+            <Eye size={28} strokeWidth={1.25}/>
           </div>
           <div>
             <h3 className="font-semibold text-lg text-indigo-900 mb-1">การรับทราบเอกสาร (Acknowledgement)</h3>
@@ -86,7 +86,7 @@ const TaskAck = () => {
         </div>
 
         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center space-y-4">
-          <FileText className="w-12 h-12 text-gray-400  mx-auto" />
+          <FileText className="text-gray-400 mx-auto" size={48} strokeWidth={1.25}/>
           <div>
             <p className="font-medium text-gray-800 ">{dar.file || 'เอกสารแนบ.pdf'}</p>
             <p className="text-sm text-gray-500 ">PDF Document</p>
@@ -95,8 +95,7 @@ const TaskAck = () => {
             onClick={handleOpenPdf}
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border-2 border-indigo-600 text-indigo-600  rounded-lg hover:bg-indigo-50 font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            เปิดอ่านไฟล์ (Read Document)
+            <Download size={20} strokeWidth={1.25}/> เปิดอ่านไฟล์ (Read Document)
           </button>
         </div>
 
@@ -110,8 +109,7 @@ const TaskAck = () => {
                 : 'bg-gray-200 text-gray-400  cursor-not-allowed'
             }`}
           >
-            <CheckCircle className="w-5 h-5" />
-            ยืนยันการรับทราบ (Acknowledge)
+            <CheckCircle size={20} strokeWidth={1.25}/> ยืนยันการรับทราบ (Acknowledge)
           </button>
           {!hasOpenedPdf && (
             <p className="text-center text-sm text-red-500  mt-2">

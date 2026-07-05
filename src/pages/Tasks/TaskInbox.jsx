@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
-import { Clock, AlertTriangle, CheckCircle, Search, Filter, Play, CheckSquare, ChevronRight, FileEdit, Eye, FilterX, ExternalLink, AlertCircle } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, Search, Filter, Play, CheckSquare, ChevronRight, FileEdit, Eye, FilterX, ExternalLink, AlertCircle, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExternalDocActionModal from './ExternalDocActionModal';
-
 const TaskInbox = () => {
   const navigate = useNavigate();
-  const { currentUser, tasks, dars, externalDocuments, mockDateOffset, setMockDateOffset, checkSLA } = useStore();
+  const { currentUser, tasks, dars, externalDocuments, mockDateOffset, setMockDateOffset, checkSLA, removeTask } = useStore();
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExtTask, setSelectedExtTask] = useState(null);
@@ -45,32 +44,40 @@ const TaskInbox = () => {
   };
 
   const getRiskStatus = (task) => {
-    if (!task.dueDate) return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle className="w-4 h-4" /> };
+    if (!task.dueDate) return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle size={24} strokeWidth={1.25}/> };
     
     const today = new Date();
     today.setDate(today.getDate() + mockDateOffset);
     const todayStr = today.toISOString().split('T')[0];
     
     if (todayStr > task.dueDate) {
-      return { label: 'Overdue', color: 'bg-red-100 text-red-700 ', icon: <AlertCircle className="w-4 h-4" /> };
+      return { label: 'Overdue', color: 'bg-red-100 text-red-700 ', icon: <AlertCircle size={24} strokeWidth={1.25}/> };
     } else if (todayStr === task.dueDate) {
-      return { label: 'Due Soon', color: 'bg-yellow-100 text-yellow-700 ', icon: <Clock className="w-4 h-4" /> };
+      return { label: 'Due Soon', color: 'bg-yellow-100 text-yellow-700 ', icon: <Clock size={24} strokeWidth={1.25}/> };
     } else {
-      return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle className="w-4 h-4" /> };
+      return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle size={24} strokeWidth={1.25}/> };
     }
   };
 
+  const getTaskCount = (tabId) => {
+    let filtered = userTasks;
+    if (tabId !== 'ALL') {
+      filtered = filtered.filter(t => t.type.toUpperCase() === tabId || (tabId === 'REVIEW' && (t.type === 'EXT_REVIEW')) || (tabId === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
+    }
+    return filtered.length;
+  };
+
   const tabs = isDccAdmin ? [
-    { id: 'ALL', label: 'All DCC Tasks' },
-    { id: 'DCC_DISTRIBUTE', label: 'Distribution' },
-    { id: 'DCC_RECALL', label: 'Obsolete Recall' },
-    { id: 'DCC_REPLACEMENT', label: 'Copy Replacement' },
+    { id: 'ALL', label: 'All DCC Tasks', count: getTaskCount('ALL') },
+    { id: 'DCC_DISTRIBUTE', label: 'Distribution', count: getTaskCount('DCC_DISTRIBUTE') },
+    { id: 'DCC_RECALL', label: 'Obsolete Recall', count: getTaskCount('DCC_RECALL') },
+    { id: 'DCC_REPLACEMENT', label: 'Copy Replacement', count: getTaskCount('DCC_REPLACEMENT') },
   ] : [
-    { id: 'ALL', label: 'All Tasks' },
-    { id: 'REVIEW', label: 'Review' },
-    { id: 'APPROVE', label: 'Approve' },
-    { id: 'ACK', label: 'Acknowledge' },
-    { id: 'REVISE', label: 'Revise (Returned)' },
+    { id: 'ALL', label: 'All Tasks', count: getTaskCount('ALL') },
+    { id: 'REVIEW', label: 'Review', count: getTaskCount('REVIEW') },
+    { id: 'APPROVE', label: 'Approve', count: getTaskCount('APPROVE') },
+    { id: 'ACK', label: 'Acknowledge', count: getTaskCount('ACK') },
+    { id: 'REVISE', label: 'Revise (Returned)', count: getTaskCount('REVISE') },
   ];
 
   const handleTaskClick = (task) => {
@@ -114,36 +121,40 @@ const TaskInbox = () => {
             onClick={handleSimulateDay}
             className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
           >
-            <Play className="w-4 h-4" />
+            <Play size={24} strokeWidth={1.25}/>
             +1 Day
           </button>
         </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-gray-200  bg-gray-50  flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="flex gap-1 bg-slate-100/50  p-1 rounded-xl w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+        <div className="px-4 pt-3 border-b border-gray-200 bg-white flex flex-col md:flex-row gap-4 justify-between items-end">
+          <div className="flex gap-6 overflow-x-auto w-full md:w-auto hide-scrollbar">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors outline-none group`}
+                  className={`relative py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none group flex items-center gap-2 ${
+                    isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'
+                  }`}
                 >
+                  <span className="relative z-10">{tab.label}</span>
+                  {tab.count > 0 && (
+                    <span className={`relative z-10 text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                      isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
                   {isActive && (
                     <motion.div
-                      layoutId="task-tab"
-                      className="absolute inset-0 bg-white  rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.08)] z-0"
+                      layoutId="task-tab-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-600 rounded-t-md z-0"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
-                  {!isActive && (
-                    <div className="absolute inset-0 bg-gray-200/50  opacity-0 group-hover:opacity-100 transition-opacity rounded-lg z-0" />
-                  )}
-                  <span className={`relative z-10 ${isActive ? 'text-blue-600 ' : 'text-gray-500  group-hover:text-gray-700  '}`}>
-                    {tab.label}
-                  </span>
                 </button>
               );
             })}
@@ -151,7 +162,7 @@ const TaskInbox = () => {
 
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 " />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
               <input 
                 type="text" 
                 placeholder="ค้นหา DAR No. หรือ ชื่อเอกสาร..."
@@ -168,7 +179,7 @@ const TaskInbox = () => {
               title="ล้างตัวกรอง"
               className="p-2 text-gray-400  hover:text-red-500  hover:bg-red-50  rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-red-200 "
             >
-              <FilterX className="w-5 h-5" />
+              <FilterX size={24} strokeWidth={1.25}/>
             </button>
           </div>
         </div>
@@ -177,10 +188,10 @@ const TaskInbox = () => {
           {getFilteredTasks().length > 0 ? (
             getFilteredTasks().map(task => {
               const isExternal = task.referenceType === 'EXTERNAL_DOC';
-              const dar = !isExternal ? dars.find(d => d.id === task.darId) : null;
+              const dar = (!isExternal) ? dars.find(d => d.id === task.darId) : null;
               const extDoc = isExternal ? externalDocuments.find(d => d.id === task.referenceId) : null;
               const risk = getRiskStatus(task);
-              const displayId = task.referenceId || task.darId;
+              const displayId = task.referenceId || task.darId || task.id;
               const displayType = isExternal ? 'External Document' : dar?.type;
               
               return (
@@ -191,11 +202,11 @@ const TaskInbox = () => {
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl bg-gray-100  text-gray-500  group-hover:bg-blue-100 group-hover:text-blue-600    transition-colors">
-                      {(task.type === 'Review' || task.type === 'EXT_REVIEW') && <Eye className="w-6 h-6" />}
-                      {(task.type === 'Approve' || task.type === 'EXT_APPROVAL') && <CheckCircle className="w-6 h-6" />}
-                      {task.type === 'Ack' && <CheckCircle className="w-6 h-6" />}
-                      {task.type === 'Revise' && <FileEdit className="w-6 h-6" />}
-                      {task.type.startsWith('DCC_') && <AlertCircle className="w-6 h-6 text-indigo-500" />}
+                      {(task.type === 'Review' || task.type === 'EXT_REVIEW') && <Eye size={28} strokeWidth={1.25}/>}
+                      {(task.type === 'Approve' || task.type === 'EXT_APPROVAL') && <CheckCircle size={28} strokeWidth={1.25}/>}
+                      {task.type === 'Ack' && <CheckCircle size={28} strokeWidth={1.25}/>}
+                      {task.type === 'Revise' && <FileEdit size={28} strokeWidth={1.25}/>}
+                      {task.type.startsWith('DCC_') && <AlertCircle className="text-indigo-500" size={28} strokeWidth={1.25}/>}
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -204,7 +215,7 @@ const TaskInbox = () => {
                         </span>
                         {isExternal && (
                           <span className="px-2 py-0.5 bg-indigo-100  text-indigo-700  text-xs font-semibold rounded-full flex items-center gap-1">
-                            <ExternalLink className="w-3 h-3" /> External
+                            <ExternalLink size={20} strokeWidth={1.25}/> External
                           </span>
                         )}
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100  text-gray-700 ">
@@ -230,13 +241,13 @@ const TaskInbox = () => {
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400  group-hover:text-blue-500  transition-colors" />
+                  <ChevronRight className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} strokeWidth={1.25}/>
                 </div>
               );
             })
           ) : (
             <div className="p-12 text-center text-gray-500 ">
-              <CheckCircle className="w-12 h-12 mx-auto text-green-300 mb-3" />
+              <CheckCircle className="mx-auto text-green-300 mb-3" size={48} strokeWidth={1.25}/>
               <p className="text-lg font-medium text-gray-600 ">ไม่มีงานค้าง</p>
               <p className="text-sm">ยอดเยี่ยมมาก คุณจัดการงานเสร็จหมดแล้ว</p>
             </div>

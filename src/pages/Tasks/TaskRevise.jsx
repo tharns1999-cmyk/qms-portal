@@ -41,18 +41,18 @@ const TaskRevise = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <button onClick={() => navigate('/tasks')} className="flex items-center text-gray-500  hover:text-blue-600  transition-colors">
-        <ChevronLeft className="w-5 h-5" /> กลับหน้า Inbox
+        <ChevronLeft size={20} strokeWidth={1.25}/> กลับหน้า Inbox
       </button>
 
       <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8 text-yellow-600 " />
+        <FileText className="text-yellow-600" size={32} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800 ">Revise Task: {dar.id}</h2>
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
         <div className="flex items-start gap-4">
           <div className="bg-yellow-100 p-3 rounded-full text-yellow-700 ">
-            <AlertCircle className="w-6 h-6" />
+            <AlertCircle size={28} strokeWidth={1.25}/>
           </div>
           <div>
             <h3 className="font-semibold text-lg text-yellow-900 mb-1">เอกสารส่งกลับแก้ไข (Returned for Revision)</h3>
@@ -105,8 +105,7 @@ const TaskRevise = () => {
             onClick={handleAction}
             className="w-full bg-blue-600 text-white hover:bg-blue-700 py-3 rounded-lg font-semibold flex justify-center items-center gap-2 transition-colors shadow-md"
           >
-            <CheckCircle className="w-5 h-5" />
-            Resubmit for Review (ส่งตรวจสอบใหม่)
+            <CheckCircle size={20} strokeWidth={1.25}/> Resubmit for Review (ส่งตรวจสอบใหม่)
           </button>
         </div>
       </div>

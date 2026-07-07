@@ -206,7 +206,7 @@ const DarRevisionForm = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <FileEdit className="w-8 h-8 text-orange-600 " />
+        <FileEdit className="text-orange-600" size={32} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอแก้ไขเอกสาร (Revision DAR)</h2>
       </div>
       
@@ -215,7 +215,7 @@ const DarRevisionForm = () => {
         {/* Section 1: Select Effective Document */}
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2 rounded-t-2xl">
-            <Settings className="w-5 h-5 text-gray-500 " />
+            <Settings className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 1: Select Effective Document</h3>
           </div>
           <div className="p-6">
@@ -231,7 +231,7 @@ const DarRevisionForm = () => {
                     className="text-gray-400  hover:text-red-500  transition-colors"
                     title="ล้างค่าเพื่อเลือกเอกสารใหม่"
                   >
-                    <X className="w-5 h-5" />
+                    <X size={24} strokeWidth={1.25}/>
                   </button>
                 </div>
               </div>
@@ -254,7 +254,7 @@ const DarRevisionForm = () => {
                 
                 <div className="w-full md:w-2/3 flex items-center gap-2 relative" ref={searchContainerRef}>
                   <div className="relative flex-1">
-                    <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 " />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
                     <input
                       type="text"
                       value={searchQuery}
@@ -276,7 +276,7 @@ const DarRevisionForm = () => {
                         className="absolute right-3 top-2.5 text-gray-400  hover:text-red-500 "
                         title="ล้างคำค้นหา"
                       >
-                        <X className="w-5 h-5" />
+                        <X size={24} strokeWidth={1.25}/>
                       </button>
                     )}
                     
@@ -310,7 +310,7 @@ const DarRevisionForm = () => {
                     title="ล้างตัวกรองทั้งหมด"
                     className="p-2 text-gray-400  hover:text-red-500  hover:bg-red-50/50 rounded-lg transition-all duration-300 ease-fluid active:scale-95 h-[42px]"
                   >
-                    <FilterX className="w-5 h-5" />
+                    <FilterX size={24} strokeWidth={1.25}/>
                   </button>
                 </div>
               </div>
@@ -325,7 +325,7 @@ const DarRevisionForm = () => {
         {selectedDoc && (
           <div className="premium-card overflow-visible border-none">
             <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-500 " />
+              <FileText className="text-gray-500" size={24} strokeWidth={1.25}/>
               <h3 className="font-semibold text-gray-800 ">Section 2: Revision Details (Snapshot Area)</h3>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -354,7 +354,7 @@ const DarRevisionForm = () => {
         {/* Section 3: Change Details & Rationale */}
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <FileEdit className="w-5 h-5 text-gray-500 " />
+            <FileEdit className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 3: Change Details & Rationale</h3>
           </div>
           <div className="p-6 space-y-6">
@@ -408,7 +408,7 @@ const DarRevisionForm = () => {
         {/* Section 4: Distribution Management & Attachment */}
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <Upload className="w-5 h-5 text-gray-500 " />
+            <Upload className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 4: Distribution & Attachment</h3>
           </div>
           <div className="p-6 space-y-8">
@@ -417,7 +417,7 @@ const DarRevisionForm = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700  mb-2">อัปโหลดไฟล์เอกสารฉบับแก้ไข (PDF เท่านั้น) <span className="text-red-500 ">*</span></label>
               <div className="border-2 border-dashed border-gray-300  rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50  hover:bg-gray-100  transition-colors">
-                <Upload className="w-10 h-10 text-orange-500  mb-3" />
+                <Upload className="text-orange-500 mb-3" size={40} strokeWidth={1.25}/>
                 <p className="text-sm text-gray-600  mb-3 text-center">อัปโหลด PDF ฉบับที่มีการเปลี่ยนแปลงแล้วมาที่นี่<br/><span className="text-xs text-gray-400 ">ระบบจะจัดเก็บแยก Version จากฉบับ Effective เดิมโดยอัตโนมัติ</span></p>
                 <input 
                   type="file" 
@@ -465,7 +465,7 @@ const DarRevisionForm = () => {
                       value={formData.ackUserId} 
                       onChange={(id) => setFormData({...formData, ackUserId: id})} 
                       error={errors.ackUserId} 
-                      users={masterUsers} 
+                      users={masterUsers.filter(u => u.id !== currentUser.id && !u.isDcc && u.role !== 'DCC_ADMIN')} 
                     />
                   </div>
                   {errors.ackUserId && <p className="text-red-500  text-xs mt-2">{errors.ackUserId}</p>}
@@ -489,7 +489,7 @@ const DarRevisionForm = () => {
         {/* Section 5: Effective Control */}
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500 " />
+            <Calendar className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 5: Effective Control</h3>
           </div>
           <div className="p-6">
@@ -512,7 +512,7 @@ const DarRevisionForm = () => {
             onClick={() => navigate('/dashboard')}
             className="btn-ios-secondary text-gray-500"
           >
-            <X className="w-4 h-4" /> ยกเลิก (Cancel)
+            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
           </button>
           <button 
             type="button" 

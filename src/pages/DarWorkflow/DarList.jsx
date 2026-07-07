@@ -89,7 +89,7 @@ const DarList = () => {
             className="p-1.5 text-blue-600  hover:text-blue-700  hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-blue-200"
             title="ดำเนินการต่อ (Resume)"
           >
-            <Edit className="w-4 h-4" />
+            <Edit size={24} strokeWidth={1.25}/>
           </button>
           <button 
             onClick={(e) => {
@@ -101,7 +101,7 @@ const DarList = () => {
             className="p-1.5 text-gray-400  hover:text-red-600  hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-red-200"
             title="ลบทิ้ง (Discard)"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 size={24} strokeWidth={1.25}/>
           </button>
         </div>
       );
@@ -116,7 +116,7 @@ const DarList = () => {
           className="p-1.5 text-blue-600  bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center border border-blue-200"
           title="ดำเนินการ (Evaluate)"
         >
-          <ClipboardCheck className="w-4 h-4" />
+          <ClipboardCheck size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -128,7 +128,7 @@ const DarList = () => {
           className="p-1.5 text-purple-600  bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors flex items-center justify-center border border-purple-200"
           title="ดำเนินการ (Evaluate DCC)"
         >
-          <ClipboardCheck className="w-4 h-4" />
+          <ClipboardCheck size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -140,7 +140,7 @@ const DarList = () => {
           className="p-1.5 text-orange-600  hover:text-orange-700  bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors flex items-center justify-center border border-orange-200"
           title="แก้ไขคำขอ (Edit)"
         >
-          <Edit className="w-4 h-4" />
+          <Edit size={24} strokeWidth={1.25}/>
         </button>
       );
     }
@@ -151,7 +151,7 @@ const DarList = () => {
         className="p-1.5 text-gray-500  hover:text-gray-700  hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-gray-300"
         title="ดูรายละเอียด (View Details)"
       >
-        <Eye className="w-4 h-4" />
+        <Eye size={24} strokeWidth={1.25}/>
       </button>
     );
   };
@@ -180,8 +180,7 @@ const DarList = () => {
           onClick={() => navigate('/dar/new')}
           className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-out active:scale-95 border border-transparent"
         >
-          <FilePlus className="w-5 h-5" />
-          สร้าง DAR ใหม่
+          <FilePlus size={20} strokeWidth={1.25}/> สร้าง DAR ใหม่
         </button>
       </div>
 
@@ -198,13 +197,13 @@ const DarList = () => {
             }}
             className="input-ios w-full pl-10 pr-10 py-2"
           />
-          <Search className="w-5 h-5 text-gray-400  absolute left-3 top-2.5" />
+          <Search className="text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" size={18} strokeWidth={1.25}/>
           {searchTerm && (
             <button
               onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
               className="absolute right-3 top-2.5 text-gray-400  hover:text-gray-600 "
             >
-              <X className="w-5 h-5" />
+              <X size={24} strokeWidth={1.25}/>
             </button>
           )}
         </div>
@@ -264,7 +263,7 @@ const DarList = () => {
               disabled={currentPage === 1}
               className="p-2 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 "
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft size={24} strokeWidth={1.25}/>
             </button>
             <span className="text-sm font-medium px-4 text-gray-700 ">
               หน้า {currentPage} / {totalPages}
@@ -274,7 +273,7 @@ const DarList = () => {
               disabled={currentPage === totalPages}
               className="p-2 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 "
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight size={24} strokeWidth={1.25}/>
             </button>
           </div>
         </div>

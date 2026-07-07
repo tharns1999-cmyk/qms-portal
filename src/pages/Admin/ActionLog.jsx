@@ -13,14 +13,14 @@ const ActionLog = () => {
   if (!isDccAdmin) {
     return (
       <div className="flex flex-col items-center justify-center h-full pt-20">
-        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+        <ShieldAlert className="text-red-500 mb-4" size={64} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800">Access Denied</h2>
         <p className="text-gray-500 mt-2">Only DCC Admin can view the Action Log.</p>
       </div>
     );
   }
 
-  const filteredLogs = actionLog.filter(log => 
+  const filteredLogs = actionLog.filter(log =>
     log.actionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.actor.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.details.toLowerCase().includes(searchTerm.toLowerCase())
@@ -47,7 +47,7 @@ const ActionLog = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <History className="w-8 h-8 text-indigo-600" />
+            <History className="text-indigo-600" size={32} strokeWidth={1.25}/>
             System Action Log
           </h1>
           <p className="text-gray-500 mt-1">Audit trail for all system activities</p>
@@ -56,18 +56,17 @@ const ActionLog = () => {
           onClick={handleExportCSV}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all font-medium shadow-sm hover:shadow active:scale-95"
         >
-          <Download className="w-5 h-5" />
-          Export to CSV
+          <Download size={20} strokeWidth={1.25}/> Export to CSV
         </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[70vh]">
         <div className="p-4 border-b border-gray-100 bg-gray-50/50">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search logs by action, user, or details..." 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
+            <input
+              type="text"
+              placeholder="Search logs by action, user, or details..."
               className="pl-10 pr-4 py-2 w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

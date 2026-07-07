@@ -163,11 +163,11 @@ const ExternalDocsList = () => {
 
   const getStatusDisplay = (status) => {
     switch (status) {
-      case 'PENDING_EXT_REVIEW': return { color: 'text-orange-700  bg-orange-100', label: 'รอ Review', icon: <Clock className="w-3 h-3" /> };
-      case 'PENDING_EXT_APPROVAL': return { color: 'text-blue-700  bg-blue-100', label: 'รอ Approve', icon: <Clock className="w-3 h-3" /> };
-      case 'ACTIVE': return { color: 'text-green-700  bg-green-100', label: 'Active', icon: <CheckCircle className="w-3 h-3" /> };
-      case 'WITHDRAWN': return { color: 'text-red-700  bg-red-100', label: 'Withdrawn', icon: <X className="w-3 h-3" /> };
-      case 'OBSOLETE_ARCHIVED': return { color: 'text-red-700  bg-red-100', label: 'Obsolete', icon: <Archive className="w-3 h-3" /> };
+      case 'PENDING_EXT_REVIEW': return { color: 'text-orange-700  bg-orange-100', label: 'รอ Review', icon: <Clock size={24} strokeWidth={1.25}/> };
+      case 'PENDING_EXT_APPROVAL': return { color: 'text-blue-700  bg-blue-100', label: 'รอ Approve', icon: <Clock size={24} strokeWidth={1.25}/> };
+      case 'ACTIVE': return { color: 'text-green-700  bg-green-100', label: 'Active', icon: <CheckCircle size={24} strokeWidth={1.25}/> };
+      case 'WITHDRAWN': return { color: 'text-red-700  bg-red-100', label: 'Withdrawn', icon: <X size={24} strokeWidth={1.25}/> };
+      case 'OBSOLETE_ARCHIVED': return { color: 'text-red-700  bg-red-100', label: 'Obsolete', icon: <Archive size={24} strokeWidth={1.25}/> };
       default: return { color: 'text-gray-700  bg-gray-100', label: status, icon: null };
     }
   };
@@ -182,7 +182,7 @@ const ExternalDocsList = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800  flex items-center gap-2">
-            <Globe className="w-6 h-6 text-blue-600 " />
+            <Globe className="text-blue-600" size={28} strokeWidth={1.25}/>
             เอกสารภายนอก (External Documents)
           </h2>
           <p className="text-gray-500  mt-1">ระบบลงทะเบียนและอัปเดตเอกสารจากหน่วยงานภายนอก (ตามมาตรฐาน BRS V1.1)</p>
@@ -191,8 +191,7 @@ const ExternalDocsList = () => {
           onClick={handleRegisterNew}
           className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-95 shadow-[inset_-4px_-4px_8px_rgba(0,0,0,0.15),inset_4px_4px_8px_rgba(255,255,255,0.5),4px_4px_8px_rgba(0,0,0,0.1)]"
         >
-          <Plus className="w-5 h-5" />
-          ลงทะเบียนเอกสารใหม่
+          <Plus size={20} strokeWidth={1.25}/> ลงทะเบียนเอกสารใหม่
         </button>
       </div>
 
@@ -205,13 +204,13 @@ const ExternalDocsList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input-ios w-full pl-10 pr-10 py-2"
           />
-          <Search className="w-5 h-5 text-gray-400  absolute left-3 top-2.5" />
+          <Search className="text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" size={18} strokeWidth={1.25}/>
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
               className="absolute right-3 top-2.5 text-gray-400  hover:text-gray-600  "
             >
-              <X className="w-5 h-5" />
+              <X size={24} strokeWidth={1.25}/>
             </button>
           )}
         </div>
@@ -285,7 +284,7 @@ const ExternalDocsList = () => {
                           className="p-1.5 text-indigo-600  hover:bg-indigo-50/50  rounded-lg transition-all duration-300 ease-fluid active:scale-95"
                           title="Preview"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye size={24} strokeWidth={1.25}/>
                         </button>
 
                         {/* Manage CC button removed as requested */}
@@ -295,7 +294,7 @@ const ExternalDocsList = () => {
                           className={`p-1.5 rounded-lg transition-all duration-300 ease-fluid active:scale-95 ${isViewOnly ? 'text-gray-300  cursor-not-allowed' : 'text-blue-600  hover:bg-blue-50/50 '}`}
                           title={isViewOnly ? "ดาวน์โหลด (View-only ไม่มีสิทธิ์)" : "ดาวน์โหลด (Download)"}
                         >
-                          <Download className="w-4 h-4" />
+                          <Download size={24} strokeWidth={1.25}/>
                         </button>
 
                         {doc.status !== 'WITHDRAWN' && doc.status !== 'OBSOLETE_ARCHIVED' && isOwner && (
@@ -308,14 +307,14 @@ const ExternalDocsList = () => {
                                   className="p-1.5 text-gray-500  hover:text-indigo-600   hover:bg-indigo-50/50  rounded-lg transition-all duration-300 ease-fluid active:scale-95"
                                   title="อัปเดต Revision (Revise)"
                                 >
-                                  <FileText className="w-4 h-4" />
+                                  <FileText size={24} strokeWidth={1.25}/>
                                 </button>
                                 <button
                                   onClick={() => handleObsolete(doc)}
                                   className="p-1.5 text-gray-500  hover:text-amber-600   hover:bg-amber-50/50  rounded-lg transition-all duration-300 ease-fluid active:scale-95"
                                   title="ยกเลิกใช้งาน (Obsolete)"
                                 >
-                                  <Archive className="w-4 h-4" />
+                                  <Archive size={24} strokeWidth={1.25}/>
                                 </button>
                               </>
                             )}
@@ -328,7 +327,7 @@ const ExternalDocsList = () => {
                     <td className="px-4 py-3 font-medium text-gray-800 ">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          {isRestricted && <ShieldAlert className="w-4 h-4 text-red-500  shrink-0" title="Confidential Document" />}
+                          {isRestricted && <ShieldAlert className="text-red-500 shrink-0" title="Confidential Document" size={24} strokeWidth={1.25}/>}
                           <span>{doc.title}</span>
                         </div>
                         {doc.sourceVersion && (
@@ -353,7 +352,7 @@ const ExternalDocsList = () => {
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-gray-500 ">
                     <div className="flex flex-col items-center justify-center">
-                      <FileText className="w-10 h-10 text-gray-300  mb-2" />
+                      <FileText className="text-gray-300 mb-2" size={40} strokeWidth={1.25}/>
                       <p>ไม่มีข้อมูลเอกสารภายนอก</p>
                     </div>
                   </td>

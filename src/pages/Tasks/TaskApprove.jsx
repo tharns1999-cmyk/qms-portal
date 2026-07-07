@@ -47,7 +47,7 @@ const TaskApprove = () => {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="bg-red-50 text-red-600  p-8 rounded-xl border border-red-200 text-center shadow-lg">
-          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500 " />
+          <XCircle className="mx-auto mb-4 text-red-500" size={64} strokeWidth={1.25}/>
           <h2 className="text-2xl font-bold mb-2">Unauthorized Access</h2>
           <p>คุณไม่มีสิทธิ์เข้าถึงงานนี้ หรือเป็นงานที่ถูกมอบหมายให้ผู้อื่น</p>
           <button onClick={() => navigate('/tasks')} className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700">กลับหน้า Inbox</button>
@@ -86,10 +86,10 @@ const TaskApprove = () => {
         {/* Header */}
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between shadow-sm z-10">
            <button onClick={() => navigate('/tasks')} className="flex items-center text-gray-500  hover:text-blue-600  font-medium">
-             <ChevronLeft className="w-5 h-5 mr-1" /> Back
+             <ChevronLeft className="mr-1" size={20} strokeWidth={1.25}/> Back
            </button>
            <h2 className="font-bold text-gray-800  text-lg flex items-center gap-2">
-             <FileText className="w-5 h-5 text-purple-600 " /> Task Approve
+             <FileText className="text-purple-600" size={20} strokeWidth={1.25}/> Task Approve
            </h2>
         </div>
 
@@ -109,10 +109,16 @@ const TaskApprove = () => {
                <p><span className="text-gray-400  w-24 inline-block">Title:</span> <span className="font-medium text-gray-900 ">{dar.title}</span></p>
                <p><span className="text-gray-400  w-24 inline-block">Doc Code:</span> <span className="font-medium">{getDarDocInfo(dar, documents).docCode}</span></p>
                <p><span className="text-gray-400  w-24 inline-block">Type:</span> <span className="font-medium">{getDarDocInfo(dar, documents).docType}</span></p>
-               <p><span className="text-gray-400  w-24 inline-block">Revision:</span> <span className="font-medium">{getDarDocInfo(dar, documents).docRev}</span></p>
+               <p><span className="text-gray-400  w-24 inline-block">Revision:</span> <span className="font-medium">
+                 {dar.type === 'REVISION' ? `${getDarDocInfo(dar, documents).docRev} ➡️ ${String(parseInt(getDarDocInfo(dar, documents).docRev || 0, 10) + 1).padStart(2, '0')}` : getDarDocInfo(dar, documents).docRev}
+               </span></p>
                <p><span className="text-gray-400  w-24 inline-block">Dept:</span> <span className="font-medium">{dar.department}</span></p>
                <p><span className="text-gray-400  w-24 inline-block">Effective:</span> <span className="font-medium">{dar.effectiveDate || '-'}</span></p>
-               <p><span className="text-gray-400  w-24 inline-block">Distribution:</span> <span className="font-medium">{dar.distributionMode === 'ALL' ? 'All Departments' : (dar.distributedDepts?.join(', ') || '-')}</span></p>
+               <p><span className="text-gray-400  w-24 inline-block">Distribution:</span> <span className="font-medium">
+                 {dar.distributions?.length > 0 
+                    ? dar.distributions.map(d => d.departmentId || d.dept).join(', ') 
+                    : (dar.distributionMode === 'ALL' ? 'All Departments' : (dar.distributedDepts?.join(', ') || '-'))}
+               </span></p>
                {dar.ackRequirement && dar.ackRequirement !== 'NOT_REQUIRED' && (
                  <p><span className="text-gray-400  w-24 inline-block">Ack:</span> <span className="font-medium text-purple-600 ">Required</span></p>
                )}
@@ -126,7 +132,7 @@ const TaskApprove = () => {
           {/* Timeline / Chat */}
           <div className="flex flex-col gap-4">
              <h4 className="text-sm font-bold text-gray-500  uppercase tracking-wider flex items-center gap-2">
-               <MessageSquare className="w-4 h-4" /> Workflow History
+               <MessageSquare size={20} strokeWidth={1.25}/> Workflow History
              </h4>
              {darTimeline.map(tl => (
                <div key={tl.id} className={`flex flex-col ${tl.userId === currentUser.id ? 'items-end' : 'items-start'}`}>
@@ -167,7 +173,7 @@ const TaskApprove = () => {
               className="flex-1 bg-white border-2 border-red-500 text-red-600  hover:bg-red-50 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
               title="ไม่อนุมัติและยกเลิกคำขอนี้ทันที"
             >
-              <Ban className="w-4 h-4" /> Reject
+              <Ban size={20} strokeWidth={1.25}/> Reject
             </button>
             <button
               disabled={!hasReadToBottom}
@@ -175,7 +181,7 @@ const TaskApprove = () => {
               className="flex-1 bg-white border-2 border-yellow-500 text-yellow-600  hover:bg-yellow-50 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
               title="ส่งกลับไปให้ Requester แก้ไข"
             >
-              <XCircle className="w-4 h-4" /> Return
+              <XCircle size={20} strokeWidth={1.25}/> Return
             </button>
             <button
               disabled={!hasReadToBottom}
@@ -183,7 +189,7 @@ const TaskApprove = () => {
               className="flex-[1.5] bg-purple-600 text-white hover:bg-purple-700 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-sm"
               title="อนุมัติคำขอ"
             >
-              <CheckCircle className="w-4 h-4" /> Approve
+              <CheckCircle size={20} strokeWidth={1.25}/> Approve
             </button>
           </div>
           {!hasReadToBottom && (
@@ -203,11 +209,11 @@ const TaskApprove = () => {
           <div className="flex items-center gap-2 border-l border-gray-700 pl-4">
             {canDownload ? (
               <button className="p-1.5 hover:bg-gray-700 rounded transition-colors text-purple-400 hover:text-purple-300" title="Download Document">
-                <Download className="w-5 h-5" />
+                <Download size={24} strokeWidth={1.25}/>
               </button>
             ) : (
               <button className="p-1.5 opacity-50 cursor-not-allowed text-gray-500 " title="Preview Only (Global View restricted)">
-                <Download className="w-5 h-5" />
+                <Download size={24} strokeWidth={1.25}/>
               </button>
             )}
           </div>

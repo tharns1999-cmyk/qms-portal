@@ -160,14 +160,14 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
             onClick={onClose}
             className="text-gray-400  hover:text-gray-600  p-2 rounded-full hover:bg-slate-200/50 transition-all duration-300 ease-out active:scale-95"
           >
-            <X className="w-5 h-5" />
+            <X size={24} strokeWidth={1.25}/>
           </button>
         </div>
 
         {/* Form Body */}
         <div className="p-6 overflow-y-auto flex-1">
           <div className="bg-blue-50 text-blue-700  p-4 rounded-xl flex gap-3 mb-6 items-start">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <AlertCircle className="shrink-0 mt-0.5" size={24} strokeWidth={1.25}/>
             <div className="text-sm">
               <p className="font-semibold mb-1">กฎการลงทะเบียน (External Rules)</p>
               <ul className="list-disc pl-4 space-y-1">
@@ -237,7 +237,7 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
                     onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer    " 
                   />
-                  <Upload className="w-8 h-8 text-gray-400  mb-2" />
+                  <Upload className="text-gray-400 mb-2" size={32} strokeWidth={1.25}/>
                   <span className="text-sm text-gray-600  font-medium">คลิกหรือลากไฟล์ PDF มาวางที่นี่</span>
                   {fileName && <span className="text-sm text-blue-600  mt-2 font-medium">ไฟล์ที่เลือก: {fileName}</span>}
                 </div>
@@ -297,7 +297,7 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
                         return (
                           <div key={uid} className="bg-white border border-red-200 text-red-700  px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm">
                             <span className="font-medium">{u?.name || uid}</span>
-                            <button type="button" onClick={() => handleRemoveUser(uid)} className="hover:text-red-900"><X className="w-4 h-4"/></button>
+                            <button type="button" onClick={() => handleRemoveUser(uid)} className="hover:text-red-900"><X size={24} strokeWidth={1.25}/></button>
                           </div>
                         );
                       })}
@@ -351,14 +351,14 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
             onClick={onClose}
             className="px-5 py-2 btn-ios-secondary text-gray-500"
           >
-            <X className="w-4 h-4" /> ยกเลิก
+            <X size={20} strokeWidth={1.25}/> ยกเลิก
           </button>
           <button 
             type="submit"
             form="external-doc-form"
             className="btn-ios-primary"
           >
-            <Save className="w-4 h-4" />
+            <Save size={24} strokeWidth={1.25}/>
             {documentToEdit ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'}
           </button>
         </div>
@@ -378,7 +378,7 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
               className="relative premium-card w-full max-w-lg p-6 bg-white"
             >
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <ShieldAlert className="w-6 h-6 text-indigo-500" /> ยืนยันข้อมูลและสิทธิ์การเข้าถึง
+                <ShieldAlert className="text-indigo-500" size={28} strokeWidth={1.25}/> ยืนยันข้อมูลและสิทธิ์การเข้าถึง
               </h2>
               
               <div className="space-y-4 mb-6">

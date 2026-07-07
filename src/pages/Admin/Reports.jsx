@@ -20,14 +20,14 @@ const Reports = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600 " />
+            <FileText className="text-blue-600" size={24} strokeWidth={1.25}/>
             <h3 className="text-lg font-bold text-gray-800 ">DAR Register Report</h3>
           </div>
           <button 
             onClick={() => handleExport('DAR Register')}
             className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-md text-gray-700  hover:bg-gray-50 text-sm font-medium"
           >
-            <Download className="w-4 h-4" /> Export CSV
+            <Download size={20} strokeWidth={1.25}/> Export CSV
           </button>
         </div>
         
@@ -64,14 +64,14 @@ const Reports = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-500 " />
+            <AlertTriangle className="text-orange-500" size={24} strokeWidth={1.25}/>
             <h3 className="text-lg font-bold text-gray-800 ">Task Overdue Report</h3>
           </div>
           <button 
             onClick={() => handleExport('Task Overdue')}
             className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-md text-gray-700  hover:bg-gray-50 text-sm font-medium"
           >
-            <Download className="w-4 h-4" /> Export CSV
+            <Download size={20} strokeWidth={1.25}/> Export CSV
           </button>
         </div>
         

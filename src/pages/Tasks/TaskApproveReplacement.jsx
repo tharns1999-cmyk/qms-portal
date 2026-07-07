@@ -65,7 +65,7 @@ const TaskApproveCopyRequest = () => {
           onClick={() => navigate('/tasks')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="text-gray-600" size={24} strokeWidth={1.25}/>
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">อนุมัติคำขอทดแทนเอกสารควบคุม</h1>
@@ -76,7 +76,7 @@ const TaskApproveCopyRequest = () => {
       <div className="premium-card p-6 border-none bg-white">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-            <FilePlus className="w-6 h-6" />
+            <FilePlus size={28} strokeWidth={1.25}/>
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-800">{instance.docTitle}</h2>
@@ -124,14 +124,14 @@ const TaskApproveCopyRequest = () => {
             disabled={isSubmitting}
             className="flex items-center gap-2 px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-colors disabled:opacity-50"
           >
-            <XCircle className="w-4 h-4" /> ปฏิเสธ (Reject)
+            <XCircle size={20} strokeWidth={1.25}/> ปฏิเสธ (Reject)
           </button>
           <button 
             onClick={() => handleAction('APPROVE')}
             disabled={isSubmitting}
             className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-transform duration-300 active:scale-95 disabled:opacity-50"
           >
-            <CheckCircle className="w-4 h-4" /> อนุมัติ (Approve)
+            <CheckCircle size={20} strokeWidth={1.25}/> อนุมัติ (Approve)
           </button>
         </div>
       </div>

@@ -20,7 +20,7 @@ const Viewer = () => {
       <div className="bg-gray-800 text-gray-200 px-4 py-3 flex items-center justify-between shadow-md z-10">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-700 rounded transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft size={24} strokeWidth={1.25}/>
           </button>
           <div className="font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-md">
             {title} (Rev: {rev}) {isArchive && <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs border border-red-500/30">ARCHIVED</span>}
@@ -29,19 +29,19 @@ const Viewer = () => {
         
         <div className="flex items-center gap-1 md:gap-4">
           <div className="hidden md:flex items-center gap-2 bg-gray-700 rounded px-2 py-1">
-            <button className="p-1 hover:bg-gray-600 rounded"><ZoomOut className="w-4 h-4" /></button>
+            <button className="p-1 hover:bg-gray-600 rounded"><ZoomOut size={24} strokeWidth={1.25}/></button>
             <span className="text-xs w-10 text-center">100%</span>
-            <button className="p-1 hover:bg-gray-600 rounded"><ZoomIn className="w-4 h-4" /></button>
+            <button className="p-1 hover:bg-gray-600 rounded"><ZoomIn size={24} strokeWidth={1.25}/></button>
           </div>
           
           <div className="flex items-center gap-2 border-l border-gray-700 pl-4">
             {canDownload ? (
               <button className="p-1.5 hover:bg-gray-700 rounded transition-colors" title="Download Document (DCC Only)">
-                <Download className="w-4 h-4" />
+                <Download size={24} strokeWidth={1.25}/>
               </button>
             ) : (
               <button className="p-1.5 opacity-50 cursor-not-allowed" title={isArchive ? "Archive Document (Download Disabled)" : "View Only Mode: ไม่อนุญาตให้ดาวน์โหลดเพื่อป้องกันสำเนาซ้ำซ้อน"}>
-                <Download className="w-4 h-4" />
+                <Download size={24} strokeWidth={1.25}/>
               </button>
             )}
           </div>
@@ -78,9 +78,9 @@ const Viewer = () => {
       
       {/* Floating Pagination */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full flex items-center gap-4 shadow-lg border border-gray-700">
-        <button className="p-1 hover:bg-gray-700 rounded-full"><ChevronLeft className="w-5 h-5" /></button>
+        <button className="p-1 hover:bg-gray-700 rounded-full"><ChevronLeft size={24} strokeWidth={1.25}/></button>
         <span className="text-sm font-medium">Page 1 of 5</span>
-        <button className="p-1 hover:bg-gray-700 rounded-full"><ChevronRight className="w-5 h-5" /></button>
+        <button className="p-1 hover:bg-gray-700 rounded-full"><ChevronRight size={24} strokeWidth={1.25}/></button>
       </div>
     </div>
   );

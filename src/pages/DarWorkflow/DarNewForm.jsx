@@ -168,7 +168,7 @@ const DarNewForm = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8 text-blue-600 " />
+        <FileText className="text-blue-600" size={32} strokeWidth={1.25}/>
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอสร้างเอกสารใหม่ (New Document DAR)</h2>
       </div>
       
@@ -176,7 +176,7 @@ const DarNewForm = () => {
         
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <User className="w-5 h-5 text-gray-500 " />
+            <User className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 1: Requester Information</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -197,7 +197,7 @@ const DarNewForm = () => {
 
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <Settings className="w-5 h-5 text-gray-500 " />
+            <Settings className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 2: Document Definition</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -240,7 +240,7 @@ const DarNewForm = () => {
 
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gray-500 " />
+            <FileText className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 3: Request Details & Attachment</h3>
           </div>
           <div className="p-6 space-y-6">
@@ -271,7 +271,7 @@ const DarNewForm = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700  mb-2">อัปโหลดไฟล์เอกสาร (PDF เท่านั้น) <span className="text-red-500 ">*</span></label>
               <div className="border-2 border-dashed border-gray-300  rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 ">
-                <Upload className="w-10 h-10 text-blue-500  mb-3" />
+                <Upload className="text-blue-500 mb-3" size={40} strokeWidth={1.25}/>
                 <input 
                   type="file" 
                   accept="application/pdf"
@@ -303,7 +303,7 @@ const DarNewForm = () => {
                       value={formData.ackUserId} 
                       onChange={(id) => setFormData({...formData, ackUserId: id})} 
                       error={errors.ackUserId} 
-                      users={masterUsers} 
+                      users={masterUsers.filter(u => u.id !== currentUser.id && !u.isDcc && u.role !== 'DCC_ADMIN')} 
                     />
                   </div>
                   {errors.ackUserId && <p className="text-red-500  text-xs mt-2">{errors.ackUserId}</p>}
@@ -324,7 +324,7 @@ const DarNewForm = () => {
         {/* Section 5: Effective Control */}
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500 " />
+            <Calendar className="text-gray-500" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-gray-800 ">Section 5: Effective Control</h3>
           </div>
           <div className="p-6">
@@ -344,7 +344,7 @@ const DarNewForm = () => {
         {/* Developer Testing Section */}
         <div className="premium-card bg-[#fffbeb] overflow-hidden border-none">
           <div className="px-6 py-4 border-b border-yellow-200  bg-yellow-100/50  flex items-center gap-2">
-            <Settings className="w-5 h-5 text-yellow-600  " />
+            <Settings className="text-yellow-600" size={24} strokeWidth={1.25}/>
             <h3 className="font-semibold text-yellow-800 ">Developer Testing: SoD Validation</h3>
           </div>
           <div className="p-6">
@@ -390,7 +390,7 @@ const DarNewForm = () => {
             onClick={() => navigate('/dashboard')}
             className="btn-ios-secondary text-gray-500"
           >
-            <X className="w-4 h-4" /> ยกเลิก (Cancel)
+            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
           </button>
           <button 
             type="button" 

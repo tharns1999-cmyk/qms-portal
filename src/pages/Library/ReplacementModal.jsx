@@ -51,7 +51,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
           >
             <div className="px-6 py-4 border-b border-red-100 bg-red-50/50 flex justify-between items-center">
               <div className="flex items-center gap-2 text-red-700 ">
-                <AlertTriangle className="w-5 h-5" />
+                <AlertTriangle size={24} strokeWidth={1.25}/>
                 <h2 className="text-xl font-bold">แจ้งเอกสารชำรุด/สูญหาย</h2>
               </div>
               <button 
@@ -59,7 +59,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
                 className="text-gray-400  hover:text-gray-600  p-2 rounded-full hover:bg-slate-200/50 transition-all duration-300 ease-out active:scale-95"
                 disabled={isSubmitting}
               >
-                <X className="w-5 h-5" />
+                <X size={24} strokeWidth={1.25}/>
               </button>
             </div>
 
@@ -83,12 +83,12 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
                   <div className="grid grid-cols-2 gap-3">
                     <label className={`border rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${reasonType === 'DAMAGED' ? 'border-orange-500 bg-orange-50 text-orange-700  ring-1 ring-orange-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600 '}`}>
                       <input type="radio" name="reasonType" value="DAMAGED" className="sr-only    " checked={reasonType === 'DAMAGED'} onChange={() => setReasonType('DAMAGED')} />
-                      <FileText className="w-6 h-6" />
+                      <FileText size={28} strokeWidth={1.25}/>
                       <span className="font-medium text-sm">เอกสารชำรุด (Damaged)</span>
                     </label>
                     <label className={`border rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${reasonType === 'LOST' ? 'border-red-500 bg-red-50 text-red-700  ring-1 ring-red-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600 '}`}>
                       <input type="radio" name="reasonType" value="LOST" className="sr-only    " checked={reasonType === 'LOST'} onChange={() => setReasonType('LOST')} />
-                      <AlertTriangle className="w-6 h-6" />
+                      <AlertTriangle size={28} strokeWidth={1.25}/>
                       <span className="font-medium text-sm">เอกสารสูญหาย (Lost)</span>
                     </label>
                   </div>
@@ -109,7 +109,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
                 </div>
                 
                 <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-xs flex gap-2 border border-blue-100">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="shrink-0 mt-0.5" size={24} strokeWidth={1.25}/>
                   <p>เมื่อยืนยัน ระบบจะส่งคำขอไปยังผู้จัดการเพื่ออนุมัติ หลังจากนั้น DCC จะทำการเตรียมเอกสารควบคุมใหม่ภายใต้รหัสเดิม (โดยปรับเพิ่ม Issue No.) ให้ท่านต่อไป</p>
                 </div>
               </form>
@@ -122,7 +122,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
                 disabled={isSubmitting}
                 className="px-5 py-2 btn-ios-secondary text-gray-500"
               >
-                <X className="w-4 h-4" /> ยกเลิก
+                <X size={20} strokeWidth={1.25}/> ยกเลิก
               </button>
               <button 
                 type="submit"

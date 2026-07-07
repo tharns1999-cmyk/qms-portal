@@ -14,6 +14,9 @@ const DarDetail = () => {
   const dar = dars.find(d => d.id === id);
   const myTimeline = timeline.filter(t => t.darId === id).sort((a, b) => b.id - a.id);
   
+  const darHistory = timeline.filter(t => t.darId === id);
+  const getActor = (action) => darHistory.find(t => t.action === action)?.user || '-';
+  
   const docInfo = getDarDocInfo(dar, documents);
 
   if (!dar) return <div className="p-6">ไม่พบข้อมูล DAR</div>;
@@ -36,7 +39,7 @@ const DarDetail = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-gray-600 " />
+          <ArrowLeft className="text-gray-600" size={24} strokeWidth={1.25}/>
         </button>
         <h2 className="text-2xl font-bold text-gray-800 ">{dar.id}: {dar.title}</h2>
       </div>
@@ -44,7 +47,7 @@ const DarDetail = () => {
       {isAdmin && workflow && (
         <div className="bg-white rounded-xl shadow-sm border border-indigo-100 p-6">
           <h3 className="font-semibold text-indigo-900 border-b border-indigo-50 pb-2 mb-6 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-indigo-600 " /> Workflow Integrity Tracker (DCC Admin)
+            <Activity className="text-indigo-600" size={20} strokeWidth={1.25}/> Workflow Integrity Tracker (DCC Admin)
           </h3>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative">
              {/* Background connecting line for desktop */}
@@ -91,7 +94,7 @@ const DarDetail = () => {
 
       {dar.status === 'CANCELLED' && (
         <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-6 h-6 text-red-500 " />
+          <AlertCircle className="text-red-500" size={28} strokeWidth={1.25}/>
           <div>
             <p className="font-bold">คำร้องถูกยกเลิก (CANCELLED)</p>
             <p className="text-sm text-red-700 ">ระบบได้ยกเลิกคำร้องนี้โดยอัตโนมัติเนื่องจากเกินกำหนดเวลา SLA (Overdue Day 4) ข้อมูลทั้งหมดอยู่ในสถานะ Read-only</p>
@@ -118,12 +121,24 @@ const DarDetail = () => {
               <div><span className="text-gray-500  w-32 inline-block">วันที่มีผล (Effective):</span> <span className="font-medium text-gray-900 ">{dar.effectiveDate || '-'}</span></div>
               <div className="col-span-2"><span className="text-gray-500  w-32 inline-block">แจกจ่ายไปยัง (Dist.):</span> <span className="font-medium text-gray-900 ">
                 {dar.distributions?.length > 0 
-                  ? dar.distributions.map(d => d.dept).join(', ') 
+                  ? dar.distributions.map(d => d.departmentId || d.dept).join(', ') 
                   : (dar.distributionMode === 'ALL' ? 'ทุกแผนก (All Departments)' : (dar.distributedDepts?.join(', ') || '-'))}
               </span></div>
               <div className="col-span-2"><span className="text-gray-500  w-32 inline-block">รับทราบ (Ack):</span> <span className="font-medium text-gray-900 ">{dar.ackRequirement === 'REQUIRED' ? 'ต้องกดรับทราบ' : 'ไม่ต้องรับทราบ'}</span></div>
               
-              <div className="col-span-2 mt-2 pt-4 border-t border-gray-100">
+              <div className="col-span-2 mt-4 pt-4 border-t border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-800 mb-3">ผู้ที่เกี่ยวข้อง (Workflow)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-sm">
+                  <div><span className="text-gray-500 w-28 inline-block">ผู้ร้องขอ (Request):</span> <span className="font-medium text-gray-900">{dar.requesterName || getActor('Created') || '-'}</span></div>
+                  <div><span className="text-gray-500 w-28 inline-block">ผู้ทบทวน (Review):</span> <span className="font-medium text-gray-900">{getActor('Reviewed')}</span></div>
+                  <div><span className="text-gray-500 w-28 inline-block">ผู้อนุมัติ (Approve):</span> <span className="font-medium text-gray-900">{getActor('Approved')}</span></div>
+                  {dar.ackRequirement === 'REQUIRED' && (
+                    <div><span className="text-gray-500 w-28 inline-block">รับทราบ (Ack):</span> <span className="font-medium text-gray-900">{getActor('Acknowledged')}</span></div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="col-span-2 mt-4 pt-4 border-t border-gray-100">
                 <span className="text-gray-500  block mb-1">{getDarReason(dar).title}</span> 
                 <p className="font-medium text-gray-900  bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">{getDarReason(dar).value}</p>
               </div>
@@ -138,7 +153,7 @@ const DarDetail = () => {
             <h3 className="font-semibold text-gray-800  border-b pb-2 mb-4">เอกสารแนบ (PDF)</h3>
             <div className="flex-1 bg-gray-100 flex items-center justify-center rounded-lg border border-gray-200">
               <div className="text-center text-gray-400 ">
-                <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <FileText className="mx-auto mb-2 opacity-50" size={48} strokeWidth={1.25}/>
                 <p>PDF Viewer Simulator</p>
               </div>
             </div>
@@ -153,7 +168,7 @@ const DarDetail = () => {
               {myTimeline.map((item, idx) => (
                 <div key={item.id} className="relative pl-6 border-l-2 border-gray-200 last:border-0 pb-2">
                   <div className="absolute -left-[9px] top-0 bg-white p-1">
-                    <CheckCircle className="w-4 h-4 text-blue-500 " />
+                    <CheckCircle className="text-blue-500" size={24} strokeWidth={1.25}/>
                   </div>
                   <div>
                     <div className="flex justify-between items-start mb-1">

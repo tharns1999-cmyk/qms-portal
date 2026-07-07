@@ -34,8 +34,7 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <div>
               <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-500" />
-                ประวัติเอกสารภายนอก (External Document History)
+                <FileText className="text-indigo-500" size={20} strokeWidth={1.25}/> ประวัติเอกสารภายนอก (External Document History)
               </h3>
               <p className="text-sm text-slate-500 mt-0.5">
                 {document.id} - {document.title}
@@ -45,7 +44,7 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X size={24} strokeWidth={1.25}/>
             </button>
           </div>
 
@@ -54,25 +53,25 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-1">
-                  <Info className="w-4 h-4" /> ชื่อเอกสาร / Title
+                  <Info size={20} strokeWidth={1.25}/> ชื่อเอกสาร / Title
                 </div>
                 <div className="text-slate-800 font-medium">{document.title}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-1">
-                  <CheckCircle className="w-4 h-4" /> สถานะ / Status
+                  <CheckCircle size={20} strokeWidth={1.25}/> สถานะ / Status
                 </div>
                 <div className="text-slate-800 font-medium">{document.status}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-1">
-                  <Clock className="w-4 h-4" /> Revision
+                  <Clock size={20} strokeWidth={1.25}/> Revision
                 </div>
                 <div className="text-slate-800 font-medium">{document.rev || '00'}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-1">
-                  <ShieldAlert className="w-4 h-4" /> ระดับความลับ / Access Scope
+                  <ShieldAlert size={20} strokeWidth={1.25}/> ระดับความลับ / Access Scope
                 </div>
                 <div className="text-slate-800 font-medium">{document.accessScope}</div>
               </div>
@@ -81,8 +80,7 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
             {/* History Timeline */}
             <div>
               <h4 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
-                <Clock className="w-5 h-5 text-blue-500" />
-                ประวัติการดำเนินการ (Audit Trail)
+                <Clock className="text-blue-500" size={20} strokeWidth={1.25}/> ประวัติการดำเนินการ (Audit Trail)
               </h4>
               
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
@@ -108,7 +106,7 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
                             </span>
                           </td>
                           <td className="px-4 py-3 flex items-center gap-2">
-                            <User className="w-3.5 h-3.5 text-slate-400" />
+                            <User className="w-3.5 h-3.5 text-slate-400" size={24} strokeWidth={1.25}/>
                             {log.actor}
                           </td>
                           <td className="px-4 py-3 text-slate-500 text-xs">
@@ -119,7 +117,7 @@ const ExternalDocHistoryModal = ({ isOpen, onClose, document }) => {
                       {docHistory.length === 0 && (
                         <tr>
                           <td colSpan="4" className="px-4 py-8 text-center text-slate-500">
-                            <FileMinus className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                            <FileMinus className="text-slate-300 mx-auto mb-2" size={32} strokeWidth={1.25}/>
                             <p>ยังไม่มีประวัติการดำเนินการ</p>
                           </td>
                         </tr>

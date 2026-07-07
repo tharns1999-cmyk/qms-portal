@@ -55,14 +55,13 @@ const ExternalDocCcTrackerModal = ({ isOpen, onClose, document }) => {
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-200/50 flex justify-between items-center bg-slate-50/50">
             <h2 className="text-xl font-bold text-gray-800  flex items-center gap-2">
-              <FileText className="w-5 h-5 text-purple-600 " />
-              จัดการสำเนาควบคุม: {document.title} {document.sourceVersion ? `(${document.sourceVersion})` : ''}
+              <FileText className="text-purple-600" size={20} strokeWidth={1.25}/> จัดการสำเนาควบคุม: {document.title} {document.sourceVersion ? `(${document.sourceVersion})` : ''}
             </h2>
             <button 
               onClick={onClose}
               className="text-gray-400  hover:text-gray-600  p-2 rounded-full hover:bg-slate-200/50 transition-all duration-300 ease-out active:scale-95"
             >
-              <X className="w-5 h-5" />
+              <X size={24} strokeWidth={1.25}/>
             </button>
           </div>
 

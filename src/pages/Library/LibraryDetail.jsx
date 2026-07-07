@@ -5,6 +5,8 @@ import { ArrowLeft, ExternalLink, History, FileText, Download } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { getDarReason, getDarDetail, getRequesterName, getReviewerName, getApproverName, getAckNames } from '../../utils/darHelper';
 import ReplacementModal from './ReplacementModal';
+import { PDFDocument, rgb, degrees } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 
 const LibraryDetail = () => {
   const { id } = useParams();
@@ -13,7 +15,6 @@ const LibraryDetail = () => {
   
   const [selectedDar, setSelectedDar] = React.useState(null);
   const [replacementInstance, setReplacementInstance] = React.useState(null);
-  const [isPrintingMaster, setIsPrintingMaster] = React.useState(false);
 
   const doc = documents.find(d => d.id === id);
 
@@ -48,13 +49,105 @@ const LibraryDetail = () => {
 
   const canDownload = canDownloadDocument(doc, currentUser);
 
-  const handleDownloadMaster = () => {
-    setIsPrintingMaster(true);
-    toast.loading('เตรียมไฟล์ Master Document...', { duration: 1500 });
-    setTimeout(() => {
-      window.print();
-      setIsPrintingMaster(false);
-    }, 1500);
+  const handleDownloadMaster = async () => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+      
+      let customFont;
+      try {
+        const fontBytes = await fetch('/fonts/NotoSansThai-Regular.ttf').then(res => {
+          if (!res.ok) throw new Error('Font load failed');
+          return res.arrayBuffer();
+        });
+        customFont = await pdfDoc.embedFont(fontBytes);
+      } catch(err) {
+        console.warn('Failed to load Thai font', err);
+      }
+
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4
+      
+      const { width, height } = page.getSize();
+      page.drawText('ORIGINAL', {
+        x: width / 2 - 150,
+        y: height / 2,
+        size: 70,
+        color: rgb(1, 0, 0),
+        rotate: degrees(-45),
+        opacity: 0.3,
+      });
+      
+      const textOptions = { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) };
+      if (customFont) textOptions.font = customFont;
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, textOptions);
+      
+      const revOptions = { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) };
+      if (customFont) revOptions.font = customFont;
+      page.drawText(`Rev: ${doc.rev}`, revOptions);
+      
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.title}_MASTER.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('ดาวน์โหลด Master Document สำเร็จ');
+    } catch (error) {
+      toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
+    }
+  };
+
+  const handleDownloadExternal = async () => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+      
+      let customFont;
+      try {
+        const fontBytes = await fetch('/fonts/NotoSansThai-Regular.ttf').then(res => {
+          if (!res.ok) throw new Error('Font load failed');
+          return res.arrayBuffer();
+        });
+        customFont = await pdfDoc.embedFont(fontBytes);
+      } catch(err) {
+        console.warn('Failed to load Thai font', err);
+      }
+
+      pdfDoc.addPage([595.28, 841.89]); // A4
+      if (customFont) {
+        page.drawText('CONFIDENTIAL', { x: 80, y: height / 2 + 50, size: 50, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+        page.drawText('เอกสารควบคุมภายใน ห้าม COPY', { x: 80, y: height / 2, size: 30, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+      } else {
+         page.drawText('CONFIDENTIAL\\nINTERNAL CONTROLLED COPY - DO NOT COPY', {
+          x: 50, y: height / 2, size: 30, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, lineHeight: 40,
+        });
+      }
+      
+      const textOptions = { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) };
+      if (customFont) textOptions.font = customFont;
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, textOptions);
+      
+      const revOptions = { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) };
+      if (customFont) revOptions.font = customFont;
+      page.drawText(`Rev: ${doc.rev}`, revOptions);
+      
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.title}_EXTERNAL.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('ดาวน์โหลดเอกสารสำหรับหน่วยงานภายนอกสำเร็จ');
+    } catch (error) {
+      console.error(error);
+      toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
+    }
   };
 
   // Get all revisions of this document
@@ -76,48 +169,11 @@ const LibraryDetail = () => {
   // getRequesterName, getReviewerName, getApproverName, getAckNames are imported from darHelper.js
 
   return (
-    <div className={`max-w-5xl mx-auto space-y-6 ${isPrintingMaster ? 'master-print-container' : ''}`}>
-      {isPrintingMaster && <div className="master-watermark">ORIGINAL</div>}
-      
-      {currentUser.isDcc && (
-        <style>
-          {`
-            @media print {
-              body * {
-                visibility: hidden;
-              }
-              .master-print-container, .master-print-container * {
-                visibility: visible;
-              }
-              .master-print-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 40px;
-                background: white;
-              }
-              .master-watermark {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(-45deg);
-                font-size: 140px;
-                color: rgba(156, 163, 175, 0.2);
-                font-weight: 900;
-                white-space: nowrap;
-                pointer-events: none;
-                z-index: 9999;
-                letter-spacing: 0.1em;
-              }
-            }
-          `}
-        </style>
-      )}
+    <div className="max-w-5xl mx-auto space-y-6">
 
       <div className="flex items-center gap-4">
         <button onClick={() => navigate('/library')} className="p-2 hover:bg-gray-200  rounded-full transition-colors print:hidden">
-          <ArrowLeft className="w-5 h-5 text-gray-600 " />
+          <ArrowLeft className="text-gray-600" size={24} strokeWidth={1.25}/>
         </button>
         <h2 className="text-2xl font-bold text-gray-800 ">{doc.title}: {doc.name}</h2>
       </div>
@@ -158,7 +214,7 @@ const LibraryDetail = () => {
             
             {!canDownload && (
               <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-sm border border-yellow-200 rounded-lg flex gap-2">
-                <FileText className="w-4 h-4 shrink-0 mt-0.5" />
+                <FileText className="shrink-0 mt-0.5" size={24} strokeWidth={1.25}/>
                 <span>
                   <strong>Preview Only (Global View):</strong> คุณสามารถเปิดดูเอกสารนี้ได้ แต่ไม่ได้รับอนุญาตให้ดาวน์โหลดเพื่อป้องกันการเกิดสำเนาควบคุมภายนอกระบบ
                 </span>
@@ -168,16 +224,24 @@ const LibraryDetail = () => {
               onClick={() => navigate(`/viewer/${doc.id}/${doc.rev}`)}
               className="mt-4 w-full flex items-center justify-center gap-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium print:hidden"
             >
-              <ExternalLink className="w-5 h-5" /> เปิดดูเอกสาร PDF
+              <ExternalLink size={20} strokeWidth={1.25}/> เปิดดูเอกสาร PDF
             </button>
-            {currentUser.isDcc && (
-              <button 
-                onClick={handleDownloadMaster}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 btn-ios-secondary transition-colors font-medium print:hidden"
-              >
-                <Download className="w-5 h-5" /> Download Master File
-              </button>
-            )}
+              {canDownload && (
+                <div className="flex flex-col gap-2 mt-4">
+                  <button 
+                    onClick={handleDownloadMaster}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-medium transition-all shadow-sm shadow-indigo-200"
+                  >
+                    <Download size={20} strokeWidth={1.25}/> Download Master File
+                  </button>
+                  <button 
+                    onClick={handleDownloadExternal}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-500 text-white hover:bg-amber-600 rounded-xl font-medium transition-all shadow-sm shadow-amber-200"
+                  >
+                    <Download size={20} strokeWidth={1.25}/> Download for External Use
+                  </button>
+                </div>
+              )}
           </div>
 
           {/* Normal User: Show their active copy and allow requesting replacement */}
@@ -258,7 +322,7 @@ const LibraryDetail = () => {
         <div className="lg:col-span-5">
           <div className="premium-card overflow-hidden border-none">
             <div className="px-6 py-4 border-b border-gray-100  flex items-center gap-2 bg-gray-50 ">
-              <History className="w-5 h-5 text-gray-500 " />
+              <History className="text-gray-500" size={24} strokeWidth={1.25}/>
               <h3 className="font-semibold text-gray-800 ">ประวัติ Revision (Revision History)</h3>
             </div>
             <div className="p-6">
@@ -274,7 +338,7 @@ const LibraryDetail = () => {
                   return (
                     <div key={revDoc.id} className="relative flex items-start gap-4">
                       <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white  ${isCurrent ? 'bg-blue-100 text-blue-600    shadow' : 'bg-gray-100 text-gray-500   '} shrink-0 z-10`}>
-                        <FileText className="w-4 h-4" />
+                        <FileText size={24} strokeWidth={1.25}/>
                       </div>
                       <div className={`w-full ${isCurrent ? 'bg-white  border-blue-200  shadow-sm' : 'bg-gray-50  border-gray-200 '} p-4 rounded-xl border`}>
                         <div className="flex justify-between items-center mb-1">
@@ -298,14 +362,14 @@ const LibraryDetail = () => {
                               onClick={() => navigate(`/viewer/${revDoc.id}/${revDoc.rev}?archive=true`)}
                               className="text-xs text-blue-600  hover:underline flex items-center gap-1 font-medium px-2 py-1 bg-blue-50   rounded"
                             >
-                              <ExternalLink className="w-3 h-3" /> เปิดดูฉบับเก่า (PDF)
+                              <ExternalLink size={20} strokeWidth={1.25}/> เปิดดูฉบับเก่า (PDF)
                             </button>
                             {revDar && (
                               <button 
                                 onClick={() => setSelectedDar(revDar)}
                                 className="text-xs text-purple-600  hover:underline flex items-center gap-1 font-medium px-2 py-1 bg-purple-50   rounded"
                               >
-                                <History className="w-3 h-3" /> ดูใบคำขอ (DAR)
+                                <History size={20} strokeWidth={1.25}/> ดูใบคำขอ (DAR)
                               </button>
                             )}
                           </div>

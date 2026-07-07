@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
-import { Search, Filter, BookOpen, Layers, Share2, Globe, FilterX, Download, FileText, Eye, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, BookOpen, Layers, Share2, Globe, FilterX, Download, FileText, Eye, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { getRequesterName, getReviewerName, getApproverName, getAckNames } from '../../utils/darHelper';
 import ReplacementModal from './ReplacementModal';
 import toast from 'react-hot-toast';
@@ -11,7 +11,7 @@ import { PDFDocument, rgb, degrees } from 'pdf-lib';
 
 const Library = () => {
   const navigate = useNavigate();
-  const { documents, currentUser, canAccessDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, addNotification, logAction } = useStore();
+  const { documents, currentUser, canAccessDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, logAction } = useStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('');
@@ -121,6 +121,19 @@ const Library = () => {
     e.stopPropagation();
     try {
       const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+      
+      let customFont;
+      try {
+        const fontBytes = await fetch('/fonts/NotoSansThai-Regular.ttf').then(res => {
+          if (!res.ok) throw new Error('Font load failed');
+          return res.arrayBuffer();
+        });
+        customFont = await pdfDoc.embedFont(fontBytes);
+      } catch(err) {
+        console.warn('Failed to load Thai font', err);
+      }
+
       const page = pdfDoc.addPage([595.28, 841.89]); // A4
       
       const { width, height } = page.getSize();
@@ -133,8 +146,13 @@ const Library = () => {
         opacity: 0.3,
       });
       
-      page.drawText(`Document: ${doc.title} - ${doc.name}`, { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) });
-      page.drawText(`Rev: ${doc.rev}`, { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) });
+      const textOptions = { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) };
+      if (customFont) textOptions.font = customFont;
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, textOptions);
+      
+      const revOptions = { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) };
+      if (customFont) revOptions.font = customFont;
+      page.drawText(`Rev: ${doc.rev}`, revOptions);
       
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -148,6 +166,7 @@ const Library = () => {
       toast.success('ดาวน์โหลด Master Document สำเร็จ');
       logAction('DOWNLOAD_MASTER', `Downloaded Master for ${doc.title}`);
     } catch (error) {
+      console.error('PDF Generation Error:', error);
       toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
     }
   };
@@ -160,14 +179,16 @@ const Library = () => {
       
       let customFont;
       try {
-        const fontBytes = await fetch('https://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9aAFvmuB_8es.ttf').then(res => res.arrayBuffer());
+        const fontBytes = await fetch('/fonts/NotoSansThai-Regular.ttf').then(res => {
+          if (!res.ok) throw new Error('Font load failed');
+          return res.arrayBuffer();
+        });
         customFont = await pdfDoc.embedFont(fontBytes);
       } catch(err) {
         console.warn('Failed to load Thai font', err);
       }
 
-      const page = pdfDoc.addPage([595.28, 841.89]); // A4
-      const { width, height } = page.getSize();
+      pdfDoc.addPage([595.28, 841.89]); // A4
       
       if (customFont) {
         page.drawText('CONFIDENTIAL', { x: 80, y: height / 2 + 50, size: 50, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
@@ -178,8 +199,13 @@ const Library = () => {
         });
       }
       
-      page.drawText(`Document: ${doc.title} - ${doc.name}`, { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) });
-      page.drawText(`Rev: ${doc.rev}`, { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) });
+      const textOptions = { x: 50, y: height - 50, size: 12, color: rgb(0,0,0) };
+      if (customFont) textOptions.font = customFont;
+      page.drawText(`Document: ${doc.title} - ${doc.name}`, textOptions);
+      
+      const revOptions = { x: 50, y: height - 70, size: 12, color: rgb(0,0,0) };
+      if (customFont) revOptions.font = customFont;
+      page.drawText(`Rev: ${doc.rev}`, revOptions);
       
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -193,6 +219,7 @@ const Library = () => {
       toast.success('ดาวน์โหลดเอกสารสำหรับหน่วยงานภายนอกสำเร็จ');
       logAction('DOWNLOAD_EXTERNAL', `Downloaded External Copy for ${doc.title}`);
     } catch (error) {
+      console.error(error);
       toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
     }
   };
@@ -230,7 +257,7 @@ const Library = () => {
                     className="text-blue-500  hover:text-blue-700  p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                     title="Preview Document"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye size={24} strokeWidth={1.25}/>
                   </button>
                   {currentUser.isDcc && (
                     <>
@@ -239,14 +266,14 @@ const Library = () => {
                         className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                         title="Download Master (DCC Only)"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download size={24} strokeWidth={1.25}/>
                       </button>
                       <button 
                         onClick={(e) => handleDownloadExternal(doc, e)}
                         className="text-indigo-600  hover:text-indigo-700  p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
                         title="Download for External Use"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <Share2 size={24} strokeWidth={1.25}/>
                       </button>
                     </>
                   )}
@@ -264,7 +291,7 @@ const Library = () => {
                       className="text-amber-500  hover:text-amber-700 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
                       title="ขอสำเนาควบคุมใหม่ (Request Replacement)"
                     >
-                      <FileText className="w-4 h-4" />
+                      <FileText size={24} strokeWidth={1.25}/>
                     </button>
                   )}
                 </td>
@@ -288,7 +315,7 @@ const Library = () => {
             {docs.length === 0 && (
               <tr>
                 <td colSpan="13" className="px-6 py-12 text-center text-gray-500 ">
-                  <div className="text-gray-400  mb-2 flex justify-center"><BookOpen className="w-10 h-10" /></div>
+                  <div className="text-gray-400  mb-2 flex justify-center"><BookOpen size={40} strokeWidth={1.25}/></div>
                   <p className="font-medium">ไม่พบเอกสารในหมวดหมู่นี้</p>
                 </td>
               </tr>
@@ -324,7 +351,7 @@ const Library = () => {
         {Object.keys(groups).sort().map(prefix => (
           <div key={prefix} className="bg-white  rounded-xl shadow-sm border border-gray-100  overflow-hidden">
             <div className="bg-gray-50  px-6 py-3 border-b border-gray-100  font-semibold text-gray-700  flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-500 " /> {typeNames[prefix] || prefix}
+              <Layers className="text-indigo-500" size={24} strokeWidth={1.25}/> {typeNames[prefix] || prefix}
               <span className="ml-auto bg-gray-200  text-gray-600  px-2 py-0.5 rounded-full text-xs">{groups[prefix].length}</span>
             </div>
             <div className="overflow-x-auto">
@@ -358,7 +385,7 @@ const Library = () => {
                           className="text-blue-500  hover:text-blue-700  p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           title="Preview Document"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye size={24} strokeWidth={1.25}/>
                         </button>
                         {currentUser.isDcc && (
                           <>
@@ -370,7 +397,7 @@ const Library = () => {
                               className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                               title="Download Master (DCC Only)"
                             >
-                              <Download className="w-4 h-4" />
+                              <Download size={24} strokeWidth={1.25}/>
                             </button>
                             <button 
                               onClick={(e) => {
@@ -380,7 +407,7 @@ const Library = () => {
                               className="text-indigo-600  hover:text-indigo-700  p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
                               title="Download for External Use"
                             >
-                              <Share2 className="w-4 h-4" />
+                              <Share2 size={24} strokeWidth={1.25}/>
                             </button>
                           </>
                         )}
@@ -398,7 +425,7 @@ const Library = () => {
                             className="text-amber-500  hover:text-amber-700 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
                             title="ขอสำเนาควบคุมใหม่ (Request Replacement)"
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText size={24} strokeWidth={1.25}/>
                           </button>
                         )}
                       </td>
@@ -433,7 +460,7 @@ const Library = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800  flex items-center gap-2">
-            <BookOpen className="w-7 h-7 text-blue-600 " /> คลังเอกสาร (Document Library)
+            <BookOpen className="text-blue-600" size={28} strokeWidth={1.25}/> คลังเอกสาร (Document Library)
           </h2>
           <p className="text-gray-500  mt-1">ศูนย์รวมเอกสารที่ประกาศใช้แล้ว (Effective Documents)</p>
         </div>
@@ -473,7 +500,7 @@ const Library = () => {
 
       <div className="p-6 bg-white  rounded-xl shadow-sm border border-gray-100  flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
-          <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 " />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
           <input 
             type="text"
             placeholder="ค้นหาตามรหัสเอกสาร หรือ ชื่อเอกสาร..."
@@ -551,7 +578,7 @@ const Library = () => {
             className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-100  rounded-lg transition-colors flex-shrink-0"
             title="ล้างตัวกรอง (Clear Filters)"
           >
-            <FilterX className="w-5 h-5" />
+            <FilterX size={24} strokeWidth={1.25}/>
           </button>
           
           {(activeTab === 'dept' || currentUser.isDcc) && (
@@ -559,7 +586,7 @@ const Library = () => {
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700    rounded-lg text-sm font-medium transition-colors border border-slate-200  flex-shrink-0 ml-auto"
             >
-              <Download className="w-4 h-4" /> {currentUser.isDcc ? 'Export Master List' : 'Export Dept List'}
+              <Download size={24} strokeWidth={1.25}/> {currentUser.isDcc ? 'Export Master List' : 'Export Dept List'}
             </button>
           )}
         </div>
@@ -580,11 +607,11 @@ const Library = () => {
                 onClick={() => setPreviewDoc(null)}
                 className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-200 rounded-full transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X size={24} strokeWidth={1.25}/>
               </button>
             </div>
             <div className="flex-1 bg-gray-200 flex flex-col items-center justify-center p-8">
-              <FileText className="w-16 h-16 text-gray-400  mb-4 opacity-50" />
+              <FileText className="text-gray-400 mb-4 opacity-50" size={64} strokeWidth={1.25}/>
               <p className="text-gray-500  font-medium">PDF Preview Simulator</p>
               <p className="text-gray-400  text-sm mt-2">Displaying document: {previewDoc.id}</p>
             </div>

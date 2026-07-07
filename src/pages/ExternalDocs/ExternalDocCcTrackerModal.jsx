@@ -125,7 +125,7 @@ const ExternalDocCcTrackerModal = ({ isOpen, onClose, document }) => {
         onClose={() => setReplacementInstance(null)}
         instance={replacementInstance}
         documentId={document.id}
-        onSubmit={(reason, notes) => {
+        onSubmit={(reason) => {
           // Simulate Replacement Workflow
           const newIssue = String(parseInt(replacementInstance.issueNumber) + 1).padStart(2, '0');
           setCcInstances(prev => {

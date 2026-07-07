@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, FileText, FileDown, AlertTriangle, ShieldCheck, RefreshCw, Layers, Download, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, FileText, FileDown, AlertTriangle, RefreshCw, Layers, Download, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -13,8 +13,6 @@ const ControlledCopyRegister = () => {
     confirmCcReceipt, 
     reportCcDamagedLost, 
     recallControlledCopy,
-    approveCcReplacement,
-    rejectCcReplacement,
     documents,
     controlledCopyAuditTrail
   } = useStore();
@@ -184,11 +182,6 @@ const ControlledCopyRegister = () => {
     }, 1500);
   };
 
-  const handleConfirm = (inst) => {
-    confirmCcReceipt(inst.id);
-    toast.success(`ยืนยันการรับเอกสาร ${inst.ccNumber} สำเร็จ`);
-  };
-
   const handleReport = (e) => {
     e.preventDefault();
     if (!reportReason) {
@@ -202,15 +195,6 @@ const ControlledCopyRegister = () => {
     toast.success(`แจ้งเอกสาร ${reportType === 'LOST' ? 'สูญหาย' : 'ชำรุด'} เรียบร้อยแล้ว (รอการอนุมัติ)`);
   };
 
-  const handleApproveReplacement = (inst) => {
-    approveCcReplacement(inst.id);
-    toast.success(`อนุมัติคำขอทดแทนสำเร็จ ระบบได้ออกเอกสารควบคุมหมายเลขใหม่และจัดเข้าคิว Pending Receipt แล้ว`);
-  };
-
-  const handleRejectReplacement = (inst) => {
-    rejectCcReplacement(inst.id);
-    toast.error(`ปฏิเสธคำขอทดแทนเอกสาร ${inst.ccNumber} แล้ว`);
-  };
 
   const handleRecall = () => {
     recallControlledCopy(selectedInstance.id);
@@ -273,16 +257,29 @@ const ControlledCopyRegister = () => {
       `}</style>
       
       {/* Watermark Print Area */}
-      {printData && (
+      {printData && (() => {
+        const doc = documents.find(d => d.id === printData.docId);
+        const isForm = doc && (doc.docType === 'FM' || doc.docType === 'Form');
+        return (
         <div id="print-area" className="hidden print:flex flex-col items-center justify-center p-20 min-h-screen relative">
-          <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none select-none z-50 overflow-hidden">
-            <div className="transform -rotate-45 text-red-600 font-bold border-[8px] border-red-600 rounded-2xl p-6 px-12 text-center whitespace-nowrap shadow-sm shadow-red-200/50">
-              <h1 className="text-6xl tracking-widest uppercase mb-4">CONTROLLED COPY</h1>
-              <p className="text-4xl">{printData.department} - {printData.ccNumber}</p>
-              <p className="text-2xl mt-2 text-red-400">Issue No: {printData.issueNumber}</p>
-              <p className="text-2xl mt-4 font-mono">{new Date().toISOString().split('T')[0]}</p>
+          {!isForm ? (
+            <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none select-none z-50 overflow-hidden">
+              <div className="transform -rotate-45 text-red-600 font-bold border-[8px] border-red-600 rounded-2xl p-6 px-12 text-center whitespace-nowrap shadow-sm shadow-red-200/50">
+                <h1 className="text-6xl tracking-widest uppercase mb-4">CONTROLLED COPY</h1>
+                <p className="text-4xl">{printData.department} - {printData.ccNumber}</p>
+                <p className="text-2xl mt-2 text-red-400">Issue No: {printData.issueNumber}</p>
+                <p className="text-2xl mt-4 font-mono">{new Date().toISOString().split('T')[0]}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="absolute top-10 left-10 flex flex-col items-start justify-start opacity-100 pointer-events-none select-none z-50">
+              <div className="text-[#ef4444] font-bold border-2 border-[#ef4444] rounded p-2 px-4 text-left whitespace-nowrap bg-white/80">
+                <h1 className="text-xl tracking-widest uppercase mb-1">CONTROLLED COPY</h1>
+                <p className="text-sm">Dept: {printData.department} | CC No: {printData.ccNumber}</p>
+                <p className="text-xs mt-0.5 text-red-500">Issue No: {printData.issueNumber} | {new Date().toISOString().split('T')[0]}</p>
+              </div>
+            </div>
+          )}
           
           {/* Mock Document Content Behind Watermark */}
           <div className="w-full max-w-4xl bg-white border border-gray-200 p-12 shadow-sm rounded">
@@ -293,7 +290,8 @@ const ControlledCopyRegister = () => {
              <p className="text-gray-500 italic text-center">-- Document Content Placeholder --</p>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

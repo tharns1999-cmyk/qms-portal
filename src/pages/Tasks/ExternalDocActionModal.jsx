@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, XCircle, Info, FileText } from 'lucide-react';
+import { X, Check, XCircle, FileText } from 'lucide-react';
 import useStore from '../../store/useStore';
 import { motion } from 'framer-motion';
 import ExternalDocPreviewModal from '../ExternalDocs/ExternalDocPreviewModal';

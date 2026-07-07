@@ -1,5 +1,4 @@
 const AutoEffectiveJob = require('./AutoEffectiveJob');
-const RecallService = require('../services/RecallService');
 
 jest.mock('../services/RecallService', () => {
   return jest.fn().mockImplementation(() => {

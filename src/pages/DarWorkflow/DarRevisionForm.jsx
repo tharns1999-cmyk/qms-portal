@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
-import { Upload, FileText, User, Calendar, Settings, FileEdit, Plus, Trash2, Search, X, FilterX } from 'lucide-react';
+import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
-
-const ALL_DEPTS = ['ST', 'HSE', 'WH', 'MKT', 'PC', 'QA/QC', 'PD', 'EN', 'HR&GA'];
 
 const DarRevisionForm = () => {
   const navigate = useNavigate();
@@ -76,7 +74,7 @@ const DarRevisionForm = () => {
         setFormData(prev => ({ ...prev, docId: '', title: '' }));
       }
     }
-  }, [currentUser, formData.docId]);
+  }, [currentUser, formData.docId, effectiveDocs]);
 
   const filteredDocs = effectiveDocs.filter(d => {
     const matchesType = docTypeFilter ? d.title.startsWith(docTypeFilter) : true;

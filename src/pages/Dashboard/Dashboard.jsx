@@ -4,10 +4,9 @@ import { motion } from 'framer-motion';
 import useStore from '../../store/useStore';
 import { 
   AlertCircle, Clock, CheckCircle, FileText, Activity, 
-  Search, Plus, FileEdit, Library, BarChart3, TrendingUp, Briefcase, Copy,
-  FilterX, Trash2, Edit, ClipboardCheck, Eye, Download, ShieldAlert, AlertTriangle, ChevronRight
+  Search, Plus, FileEdit, Library, Briefcase, Copy,
+  FilterX, Trash2, Edit, ClipboardCheck, Eye, AlertTriangle, ChevronRight
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import EmptyState from '../../components/EmptyState';
 
 const Dashboard = () => {
@@ -19,9 +18,6 @@ const Dashboard = () => {
     documents,
     controlledCopyInstances,
     masterUsers, 
-    requestUsers, 
-    reviewUsers, 
-    approveUsers,
     simulatedDate,
     simulateNextDay,
     deleteDar
@@ -46,49 +42,7 @@ const Dashboard = () => {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
-  // Identify roles for current user
-  const isRequester = requestUsers.some(u => u.id === currentUser.id);
-  const isReviewer = reviewUsers.some(u => u.id === currentUser.id);
-  const isApprover = approveUsers.some(u => u.id === currentUser.id);
   const isAdmin = currentUser.isDcc || currentUser.role === 'DCC_ADMIN' || currentUser.id === 'u5' || currentUser.id === 'U001';
-
-  const handleExportControlledCopies = async () => {
-    try {
-      const response = await fetch('/api/reports/controlled-copies');
-      if (!response.ok) throw new Error('Network response was not ok');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Controlled_Copies_Report_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast.success('ดาวน์โหลดรายงาน Controlled Copies สำเร็จ');
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('ไม่สามารถดาวน์โหลดรายงานได้ (Mock Backend Only)');
-    }
-  };
-
-  const handleExportRecalls = async () => {
-    try {
-      const response = await fetch('/api/reports/recalls');
-      if (!response.ok) throw new Error('Network response was not ok');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Outstanding_Recalls_Report_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast.success('ดาวน์โหลดรายงาน Recalls สำเร็จ');
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('ไม่สามารถดาวน์โหลดรายงานได้ (Mock Backend Only)');
-    }
-  };
 
   // 1. Calculate Stats (Split into Group 1 and Group 2)
   const isMyTask = (t) => t.assigneeId === currentUser.id || 
@@ -133,12 +87,8 @@ const Dashboard = () => {
   const actionApproveTasks = tasks.filter(t => (t.type === 'Approve' || t.type === 'CC_REPLACEMENT_APPROVAL') && isMyTask(t));
   const actionApproveCount = isAdmin ? dars.filter(d => d.status === 'PENDING_APPROVAL').length + tasks.filter(t => t.type === 'CC_REPLACEMENT_APPROVAL').length : actionApproveTasks.length;
 
-  const actionAckTasks = tasks.filter(t => t.type === 'Acknowledge' && isMyTask(t));
-  const actionReplacementTasks = tasks.filter(t => t.type === 'DCC_REPLACEMENT' && isMyTask(t));
   const actionDueSoonCount = isAdmin ? tasks.filter(t => t.status === 'DUE_SOON').length : myTasks.filter(t => t.status === 'DUE_SOON').length;
   const actionOverdueCount = isAdmin ? tasks.filter(t => t.status === 'OVERDUE').length : myTasks.filter(t => t.status === 'OVERDUE').length;
-  
-  const dccPendingCount = isAdmin ? dars.filter(d => d.status === 'APPROVED_WAITING_EFFECTIVE').length : 0;
 
   // 2. Build Recent DARs Table Data
   let recentDars = dars.filter(d => 
@@ -213,20 +163,6 @@ const Dashboard = () => {
   if (filterType) {
     recentDars = recentDars.filter(d => d.type === filterType);
   }
-  // Calculate Bottlenecks for Admin DCC
-  let bottleneckData = [];
-  if (isAdmin) {
-    const backlogDars = dars.filter(d => ['UNDER_REVIEW', 'PENDING_APPROVAL', 'WAITING_EFFECTIVE', 'WAITING_ACKNOWLEDGEMENT'].includes(d.status));
-    const deptCounts = {};
-    backlogDars.forEach(d => {
-      deptCounts[d.department] = (deptCounts[d.department] || 0) + 1;
-    });
-    bottleneckData = Object.keys(deptCounts)
-      .map(dept => ({ dept, count: deptCounts[dept] }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3); // top 3
-  }
-
   // Sort by date 
   recentDars.sort((a, b) => new Date(b.date) - new Date(a.date));
   recentDars = recentDars.slice(0, 10); // Take top 10

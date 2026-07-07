@@ -95,7 +95,7 @@ const LibraryDetail = () => {
       window.URL.revokeObjectURL(url);
       
       toast.success('ดาวน์โหลด Master Document สำเร็จ');
-    } catch (error) {
+    } catch {
       toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
     }
   };
@@ -116,12 +116,14 @@ const LibraryDetail = () => {
         console.warn('Failed to load Thai font', err);
       }
 
-      pdfDoc.addPage([595.28, 841.89]); // A4
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4
+      const { height } = page.getSize();
+      
       if (customFont) {
-        page.drawText('CONFIDENTIAL', { x: 80, y: height / 2 + 50, size: 50, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
-        page.drawText('เอกสารควบคุมภายใน ห้าม COPY', { x: 80, y: height / 2, size: 30, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+        page.drawText('CONFIDENTIAL', { x: 80, y: height / 2 + 40, size: 50, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+        page.drawText('เอกสารภายในหน่วยงาน ห้าม Copy', { x: 80, y: height / 2, size: 30, color: rgb(1,0,0), rotate: degrees(-30), opacity: 0.3, font: customFont });
       } else {
-         page.drawText('CONFIDENTIAL\\nINTERNAL CONTROLLED COPY - DO NOT COPY', {
+         page.drawText('CONFIDENTIAL\\nเอกสารภายในหน่วยงาน ห้าม Copy', {
           x: 50, y: height / 2, size: 30, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, lineHeight: 40,
         });
       }

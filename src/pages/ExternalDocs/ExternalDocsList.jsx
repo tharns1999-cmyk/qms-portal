@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useStore from '../../store/useStore';
-import { FileText, Search, Plus, Filter, Download, Eye, X, FilterX, Archive, ShieldAlert, Globe, Edit, Trash2, Clock, CheckCircle } from 'lucide-react';
+import { FileText, Search, Plus, Download, Eye, X, Archive, ShieldAlert, Globe, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ExternalDocFormModal from './ExternalDocFormModal';
 import ExternalDocPreviewModal from './ExternalDocPreviewModal';
@@ -13,7 +13,7 @@ import { PDFDocument, rgb, degrees } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 
 const ExternalDocsList = () => {
-  const { externalDocuments, withdrawExternalDoc, currentUser, logExternalDownload } = useStore();
+  const { externalDocuments, currentUser, logExternalDownload } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBy, setFilterBy] = useState('EFFECTIVE'); // EFFECTIVE, OBSOLETE, ALL
 
@@ -24,8 +24,7 @@ const ExternalDocsList = () => {
   const [docToPreview, setDocToPreview] = useState(null);
 
   const [isCcModalOpen, setIsCcModalOpen] = useState(false);
-  const [docToTrack, setDocToTrack] = useState(null);
-
+  const [docToTrack] = useState(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [docToHistory, setDocToHistory] = useState(null);
   const [isObsoleteModalOpen, setIsObsoleteModalOpen] = useState(false);
@@ -44,11 +43,6 @@ const ExternalDocsList = () => {
   const handlePreview = (doc) => {
     setDocToPreview(doc);
     setIsPreviewOpen(true);
-  };
-
-  const handleManageCc = (doc) => {
-    setDocToTrack(doc);
-    setIsCcModalOpen(true);
   };
 
   const handleDownload = async (doc, isViewOnly) => {
@@ -70,12 +64,10 @@ const ExternalDocsList = () => {
       }
 
       const page = pdfDoc.addPage([595.28, 841.89]); // A4
-      const { width, height } = page.getSize();
-
       if (customFont) {
-        page.drawText('External Doc Uncontrolled', { x: 80, y: height / 2, size: 40, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, font: customFont });
+        page.drawText('Uncontrolled copy เอกสารหน่วยงานภายนอก', { x: 50, y: height / 2, size: 30, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, font: customFont });
       } else {
-        page.drawText('External Doc Uncontrolled', {
+        page.drawText('Uncontrolled copy', {
           x: 50, y: height / 2, size: 40, color: rgb(1, 0, 0), rotate: degrees(-30), opacity: 0.3, lineHeight: 40,
         });
       }
@@ -100,18 +92,6 @@ const ExternalDocsList = () => {
       toast.error('เกิดข้อผิดพลาดในการสร้าง PDF');
     }
   };
-
-  const handleWithdraw = (doc) => {
-    const reason = window.prompt(`คุณต้องการลบ/ถอนเอกสารภายนอก: ${doc.title} ใช่หรือไม่? โปรดระบุเหตุผล:`);
-    if (reason !== null && reason.trim() !== '') {
-      withdrawExternalDoc(doc.id, reason);
-      toast.success('ถอนเอกสารภายนอกเรียบร้อยแล้ว');
-    } else if (reason !== null) {
-      toast.error('กรุณาระบุเหตุผลในการถอน');
-    }
-  };
-
-  const { reviseExternalDoc, obsoleteExternalDoc } = useStore();
 
   // handleRevise is now defined above to open ExternalDocFormModal
 

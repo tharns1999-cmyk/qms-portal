@@ -36,7 +36,7 @@ const DarObsoleteForm = () => {
         setFormData(prev => ({ ...prev, docId: '' }));
       }
     }
-  }, [currentUser, formData.docId]);
+  }, [currentUser, formData.docId, effectiveDocs]);
 
   useEffect(() => {
     if (draftId) {

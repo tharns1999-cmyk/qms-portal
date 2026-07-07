@@ -16,7 +16,6 @@ import useStore from '../../store/useStore';
 const DistributionSetup = ({ 
   ownerDept = 'PD', 
   distributions = [], 
-  oldDistributions = null, 
   onChange = () => {},
   showConfirmButton = false,
   onConfirm = () => {},
@@ -166,7 +165,7 @@ const DistributionSetup = ({
           <div className="mb-4">
             <div 
               className={`flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-[#FAFAFA] opacity-80 ${ownerDeptObj.isGroup ? 'cursor-pointer hover:bg-slate-50' : ''}`}
-              onClick={() => ownerDeptObj.isGroup && toggleGroup(ownerDeptObj.id)}
+              onClick={(e) => ownerDeptObj.isGroup && toggleGroup(ownerDeptObj.id, e)}
             >
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded bg-slate-300 flex items-center justify-center shrink-0">

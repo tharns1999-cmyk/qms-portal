@@ -47,7 +47,7 @@ const TaskApproveCopyRequest = () => {
       
       toast.success(action === 'APPROVE' ? 'อนุมัติคำขอสำเร็จ' : 'ปฏิเสธคำขอสำเร็จ');
       navigate('/tasks');
-    } catch (error) {
+    } catch {
       toast.error('เกิดข้อผิดพลาดในการทำรายการ');
     } finally {
       setIsSubmitting(false);

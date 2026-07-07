@@ -165,7 +165,7 @@ const DarDetail = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-h-[400px] overflow-y-auto">
             <h3 className="font-semibold text-gray-800  border-b pb-2 mb-6">Workflow Timeline</h3>
             <div className="space-y-6">
-              {myTimeline.map((item, idx) => (
+              {myTimeline.map((item) => (
                 <div key={item.id} className="relative pl-6 border-l-2 border-gray-200 last:border-0 pb-2">
                   <div className="absolute -left-[9px] top-0 bg-white p-1">
                     <CheckCircle className="text-blue-500" size={24} strokeWidth={1.25}/>

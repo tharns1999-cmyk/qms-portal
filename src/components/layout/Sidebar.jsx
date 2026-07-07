@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Settings, Library, FileText, Copy, Globe, Database, History, UserCircle, Bell, Calendar } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, UserCircle, Bell } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -21,25 +21,25 @@ const Sidebar = () => {
   
   const isExpanded = isHovered || showNoti;
 
-  const isRequester = requestUsers.some(u => u.id === currentUser.id);
-  const isReviewerOrApprover = reviewUsers.some(u => u.id === currentUser.id) || approveUsers.some(u => u.id === currentUser.id);
+  const isRequester = (requestUsers || []).some(u => u.id === currentUser.id);
+  const isReviewerOrApprover = (reviewUsers || []).some(u => u.id === currentUser.id) || (approveUsers || []).some(u => u.id === currentUser.id);
   const isAdmin = currentUser.id === 'u5' || currentUser.isDcc || currentUser.role === 'DCC_ADMIN';
   const isMasterListAccess = currentUser.level >= 5 && !isAdmin;
 
   // Task Counts Calculations
-  const userTasks = tasks.filter(t => {
+  const userTasks = (tasks || []).filter(t => {
     const isMyTask = t.assigneeId === currentUser.id || 
     (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level));
     
     if (isAdmin) {
-      return t.type.startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
+      return (t.type || '').startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
     }
     return isMyTask;
   });
   const myTaskCount = userTasks.length;
 
-  const ccTaskCount = controlledCopyInstances.filter(inst => {
-    const doc = documents.find(d => d.id === inst.docId);
+  const ccTaskCount = (controlledCopyInstances || []).filter(inst => {
+    const doc = (documents || []).find(d => d.id === inst.docId);
     const isRecall = doc && doc.status === 'SUPERSEDED_ARCHIVED' && inst.status === 'ACTIVE';
     return (inst.status === 'PENDING_RECEIPT' || inst.status === 'REPLACEMENT_REQUESTED' || isRecall);
   }).length;
@@ -264,10 +264,10 @@ const Sidebar = () => {
                 >
                   <select 
                     className="input-ios text-[12px] text-gray-600 w-full bg-slate-50 border-slate-200"
-                    value={currentUser.id}
+                    value={currentUser?.id || ''}
                     onChange={(e) => setCurrentUser(e.target.value)}
                   >
-                    {masterUsers.map(user => (
+                    {(masterUsers || []).map(user => (
                       <option key={user.id} value={user.id}>
                         Switch: {user.name} ({user.department})
                       </option>

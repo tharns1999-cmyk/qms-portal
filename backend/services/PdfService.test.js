@@ -1,6 +1,6 @@
 const PdfService = require('./PdfService');
 const PdfStamper = require('../utils/PdfStamper');
-const { PDFDocument } = require('pdf-lib');
+
 
 // Mock PdfStamper to avoid actual PDF manipulation during unit tests unless specifically testing it
 jest.mock('../utils/PdfStamper', () => ({

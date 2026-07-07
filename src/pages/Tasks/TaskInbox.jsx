@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
-import { Clock, AlertTriangle, CheckCircle, Search, Filter, Play, CheckSquare, ChevronRight, FileEdit, Eye, FilterX, ExternalLink, AlertCircle, Calendar } from 'lucide-react';
+import { Clock, CheckCircle, Search, Play, ChevronRight, FileEdit, Eye, ExternalLink, AlertCircle, FilterX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExternalDocActionModal from './ExternalDocActionModal';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 const TaskInbox = () => {
   const navigate = useNavigate();
-  const { currentUser, tasks, dars, externalDocuments, mockDateOffset, setMockDateOffset, checkSLA, removeTask } = useStore();
+  const { currentUser, tasks, dars, externalDocuments, mockDateOffset, setMockDateOffset, checkSLA } = useStore();
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExtTask, setSelectedExtTask] = useState(null);
@@ -23,7 +24,7 @@ const TaskInbox = () => {
       (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level));
 
     if (isDccAdmin) {
-      return t.type.startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
+      return (t.type || '').startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
     }
     return isMyTask;
   });
@@ -31,7 +32,7 @@ const TaskInbox = () => {
   const getFilteredTasks = () => {
     let filtered = userTasks;
     if (activeTab !== 'ALL') {
-      filtered = filtered.filter(t => t.type.toUpperCase() === activeTab || (activeTab === 'REVIEW' && t.type === 'EXT_REVIEW') || (activeTab === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
+      filtered = filtered.filter(t => (t.type || '').toUpperCase() === activeTab || (activeTab === 'REVIEW' && t.type === 'EXT_REVIEW') || (activeTab === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
     }
     if (searchTerm) {
       filtered = filtered.filter(t => {
@@ -47,7 +48,7 @@ const TaskInbox = () => {
     if (!task.dueDate) return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle size={24} strokeWidth={1.25}/> };
     
     const today = new Date();
-    today.setDate(today.getDate() + mockDateOffset);
+    today.setDate(today.getDate() + (mockDateOffset || 0));
     const todayStr = today.toISOString().split('T')[0];
 
     if (todayStr > task.dueDate) {
@@ -62,7 +63,7 @@ const TaskInbox = () => {
   const getTaskCount = (tabId) => {
     let filtered = userTasks;
     if (tabId !== 'ALL') {
-      filtered = filtered.filter(t => t.type.toUpperCase() === tabId || (tabId === 'REVIEW' && (t.type === 'EXT_REVIEW')) || (tabId === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
+      filtered = filtered.filter(t => (t.type || '').toUpperCase() === tabId || (tabId === 'REVIEW' && (t.type === 'EXT_REVIEW')) || (tabId === 'APPROVE' && (t.type === 'EXT_APPROVAL' || t.type === 'CC_REPLACEMENT_APPROVAL')));
     }
     return filtered.length;
   };
@@ -206,7 +207,7 @@ const TaskInbox = () => {
                       {(task.type === 'Approve' || task.type === 'EXT_APPROVAL') && <CheckCircle size={28} strokeWidth={1.25}/>}
                       {task.type === 'Ack' && <CheckCircle size={28} strokeWidth={1.25}/>}
                       {task.type === 'Revise' && <FileEdit size={28} strokeWidth={1.25}/>}
-                      {task.type.startsWith('DCC_') && <AlertCircle className="text-indigo-500" size={28} strokeWidth={1.25}/>}
+                      {(task.type || '').startsWith('DCC_') && <AlertCircle className="text-indigo-500" size={28} strokeWidth={1.25}/>}
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -219,7 +220,7 @@ const TaskInbox = () => {
                           </span>
                         )}
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100  text-gray-700 ">
-                          {task.type.replace('EXT_', '').replace('DCC_', '')} Task
+                          {(task.type || '').replace('EXT_', '').replace('DCC_', '')} Task
                         </span>
                         <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.color}`}>
                           {risk.icon}
@@ -267,4 +268,10 @@ const TaskInbox = () => {
   );
 };
 
-export default TaskInbox;
+export default function TaskInboxWrapper(props) {
+  return (
+    <ErrorBoundary>
+      <TaskInbox {...props} />
+    </ErrorBoundary>
+  );
+}

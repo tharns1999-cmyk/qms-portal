@@ -51,7 +51,6 @@ class PdfStamper {
     const textSize = 12;
 
     for (const page of pages) {
-      const { width, height } = page.getSize();
       
       // Place at bottom left or right to avoid overlapping content
       // We'll place it at bottom-left corner with some padding

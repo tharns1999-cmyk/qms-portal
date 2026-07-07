@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Upload, FileText, User, Calendar, Settings, X } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
+import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
 
 const DarNewForm = () => {
   const navigate = useNavigate();
@@ -24,7 +25,9 @@ const DarNewForm = () => {
     effectiveDate: '',
     file: null,
     manualReviewerId: '',
-    manualApproverId: ''
+    manualApproverId: '',
+    relatedStandards: [],
+    otherStandardDetail: ''
   });
   
   const [errors, setErrors] = useState({});
@@ -45,7 +48,9 @@ const DarNewForm = () => {
           effectiveDate: draft.effectiveDate || '',
           file: null,
           manualReviewerId: '',
-          manualApproverId: ''
+          manualApproverId: '',
+          relatedStandards: draft.relatedStandards || [],
+          otherStandardDetail: draft.otherStandardDetail || ''
         });
       }
     }
@@ -89,6 +94,10 @@ const DarNewForm = () => {
     if (!formData.requestDetail) newErrors.requestDetail = 'กรุณาระบุรายละเอียดคำร้องขอ';
     if (!formData.requestReason) newErrors.requestReason = 'กรุณาระบุเหตุผลที่ร้องขอ';
     
+    if (formData.relatedStandards?.includes('อื่น ๆ (Others)') && !formData.otherStandardDetail?.trim()) {
+      newErrors.otherStandardDetail = 'กรุณาระบุมาตรฐานอื่นๆ';
+    }
+    
     if (formData.ackRequirement === 'REQUIRED' && !formData.ackUserId) {
       newErrors.ackUserId = 'กรุณาเลือกผู้รับ Acknowledgement 1 คน';
     }
@@ -123,7 +132,9 @@ const DarNewForm = () => {
       ackRequirement: formData.ackRequirement,
       ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
       distributions: formData.distributions,
-      effectiveDate: formData.effectiveDate
+      effectiveDate: formData.effectiveDate,
+      relatedStandards: formData.relatedStandards,
+      otherStandardDetail: formData.otherStandardDetail
     };
     if (draftId) deleteDar(draftId);
     addDar({ ...newDar, isDraft: true });
@@ -266,6 +277,17 @@ const DarNewForm = () => {
                 />
                 {errors.requestReason && <p className="text-red-500  text-xs mt-1">{errors.requestReason}</p>}
               </div>
+            </div>
+
+            <div className="pt-2">
+              <RelatedStandardsSelector
+                value={{
+                  relatedStandards: formData.relatedStandards,
+                  otherStandardDetail: formData.otherStandardDetail
+                }}
+                onChange={(newVals) => setFormData({ ...formData, ...newVals })}
+                error={errors.otherStandardDetail}
+              />
             </div>
 
             <div>

@@ -8,7 +8,7 @@ const ExternalDocPreviewModal = ({ isOpen, onClose, document }) => {
   if (!isOpen || !document) return null;
 
   const timestamp = new Date().toLocaleString('th-TH');
-  const watermarkText = `EXTERNAL DOCUMENT - ${currentUser.name} - ${timestamp}`;
+  const watermarkText = `Uncontrolled copy เอกสารหน่วยงานภายนอก - ${currentUser.name} - ${timestamp}   `;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/80 p-4">

@@ -16,7 +16,7 @@ const MasterList = () => {
   const [masterListStatus, setMasterListStatus] = useState('EFFECTIVE');
   const [searchTerm, setSearchTerm] = useState('');
   const [previewDoc, setPreviewDoc] = useState(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [, setIsPreviewOpen] = useState(false);
 
   // Filter Logic
   let filteredDocs = documents;

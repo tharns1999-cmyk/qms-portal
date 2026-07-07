@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, FileText, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
+const ReplacementModal = ({ isOpen, onClose, instance }) => {
   const [reasonType, setReasonType] = useState('DAMAGED');
   const [reasonText, setReasonText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +23,7 @@ const ReplacementModal = ({ isOpen, onClose, instance, documentId }) => {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       onClose(true, reasonType, reasonText); // pass to parent to call store
-    } catch (error) {
+    } catch {
       toast.error('เกิดข้อผิดพลาดในการทำรายการ');
     } finally {
       setIsSubmitting(false);

@@ -48,7 +48,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Sanitize path to prevent directory traversal
-  const safeSuffix = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+  const safeSuffix = path.normalize(pathname).replace(/^(\.\.[\\/])+/, '');
   let filePath = path.join(DIST_DIR, safeSuffix);
 
   // If path is a directory (like root '/'), serve index.html
@@ -56,7 +56,7 @@ const server = http.createServer((req, res) => {
   try {
     const stat = fs.statSync(filePath);
     isDir = stat.isDirectory();
-  } catch (e) {
+  } catch {
     // File doesn't exist
   }
 

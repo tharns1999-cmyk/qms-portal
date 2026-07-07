@@ -50,63 +50,11 @@ const MOCK_DOC_FORMATS = [
 
 const MOCK_DARS = [];
 
-// Helper to calculate days from today
-const getOffsetDate = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
-};
-
 const MOCK_TASKS = [];
 
 const MOCK_TIMELINE = [];
 
-const MOCK_DOCUMENTS = [
-  {
-    id: 'DOC-PROD-001',
-    darId: 'DAR01-01-22',
-    title: 'QM-QA-001',
-    name: 'คู่มือคุณภาพ (Quality Manual)',
-    status: 'EFFECTIVE',
-    rev: '05',
-    department: 'QA',
-    controlledCopy: 5,
-    effectiveDate: '2022-05-20'
-  },
-  {
-    id: 'DOC-PROD-002',
-    darId: 'DAR02-01-22',
-    title: 'QP-QA-001',
-    name: 'ขั้นตอนการจัดการข้อร้องเรียนลูกค้า',
-    status: 'EFFECTIVE',
-    rev: '02',
-    department: 'QA',
-    controlledCopy: 2,
-    effectiveDate: '2022-10-15'
-  },
-  {
-    id: 'DOC-PROD-003',
-    darId: 'DAR03-01-22',
-    title: 'WI-PD-005',
-    name: 'วิธีการเดินเครื่องจักรบรรจุ รุ่น M-200',
-    status: 'EFFECTIVE',
-    rev: '01',
-    department: 'PD',
-    controlledCopy: 4,
-    effectiveDate: '2023-02-10'
-  },
-  {
-    id: 'DOC-PROD-004',
-    darId: 'DAR04-01-22',
-    title: 'WI-EN-002',
-    name: 'วิธีการบำรุงรักษาเชิงป้องกันรายเดือน',
-    status: 'EFFECTIVE',
-    rev: '03',
-    department: 'EN',
-    controlledCopy: 1,
-    effectiveDate: '2023-03-05'
-  }
-];
+const MOCK_DOCUMENTS = [];
 
 const MOCK_CONTROLLED_COPY_INSTANCES = [];
 
@@ -166,7 +114,7 @@ const cleanupDccTasks = (tasks, instances, documents) => {
 };
 
 // ================= STORE ================= //
-const useStore = create(persist((set, get) => ({
+const useStore = create(persist((set, _get) => ({
   masterUsers: MASTER_DATA_USER,
   requestUsers: REQUEST_MASTER_DATA_USER,
   reviewUsers: REVIEW_MASTER_DATA_USER,
@@ -216,7 +164,7 @@ const useStore = create(persist((set, get) => ({
       actorId: state.currentUser.id,
       actorRole: state.currentUser.role || state.currentUser.position,
       date: new Date().toISOString()
-    }, ...state.actionLog]
+      }, ...(state.actionLog || [])]
   })),
 
   addNotification: (userId, title, message, link, relatedTaskId = null) => set(state => ({
@@ -296,7 +244,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog],
+      }, ...(state.actionLog || [])],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: newId,
@@ -370,7 +318,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog],
+      }, ...(state.actionLog || [])],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: newId,
@@ -384,10 +332,10 @@ const useStore = create(persist((set, get) => ({
   }),
 
   // Handle immediate withdraw/delete (deprecated, keeping empty to avoid crash if called)
-  withdrawExternalDoc: (id, reason) => set(state => state),
+  withdrawExternalDoc: (_id, _reason) => set(state => state),
 
   // Handle immediate revise (replaced by updateExternalDoc above)
-  reviseExternalDoc: (id, updates) => set(state => state),
+  reviseExternalDoc: (_id, _updates) => set(state => state),
 
   // Triggered when requesting to Obsolete a document
   obsoleteExternalDoc: (id, payload) => set((state) => {
@@ -446,7 +394,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog],
+      }, ...(state.actionLog || [])],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: id,
@@ -471,7 +419,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog],
+      }, ...(state.actionLog || [])],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: id,
@@ -495,7 +443,6 @@ const useStore = create(persist((set, get) => ({
     const doc = state.externalDocuments[docIndex];
     const isUpdate = task.extAction === 'UPDATE';
     const isObsolete = task.extAction === 'OBSOLETE';
-    const isRegister = task.extAction === 'REGISTER';
 
     let newDocStatus = doc.status;
     let newTasks = state.tasks.filter(t => t.id !== taskId);
@@ -560,7 +507,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog],
+      }, ...(state.actionLog || [])],
       externalAuditTrail: [{
         id: `EXTA-${Date.now()}`,
         docId: doc.id,
@@ -928,7 +875,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog]
+      }, ...(state.actionLog || [])]
     };
 
     return newState;
@@ -975,8 +922,8 @@ const useStore = create(persist((set, get) => ({
         actor: state.currentUser.name,
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
-        date: new Date().toISOString(าะ)
-      }, ...state.actionLog]
+        date: new Date().toISOString()
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1039,7 +986,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog]
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1087,7 +1034,7 @@ const useStore = create(persist((set, get) => ({
         actorId: state.currentUser.id,
         actorRole: state.currentUser.role || state.currentUser.position,
         date: new Date().toISOString()
-      }, ...state.actionLog]
+      }, ...(state.actionLog || [])]
     };
   }),
 
@@ -1103,11 +1050,7 @@ const useStore = create(persist((set, get) => ({
   },
 
   checkSLA: () => set((state) => {
-    const todayStr = state.simulatedDate;
-    const today = new Date(todayStr);
-
     const activeStatuses = ['DRAFT', 'UNDER_REVIEW', 'PENDING_APPROVAL', 'RETURNED_FOR_REVISION', 'WAITING_ACKNOWLEDGEMENT'];
-    const tasksToCheck = state.tasks.filter(t => t.referenceType !== 'EXTERNAL_DOC');
     
     const darIdsToCancel = state.dars
       .filter(d => activeStatuses.includes(d.status))
@@ -1191,7 +1134,7 @@ const useStore = create(persist((set, get) => ({
                 docId: newDoc.id,
                 docTitle: newDoc.title,
                 docName: newDoc.name,
-                rev: nnewDoc.rev,
+                rev: newDoc.rev,
                 ccNumber: nextCcNum,
                 department: deptName,
                 issueNumber: 'I01',
@@ -1760,7 +1703,7 @@ const useStore = create(persist((set, get) => ({
   setDars: (dars) => set({ dars }),
   setTimeline: (timeline) => set({ timeline })
 }), {
-  name: 'qms-storage-uat-v4',
+  name: 'qms-storage-uat-v5',
   version: 1,
   migrate: (persistedState, version) => {
     if (version === 0 || !version) {

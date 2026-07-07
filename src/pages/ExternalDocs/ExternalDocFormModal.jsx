@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import UserSelector from '../../components/UserSelector';
+import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
 
 const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
   const { masterUsers, registerExternalDoc, updateExternalDoc } = useStore();
@@ -19,7 +20,9 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
     acknowledgees: [],
     accessScope: 'General',
     accessDepartments: [],
-    accessUsers: []
+    accessUsers: [],
+    relatedStandards: [],
+    otherStandardDetail: ''
   });
 
   const [fileName, setFileName] = useState('');
@@ -38,7 +41,9 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
         acknowledgees: documentToEdit.acknowledgees || [],
         accessScope: documentToEdit.accessScope || 'General',
         accessDepartments: documentToEdit.accessDepartments || [],
-        accessUsers: documentToEdit.accessUsers || []
+        accessUsers: documentToEdit.accessUsers || [],
+        relatedStandards: documentToEdit.relatedStandards || [],
+        otherStandardDetail: documentToEdit.otherStandardDetail || ''
       });
       setFileName(documentToEdit.fileName || '');
     } else {
@@ -52,7 +57,9 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
         acknowledgees: [],
         accessScope: 'General',
         accessDepartments: [],
-        accessUsers: []
+        accessUsers: [],
+        relatedStandards: [],
+        otherStandardDetail: ''
       });
       setFileName('');
     }
@@ -101,6 +108,11 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
     e.preventDefault();
     if (!formData.title || !formData.source || !formData.effectiveDate || !formData.reviewerId || !formData.approverId) {
       toast.error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง Reviewer และ Approver)');
+      return;
+    }
+    
+    if (formData.relatedStandards?.includes('อื่น ๆ (Others)') && !formData.otherStandardDetail?.trim()) {
+      toast.error('กรุณาระบุมาตรฐานอื่นๆ');
       return;
     }
     
@@ -215,6 +227,17 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
                   onChange={e => handleChange('source', e.target.value)}
                   className="input-ios w-full px-4 py-2"
                   placeholder="เช่น ISO, ประกาศกระทรวง, กรมโรงงาน"
+                />
+              </div>
+
+              <div className="pt-2">
+                <RelatedStandardsSelector
+                  value={{
+                    relatedStandards: formData.relatedStandards,
+                    otherStandardDetail: formData.otherStandardDetail
+                  }}
+                  onChange={(newVals) => setFormData({ ...formData, ...newVals })}
+                  error={formData.relatedStandards?.includes('อื่น ๆ (Others)') && !formData.otherStandardDetail?.trim() ? 'กรุณาระบุมาตรฐานอื่นๆ' : ''}
                 />
               </div>
 

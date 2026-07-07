@@ -27,7 +27,7 @@ files.forEach(file => {
   content = content.replace(/text-gray-900(?!\s+dark:text)/g, 'text-gray-900 dark:text-slate-100');
   content = content.replace(/text-gray-800(?!\s+dark:text)/g, 'text-gray-800 dark:text-slate-100');
   content = content.replace(/text-slate-800(?!\s+dark:text)/g, 'text-slate-800 dark:text-slate-100');
-  
+
   content = content.replace(/text-gray-700(?!\s+dark:text)/g, 'text-gray-700 dark:text-slate-300');
   content = content.replace(/text-gray-600(?!\s+dark:text)/g, 'text-gray-600 dark:text-slate-300');
   content = content.replace(/text-gray-500(?!\s+dark:text)/g, 'text-gray-500 dark:text-slate-400');
@@ -49,7 +49,7 @@ files.forEach(file => {
   if (file.includes('Dashboard.jsx')) {
     // Numbers (like text-3xl font-bold)
     content = content.replace(/text-3xl\s+font-bold\s+text-gray-\d+0(?!\s+dark:text-white)/g, match => match + ' dark:text-white');
-    
+
     // Fix Dashboard Box Titles (Draft, In Progress, etc)
     content = content.replace(/text-sm\s+font-medium\s+text-gray-600(?!\s+dark:text-slate-300)/g, match => match + ' dark:text-slate-300');
     content = content.replace(/text-sm\s+font-medium\s+text-gray-500(?!\s+dark:text-slate-300)/g, match => match + ' dark:text-slate-300');
@@ -63,7 +63,7 @@ files.forEach(file => {
       return match;
     });
 
-    content = content.replace(/<h2([^>]*)งานที่ต้องจัดการ/g, (match, p1) => {
+    content = content.replace(/<h2([^>]*)'การจัดการงานที่ต้องการ'/g, (match, p1) => {
       if (!p1.includes('dark:text-slate-100')) {
         return `<h2${p1.replace(/text-gray-\d+0/, 'text-gray-800 dark:text-slate-100 font-semibold')}งานที่ต้องจัดการ`;
       }
@@ -88,7 +88,7 @@ files.forEach(file => {
       if (!newClasses.includes('dark:placeholder-slate-400')) newClasses += ' dark:placeholder-slate-400';
       if (!newClasses.includes('dark:bg-slate-800/50')) newClasses += ' dark:bg-slate-800/50';
       if (!newClasses.includes('dark:border-slate-700')) newClasses += ' dark:border-slate-700';
-      
+
       return match.replace(classes, newClasses);
     }
     return match;

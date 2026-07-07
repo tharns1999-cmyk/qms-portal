@@ -3,7 +3,7 @@ import useStore from '../../store/useStore';
 import { X, Upload, Save, AlertCircle, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import DistributionManager from '../../components/DistributionManager';
+import DistributionSetup from '../../components/workflow/DistributionSetup';
 import UserSelector from '../../components/UserSelector';
 
 const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
@@ -189,6 +189,12 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
                   placeholder="เช่น ISO 9001:2015 Standard"
                 />
               </div>
+
+              <DistributionSetup 
+                ownerDept="QA/QC"
+                distributions={formData.distributions}
+                onChange={(distributions) => setFormData({ ...formData, distributions })}
+              />
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700  mb-1">เวอร์ชันอ้างอิง (Source Version / Edition) <span className="text-red-500 ">*</span></label>

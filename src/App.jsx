@@ -30,6 +30,7 @@ import SLAEngine from './components/SLAEngine';
 
 import { AdminHealth, NotFound } from './pages/Placeholders';
 import MasterList from './pages/MasterList/MasterList';
+import DistributionDemo from './pages/Placeholders/DistributionDemo';
 
 function App() {
   return (
@@ -66,6 +67,9 @@ function App() {
           <Route path="periodic-review" element={<ComingSoon title="Periodic Review" />} />
           <Route path="external-docs" element={<ExternalDocsList />} />
           <Route path="master-list" element={<MasterList />} />
+          
+          {/* Prototypes */}
+          <Route path="demo-distribution" element={<DistributionDemo />} />
 
           <Route path="*" element={<NotFound />} />
         </Route>

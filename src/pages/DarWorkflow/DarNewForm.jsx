@@ -4,7 +4,7 @@ import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { Upload, FileText, User, Calendar, Settings, X } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
-import DistributionManager from '../../components/DistributionManager';
+import DistributionSetup from '../../components/workflow/DistributionSetup';
 
 const DarNewForm = () => {
   const navigate = useNavigate();
@@ -174,7 +174,7 @@ const DarNewForm = () => {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <User className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 1: Requester Information</h3>
@@ -195,7 +195,7 @@ const DarNewForm = () => {
           </div>
         </div>
 
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <Settings className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 2: Document Definition</h3>
@@ -238,7 +238,7 @@ const DarNewForm = () => {
           </div>
         </div>
 
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <FileText className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 3: Request Details & Attachment</h3>
@@ -315,14 +315,14 @@ const DarNewForm = () => {
         </div>
 
         {/* Section 4: Distribution Management */}
-        <DistributionManager 
+        <DistributionSetup 
           ownerDept={currentUser.department}
           distributions={formData.distributions}
           onChange={(distributions) => setFormData({ ...formData, distributions })}
         />
 
         {/* Section 5: Effective Control */}
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 5: Effective Control</h3>

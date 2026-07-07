@@ -4,7 +4,7 @@ import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { Upload, FileText, User, Calendar, Settings, FileEdit, Plus, Trash2, Search, X, FilterX } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
-import DistributionManager from '../../components/DistributionManager';
+import DistributionSetup from '../../components/workflow/DistributionSetup';
 
 const ALL_DEPTS = ['ST', 'HSE', 'WH', 'MKT', 'PC', 'QA/QC', 'PD', 'EN', 'HR&GA'];
 
@@ -213,7 +213,7 @@ const DarRevisionForm = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Section 1: Select Effective Document */}
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2 rounded-t-2xl">
             <Settings className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 1: Select Effective Document</h3>
@@ -323,7 +323,7 @@ const DarRevisionForm = () => {
 
         {/* Section 2: Revision Details (Snapshot Area) */}
         {selectedDoc && (
-          <div className="premium-card overflow-hidden border-none">
+          <div className="premium-card overflow-visible border-none">
             <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
               <FileText className="w-5 h-5 text-gray-500 " />
               <h3 className="font-semibold text-gray-800 ">Section 2: Revision Details (Snapshot Area)</h3>
@@ -352,7 +352,7 @@ const DarRevisionForm = () => {
         )}
 
         {/* Section 3: Change Details & Rationale */}
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <FileEdit className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 3: Change Details & Rationale</h3>
@@ -406,7 +406,7 @@ const DarRevisionForm = () => {
         </div>
 
         {/* Section 4: Distribution Management & Attachment */}
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <Upload className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 4: Distribution & Attachment</h3>
@@ -475,7 +475,7 @@ const DarRevisionForm = () => {
 
             {/* Distribution */}
             <div className="mt-6">
-              <DistributionManager 
+              <DistributionSetup 
                 ownerDept={currentUser.department}
                 distributions={formData.distributions}
                 oldDistributions={selectedDoc?.distributions || []}
@@ -487,7 +487,7 @@ const DarRevisionForm = () => {
         </div>
 
         {/* Section 5: Effective Control */}
-        <div className="premium-card overflow-hidden border-none">
+        <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-500 " />
             <h3 className="font-semibold text-gray-800 ">Section 5: Effective Control</h3>

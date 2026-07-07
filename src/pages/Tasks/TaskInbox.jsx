@@ -20,9 +20,9 @@ const TaskInbox = () => {
   const isDccAdmin = currentUser.isDcc || currentUser.role === 'DCC_ADMIN' || currentUser.id === 'u5';
 
   const userTasks = tasks.filter(t => {
-    const isMyTask = t.assigneeId === currentUser.id || 
-    (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level));
-    
+    const isMyTask = t.assigneeId === currentUser.id ||
+      (t.currentHandlerDepartment === currentUser.department && Number(t.currentHandlerLevel) === Number(currentUser.level));
+
     if (isDccAdmin) {
       return t.type.startsWith('DCC_') || t.assignedToRole === 'DCC_ADMIN' || isMyTask;
     }
@@ -37,8 +37,8 @@ const TaskInbox = () => {
     if (searchTerm) {
       filtered = filtered.filter(t => {
         const refId = t.referenceId || t.darId || '';
-        return refId.toLowerCase().includes(searchTerm.toLowerCase()) || 
-               t.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return refId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.title.toLowerCase().includes(searchTerm.toLowerCase());
       });
     }
     return filtered;
@@ -46,11 +46,11 @@ const TaskInbox = () => {
 
   const getRiskStatus = (task) => {
     if (!task.dueDate) return { label: 'Normal', color: 'bg-green-100 text-green-700 ', icon: <CheckCircle className="w-4 h-4" /> };
-    
+
     const today = new Date();
     today.setDate(today.getDate() + mockDateOffset);
     const todayStr = today.toISOString().split('T')[0];
-    
+
     if (todayStr > task.dueDate) {
       return { label: 'Overdue', color: 'bg-red-100 text-red-700 ', icon: <AlertCircle className="w-4 h-4" /> };
     } else if (todayStr === task.dueDate) {
@@ -78,8 +78,8 @@ const TaskInbox = () => {
       setSelectedExtTask(task);
       return;
     }
-    
-    switch(task.type) {
+
+    switch (task.type) {
       case 'Review': navigate(`/tasks/review/${task.id}`); break;
       case 'Approve': navigate(`/tasks/approve/${task.id}`); break;
       case 'Ack': navigate(`/tasks/ack/${task.id}`); break;
@@ -103,14 +103,14 @@ const TaskInbox = () => {
           <h1 className="text-2xl font-bold text-gray-800 ">{isDccAdmin ? 'DCC Task Center' : 'Task Inbox'}</h1>
           <p className="text-gray-500 ">{isDccAdmin ? 'จัดการงานแจกจ่าย และเรียกเก็บเอกสารควบคุม' : 'จัดการงานที่รอการตรวจสอบและอนุมัติ'}</p>
         </div>
-        
+
         {/* Development Mock Tools */}
         <div className="bg-purple-50  border border-purple-200  px-4 py-2 rounded-lg flex items-center gap-4">
           <div>
             <p className="text-xs text-purple-600  font-bold uppercase tracking-wider">Dev Tools (Time Travel)</p>
             <p className="text-sm font-medium text-purple-900 ">Day Offset: +{mockDateOffset} Days</p>
           </div>
-          <button 
+          <button
             onClick={handleSimulateDay}
             className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
           >
@@ -152,15 +152,15 @@ const TaskInbox = () => {
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
               <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 " />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="ค้นหา DAR No. หรือ ชื่อเอกสาร..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-white  border border-gray-200  rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
               />
             </div>
-            <button 
+            <button
               onClick={() => {
                 setSearchTerm('');
                 setActiveTab('ALL');
@@ -182,10 +182,10 @@ const TaskInbox = () => {
               const risk = getRiskStatus(task);
               const displayId = task.referenceId || task.darId;
               const displayType = isExternal ? 'External Document' : dar?.type;
-              
+
               return (
-                <div 
-                  key={task.id} 
+                <div
+                  key={task.id}
                   onClick={() => handleTaskClick(task)}
                   className="p-5 hover:bg-blue-50  cursor-pointer transition-colors group flex items-center justify-between"
                 >
@@ -218,9 +218,9 @@ const TaskInbox = () => {
                       <h3 className="text-gray-800  font-medium mb-1">[{displayType}] {task.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-gray-500 ">
                         {isExternal ? (
-                           <span>สถานะปัจจุบัน: <span className="font-medium text-indigo-600 ">{extDoc?.status}</span></span>
+                          <span>สถานะปัจจุบัน: <span className="font-medium text-indigo-600 ">{extDoc?.status}</span></span>
                         ) : isDccAdmin ? (
-                           <span className="text-gray-600">{task.description || `DCC Action Required for ${displayId}`}</span>
+                          <span className="text-gray-600">{task.description || `DCC Action Required for ${displayId}`}</span>
                         ) : (
                           <>
                             <span>Due: <span className="font-medium text-gray-700 ">{task.dueDate}</span></span>
@@ -246,9 +246,9 @@ const TaskInbox = () => {
 
       <AnimatePresence>
         {selectedExtTask && (
-          <ExternalDocActionModal 
-            task={selectedExtTask} 
-            onClose={() => setSelectedExtTask(null)} 
+          <ExternalDocActionModal
+            task={selectedExtTask}
+            onClose={() => setSelectedExtTask(null)}
           />
         )}
       </AnimatePresence>

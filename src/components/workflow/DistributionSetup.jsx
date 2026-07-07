@@ -164,12 +164,20 @@ const DistributionSetup = ({
           
           {/* Owner Dept - Locked as Copy 01, with optional subs inline */}
           <div className="mb-4">
-            <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-[#FAFAFA] opacity-80">
+            <div 
+              className={`flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-[#FAFAFA] opacity-80 ${ownerDeptObj.isGroup ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+              onClick={() => ownerDeptObj.isGroup && toggleGroup(ownerDeptObj.id)}
+            >
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded bg-slate-300 flex items-center justify-center shrink-0">
                   <Check className="w-3.5 h-3.5 text-white" />
                 </div>
                 <span className="font-medium text-slate-700">{ownerDeptObj.name}</span>
+                {ownerDeptObj.isGroup && (
+                  expandedGroups[ownerDeptObj.id] ? 
+                    <ChevronDown className="w-4 h-4 text-slate-400" /> : 
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                )}
               </div>
               <span className="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-bold tracking-wide shrink-0">
                 Copy 01 (Master)
@@ -177,7 +185,7 @@ const DistributionSetup = ({
             </div>
             
             {/* Inline render sub-departments if owner is a group */}
-            {ownerDeptObj.isGroup && ownerDeptObj.subs && (
+            {ownerDeptObj.isGroup && ownerDeptObj.subs && expandedGroups[ownerDeptObj.id] && (
               <div className="mt-2 pl-6 pr-2 space-y-1 border-l-2 border-slate-100 ml-4 relative">
                 <div className="absolute top-0 -left-[1px] w-[2px] h-4 bg-slate-200"></div>
                 {ownerDeptObj.subs.map(sub => renderDeptItem({ ...sub, isGroup: false }, true))}

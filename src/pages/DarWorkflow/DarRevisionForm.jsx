@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
+import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
 
 const DarRevisionForm = () => {
   const navigate = useNavigate();
@@ -22,7 +23,9 @@ const DarRevisionForm = () => {
     ackUserId: '',
     distributions: [],
     effectiveDate: '',
-    file: null
+    file: null,
+    relatedStandards: [],
+    otherStandardDetail: ''
   });
   
   const [errors, setErrors] = useState({});
@@ -45,7 +48,9 @@ const DarRevisionForm = () => {
           ackUserId: draft.ackUserIds?.[0] || '',
           distributions: draft.distributions || [],
           effectiveDate: draft.effectiveDate || '',
-          file: null
+          file: null,
+          relatedStandards: draft.relatedStandards || [],
+          otherStandardDetail: draft.otherStandardDetail || ''
         });
       }
     }
@@ -96,7 +101,9 @@ const DarRevisionForm = () => {
       ...formData,
       docId: doc.id,
       title: doc.name, // Default title to old name
-      distributions: doc.distributions ? JSON.parse(JSON.stringify(doc.distributions)) : [] // copy old distributions as starting point
+      distributions: doc.distributions ? JSON.parse(JSON.stringify(doc.distributions)) : [], // copy old distributions as starting point
+      relatedStandards: doc.relatedStandards ? [...doc.relatedStandards] : [],
+      otherStandardDetail: doc.otherStandardDetail || ''
     });
     setSearchQuery('');
     setIsDropdownOpen(false);
@@ -106,7 +113,9 @@ const DarRevisionForm = () => {
     setFormData({
       ...formData,
       docId: '',
-      title: ''
+      title: '',
+      relatedStandards: [],
+      otherStandardDetail: ''
     });
   };
   
@@ -129,6 +138,10 @@ const DarRevisionForm = () => {
     if (!formData.changeSummary) newErrors.changeSummary = 'กรุณาสรุปการเปลี่ยนแปลง';
     if (!formData.changeReason) newErrors.changeReason = 'กรุณาเลือกเหตุผลที่แก้ไข';
     if (formData.changeReason === 'OTHER' && !formData.otherReason) newErrors.otherReason = 'กรุณาระบุเหตุผลอื่นๆ';
+
+    if (formData.relatedStandards?.includes('อื่น ๆ (Others)') && !formData.otherStandardDetail?.trim()) {
+      newErrors.otherStandardDetail = 'กรุณาระบุมาตรฐานอื่นๆ';
+    }
 
     if (formData.ackRequirement === 'REQUIRED' && !formData.ackUserId) {
       newErrors.ackUserId = 'กรุณาเลือกผู้รับ Acknowledgement 1 คน';
@@ -165,6 +178,8 @@ const DarRevisionForm = () => {
       ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
       distributions: formData.distributions,
       effectiveDate: formData.effectiveDate,
+      relatedStandards: formData.relatedStandards,
+      otherStandardDetail: formData.otherStandardDetail,
       isDraft: true
     };
     if (draftId) deleteDar(draftId);
@@ -190,6 +205,8 @@ const DarRevisionForm = () => {
         ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
         distributions: formData.distributions,
         effectiveDate: formData.effectiveDate,
+        relatedStandards: formData.relatedStandards,
+        otherStandardDetail: formData.otherStandardDetail,
         isDraft: false
       };
       if (draftId) deleteDar(draftId);
@@ -398,6 +415,17 @@ const DarRevisionForm = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100 mt-6">
+              <RelatedStandardsSelector
+                value={{
+                  relatedStandards: formData.relatedStandards,
+                  otherStandardDetail: formData.otherStandardDetail
+                }}
+                onChange={(newVals) => setFormData({ ...formData, ...newVals })}
+                error={errors.otherStandardDetail}
+              />
             </div>
 
           </div>

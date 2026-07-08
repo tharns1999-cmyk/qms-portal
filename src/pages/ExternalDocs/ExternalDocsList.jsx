@@ -4,7 +4,6 @@ import { FileText, Search, Plus, Download, Eye, X, Archive, ShieldAlert, Globe, 
 import { motion } from 'framer-motion';
 import ExternalDocFormModal from './ExternalDocFormModal';
 import ExternalDocPreviewModal from './ExternalDocPreviewModal';
-import ExternalDocCcTrackerModal from './ExternalDocCcTrackerModal';
 import ExternalDocHistoryModal from './ExternalDocHistoryModal';
 import ExternalDocObsoleteModal from './ExternalDocObsoleteModal';
 import toast from 'react-hot-toast';
@@ -23,8 +22,6 @@ const ExternalDocsList = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [docToPreview, setDocToPreview] = useState(null);
 
-  const [isCcModalOpen, setIsCcModalOpen] = useState(false);
-  const [docToTrack] = useState(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [docToHistory, setDocToHistory] = useState(null);
   const [isObsoleteModalOpen, setIsObsoleteModalOpen] = useState(false);
@@ -353,12 +350,6 @@ const ExternalDocsList = () => {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         document={docToPreview}
-      />
-
-      <ExternalDocCcTrackerModal
-        isOpen={isCcModalOpen}
-        onClose={() => setIsCcModalOpen(false)}
-        document={docToTrack}
       />
 
       <ExternalDocHistoryModal

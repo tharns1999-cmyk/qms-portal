@@ -1050,26 +1050,68 @@ const useStore = create(persist((set, _get) => ({
   },
 
   checkSLA: () => set((state) => {
+    const todayStr = state.simulatedDate;
     const activeStatuses = ['DRAFT', 'UNDER_REVIEW', 'PENDING_APPROVAL', 'RETURNED_FOR_REVISION', 'WAITING_ACKNOWLEDGEMENT'];
+    const activeExtStatuses = ['PENDING_EXT_REVIEW', 'PENDING_EXT_APPROVAL', 'RETURNED_FOR_REVISION'];
     
     const darIdsToCancel = state.dars
       .filter(d => activeStatuses.includes(d.status))
       .filter(d => calculateSLAStatus(d.effectiveDate, todayStr) === 'OVERDUE')
       .map(d => d.id);
+
+    const extDocIdsToCancel = state.externalDocuments
+      .filter(d => activeExtStatuses.includes(d.status))
+      .filter(d => calculateSLAStatus(d.effectiveDate, todayStr) === 'OVERDUE')
+      .map(d => d.id);
     
-    const newTasks = state.tasks.filter(t => !darIdsToCancel.includes(t.darId)).map(t => {
-      const dar = state.dars.find(d => d.id === t.darId);
-      const sla = dar && activeStatuses.includes(dar.status) ? calculateSLAStatus(dar.effectiveDate, todayStr) : 'NORMAL';
-      return { ...t, status: sla };
-    });
+    const newTasks = state.tasks
+      .filter(t => !darIdsToCancel.includes(t.darId) && !extDocIdsToCancel.includes(t.referenceId))
+      .map(t => {
+        let sla = 'NORMAL';
+        if (t.darId) {
+          const dar = state.dars.find(d => d.id === t.darId);
+          if (dar && activeStatuses.includes(dar.status)) {
+            sla = calculateSLAStatus(dar.effectiveDate, todayStr);
+          }
+        } else if (t.referenceType === 'EXTERNAL_DOC' && t.referenceId) {
+          const extDoc = state.externalDocuments.find(d => d.id === t.referenceId);
+          if (extDoc && activeExtStatuses.includes(extDoc.status)) {
+            sla = calculateSLAStatus(extDoc.effectiveDate, todayStr);
+          }
+        }
+        return { ...t, status: sla };
+      });
 
     let newDars = state.dars.map(d => darIdsToCancel.includes(d.id) ? { ...d, status: 'CANCELLED_OVERDUE' } : d);
+    let newExtDocs = state.externalDocuments.map(d => extDocIdsToCancel.includes(d.id) ? { ...d, status: 'CANCELLED_OVERDUE' } : d);
     let newDocuments = [...state.documents];
     const newTimeline = [...state.timeline];
+    let newActionLog = state.actionLog ? [...state.actionLog] : [];
+    let newExtAuditTrail = state.externalAuditTrail ? [...state.externalAuditTrail] : [];
 
     darIdsToCancel.forEach(darId => {
       newTimeline.push({
         id: Date.now() + Math.random(), darId, action: 'System Cancel', user: 'System (SLA Engine)', date: new Date().toLocaleString(), comment: 'Auto-cancelled due to Overdue Effective Date'
+      });
+    });
+
+    extDocIdsToCancel.forEach(extId => {
+      newActionLog.unshift({
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        actionType: 'SYSTEM_CANCEL',
+        details: `External document cancelled due to Overdue SLA`,
+        actor: 'System (SLA Engine)',
+        actorId: 'SYS',
+        date: new Date().toISOString()
+      });
+      newExtAuditTrail.unshift({
+        id: `EXTA-${Date.now()}-${Math.random()}`,
+        docId: extId,
+        action: 'SYSTEM_CANCEL',
+        actor: 'System (SLA Engine)',
+        actorId: 'SYS',
+        date: new Date().toISOString(),
+        details: 'Auto-cancelled due to Overdue Effective Date'
       });
     });
 
@@ -1260,11 +1302,14 @@ const useStore = create(persist((set, _get) => ({
     return {
       tasks: newTasks,
       dars: newDars,
+      externalDocuments: newExtDocs,
       documents: newDocuments,
       timeline: newTimeline,
       controlledCopyInstances: newControlledCopyInstances,
       controlledCopyAuditTrail: newAuditTrail,
-      notifications: newNotifications
+      notifications: newNotifications,
+      actionLog: newActionLog,
+      externalAuditTrail: newExtAuditTrail
     };
   }),
 
@@ -1327,7 +1372,10 @@ const useStore = create(persist((set, _get) => ({
 
   canDownloadDocument: (doc, user) => {
     // 100% View-Only for normal users. Only DCC can download.
-    return !!user.isDcc;
+    // Exception: Form (FM) documents have unlimited internal downloads.
+    if (user.isDcc) return true;
+    if (doc && doc.title && doc.title.startsWith('FM')) return true;
+    return false;
   },
 
   // --- CONTROLLED COPY METHODS ---

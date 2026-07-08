@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Check, FileText, ShieldAlert, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Check, FileText, ShieldAlert, ChevronDown, ChevronRight, Globe } from 'lucide-react';
 import useStore from '../../store/useStore';
 
 /**
@@ -19,7 +19,8 @@ const DistributionSetup = ({
   onChange = () => {},
   showConfirmButton = false,
   onConfirm = () => {},
-  document = { docNo: 'NEW-DOCUMENT', title: 'New Document' }
+  document = { docNo: 'NEW-DOCUMENT', title: 'New Document' },
+  documentType = 'WI'
 }) => {
   const masterDepartments = useStore(state => state.masterDepartments) || [];
   const normalizedOwnerDept = (ownerDept === 'QA' || ownerDept === 'QA Super') ? 'QA/QC' : ownerDept;
@@ -42,6 +43,41 @@ const DistributionSetup = ({
     }
     
     // Auto-assign copy numbers before sending up
+    const mapped = newDistributions.map((d, index) => ({
+      ...d,
+      copyNo: String(index + 2).padStart(2, '0')
+    }));
+    
+    onChange(mapped);
+  };
+
+  const isForm = documentType.startsWith('FM');
+
+  const getAllSelectableDeptIds = () => {
+    let ids = [];
+    masterDepartments.forEach(dept => {
+      if (dept.id !== normalizedOwnerDept) {
+        if (dept.isGroup && dept.subs) {
+          dept.subs.forEach(sub => {
+             if (sub.id !== normalizedOwnerDept) ids.push(sub.id);
+          });
+        } else {
+          ids.push(dept.id);
+        }
+      }
+    });
+    return ids;
+  };
+
+  const allIds = getAllSelectableDeptIds();
+  const isAllSelected = allIds.every(id => (distributions || []).some(d => d.departmentId === id));
+
+  const handleGlobalToggle = () => {
+    let newDistributions = [];
+    if (!isAllSelected) {
+      newDistributions = allIds.map(id => ({ departmentId: id }));
+    }
+    
     const mapped = newDistributions.map((d, index) => ({
       ...d,
       copyNo: String(index + 2).padStart(2, '0')
@@ -156,8 +192,36 @@ const DistributionSetup = ({
 
       {/* Right Column: Distribution List */}
       <div className="w-full md:w-2/3 p-6 flex flex-col">
-        <h3 className="font-semibold text-slate-800 tracking-tight mb-4">Distribution List</h3>
-        <p className="text-sm text-slate-500 mb-6">เลือกแผนกที่ต้องการกระจายเอกสาร (Copy No. จะถูกเรียงลำดับอัตโนมัติ)</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-semibold text-slate-800 tracking-tight">Distribution List</h3>
+            <p className="text-sm text-slate-500 mt-1">เลือกแผนกที่ต้องการกระจายเอกสาร (Copy No. จะถูกเรียงลำดับอัตโนมัติ)</p>
+          </div>
+          {isForm && (
+            <button
+              type="button"
+              onClick={handleGlobalToggle}
+              className={`shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm ${
+                isAllSelected 
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
+                  : 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 hover:shadow-md border border-transparent'
+              }`}
+            >
+              <Globe className={`w-4 h-4 ${isAllSelected ? 'text-slate-500' : 'text-indigo-100'}`} />
+              {isAllSelected ? 'ยกเลิกแจกจ่ายทุกแผนก' : 'แจกจ่ายทุกแผนก (Global Form)'}
+            </button>
+          )}
+        </div>
+
+        {isForm && (
+          <div className="flex items-start gap-3 text-cyan-800 bg-cyan-50 p-4 rounded-xl border border-cyan-100 mb-6">
+            <ShieldAlert className="w-5 h-5 shrink-0 text-cyan-600 mt-0.5" />
+            <div className="text-sm">
+              <span className="font-semibold block mb-1">เอกสารประเภท Form ไม่จำเป็นต้องรอ Acknowledge</span>
+              ระบบจะตั้งค่า <strong>ไม่ต้องรับทราบ (Not Required)</strong> ให้อัตโนมัติ สิทธิ์การมองเห็นจะถูกปลดล็อกให้ Form ไปปรากฏใน Form Library ของแผนกปลายทางทันทีหลังอนุมัติ
+            </div>
+          </div>
+        )}
         
         <div className="flex-1 space-y-2 mb-4 overflow-y-auto pr-2 custom-scrollbar max-h-96">
           

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
-import { Upload, FileText, User, Calendar, Settings, X } from 'lucide-react';
+import { Upload, FileText, User, Calendar, Settings, X, ShieldAlert } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
@@ -216,7 +216,14 @@ const DarNewForm = () => {
               <label className="block text-sm font-medium text-gray-700  mb-1">ชนิดเอกสาร (Document Type) <span className="text-red-500 ">*</span></label>
               <select 
                 value={formData.docType}
-                onChange={(e) => setFormData({...formData, docType: e.target.value})}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({
+                    ...formData, 
+                    docType: val,
+                    ...(val === 'FM' ? { ackRequirement: 'NOT_REQUIRED', ackUserId: '' } : {})
+                  });
+                }}
                 className={`input-ios w-full px-3 py-2 ${errors.docType ? 'ring-2 ring-red-400 bg-red-50/50 ' : ''}`}
               >
                 <option value="">-- เลือกชนิดเอกสาร --</option>
@@ -306,18 +313,27 @@ const DarNewForm = () => {
 
             <div className="border-t border-gray-200  pt-6">
               <label className="block text-sm font-medium text-gray-700  mb-3">การรับทราบเอกสาร (Acknowledgement) <span className="text-red-500 ">*</span></label>
-              <div className="flex gap-6 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer text-gray-700 ">
-                  <input type="radio" name="ack" value="NOT_REQUIRED" checked={formData.ackRequirement === 'NOT_REQUIRED'} onChange={(e) => setFormData({...formData, ackRequirement: e.target.value, ackUserId: ''})} />
-                  <span>ไม่ต้องรับทราบ</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-gray-700 ">
-                  <input type="radio" name="ack" value="REQUIRED" checked={formData.ackRequirement === 'REQUIRED'} onChange={(e) => setFormData({...formData, ackRequirement: e.target.value})} />
-                  <span>ต้องรับทราบ</span>
-                </label>
-              </div>
+              {formData.docType === 'FM' ? (
+                <div className="flex items-start gap-3 text-cyan-800 bg-cyan-50 p-4 rounded-xl border border-cyan-100 mb-4">
+                  <ShieldAlert className="w-5 h-5 shrink-0 text-cyan-600 mt-0.5" />
+                  <div className="text-sm">
+                    <span className="font-semibold block mb-1">เอกสารประเภท Form ระบบจะตั้งค่าเป็นแบบไม่ต้องรับทราบโดยอัตโนมัติ</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-6 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer text-gray-700 ">
+                    <input type="radio" name="ack" value="NOT_REQUIRED" checked={formData.ackRequirement === 'NOT_REQUIRED'} onChange={(e) => setFormData({...formData, ackRequirement: e.target.value, ackUserId: ''})} />
+                    <span>ไม่ต้องรับทราบ</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-gray-700 ">
+                    <input type="radio" name="ack" value="REQUIRED" checked={formData.ackRequirement === 'REQUIRED'} onChange={(e) => setFormData({...formData, ackRequirement: e.target.value})} />
+                    <span>ต้องรับทราบ</span>
+                  </label>
+                </div>
+              )}
 
-              {formData.ackRequirement === 'REQUIRED' && (
+              {formData.ackRequirement === 'REQUIRED' && formData.docType !== 'FM' && (
                 <div className={`p-4 rounded-xl border ${errors.ackUserId ? 'border-red-300 bg-red-50 ' : 'border-blue-100  bg-blue-50/30 '}`}>
                   <p className="text-sm font-medium text-gray-700  mb-3">เลือกผู้ที่ต้องรับทราบเอกสารนี้ (1 คน)</p>
                   <div className="w-full md:w-1/2">
@@ -341,6 +357,7 @@ const DarNewForm = () => {
           ownerDept={currentUser.department}
           distributions={formData.distributions}
           onChange={(distributions) => setFormData({ ...formData, distributions })}
+          documentType={formData.docType}
         />
 
         {/* Section 5: Effective Control */}

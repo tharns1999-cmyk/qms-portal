@@ -234,7 +234,7 @@ const LibraryDetail = () => {
                     onClick={handleDownloadMaster}
                     className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-medium transition-all shadow-sm shadow-indigo-200"
                   >
-                    <Download size={20} strokeWidth={1.25}/> Download Master File
+                    <Download size={20} strokeWidth={1.25}/> {doc.title.startsWith('FM') ? 'Print / Download Form (No Watermark)' : 'Download Master File'}
                   </button>
                   <button 
                     onClick={handleDownloadExternal}

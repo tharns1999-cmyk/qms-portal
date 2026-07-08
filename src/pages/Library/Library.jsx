@@ -11,11 +11,12 @@ import { PDFDocument, rgb, degrees } from 'pdf-lib';
 
 const Library = () => {
   const navigate = useNavigate();
-  const { documents, currentUser, canAccessDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, logAction } = useStore();
+  const { documents, currentUser, canAccessDocument, canDownloadDocument, dars, timeline, masterUsers, controlledCopyInstances, reportCcDamagedLost, logAction } = useStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterStandard, setFilterStandard] = useState('');
   const [filterStatus, setFilterStatus] = useState('EFFECTIVE');
   const [filterDate, setFilterDate] = useState('');
   const [activeTab, setActiveTab] = useState(currentUser.isDcc ? 'global' : 'dept'); // 'dept', 'dist', 'global'
@@ -65,12 +66,14 @@ const Library = () => {
                           doc.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = filterDept ? doc.department === filterDept : true;
     const matchesType = filterType ? doc.title.startsWith(filterType) : true;
+    const matchesStandard = filterStandard ? (doc.relatedStandards || []).includes(filterStandard) : true;
     const matchesStatus = filterStatus ? doc.status === filterStatus || (filterStatus === 'OBSOLETE' && doc.status === 'SUPERSEDED_ARCHIVED') : true;
     const matchesDate = filterDate ? doc.effectiveDate === filterDate : true;
-    return matchesSearch && matchesDept && matchesType && matchesStatus && matchesDate;
+    return matchesSearch && matchesDept && matchesType && matchesStandard && matchesStatus && matchesDate;
   });
 
   const availableTypes = [...new Set(accessibleDocs.map(doc => doc.title.split('-')[0]))].filter(Boolean).sort();
+  const availableStandards = [...new Set(accessibleDocs.flatMap(doc => doc.relatedStandards || []))].filter(Boolean).sort();
   const availableDepts = [...new Set(accessibleDocs.map(doc => doc.department))].filter(Boolean).sort();
 
   const handleExport = () => {
@@ -259,12 +262,12 @@ const Library = () => {
                   >
                     <Eye size={24} strokeWidth={1.25}/>
                   </button>
-                  {currentUser.isDcc && (
+                  {canDownloadDocument(doc, currentUser) && (
                     <>
                       <button 
                         onClick={(e) => handleDownloadMaster(doc, e)}
                         className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
-                        title="Download Master (DCC Only)"
+                        title={doc.title.startsWith('FM') ? "Print / Download Form (No Watermark)" : "Download Master (DCC Only)"}
                       >
                         <Download size={24} strokeWidth={1.25}/>
                       </button>
@@ -387,15 +390,15 @@ const Library = () => {
                         >
                           <Eye size={24} strokeWidth={1.25}/>
                         </button>
-                        {currentUser.isDcc && (
+                        {canDownloadDocument(doc, currentUser) && (
                           <>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toast.success('ดาวน์โหลด Master Document สำเร็จ');
+                                toast.success(doc.title.startsWith('FM') ? 'ดาวน์โหลด Form สำเร็จ' : 'ดาวน์โหลด Master Document สำเร็จ');
                               }}
                               className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
-                              title="Download Master (DCC Only)"
+                              title={doc.title.startsWith('FM') ? "Print / Download Form (No Watermark)" : "Download Master (DCC Only)"}
                             >
                               <Download size={24} strokeWidth={1.25}/>
                             </button>
@@ -525,6 +528,20 @@ const Library = () => {
               })}
             </select>
           </div>
+          
+          <div className="relative flex items-center min-w-[140px]">
+             <select 
+              value={filterStandard}
+              onChange={(e) => setFilterStandard(e.target.value)}
+              disabled={availableStandards.length === 0}
+              className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none disabled:opacity-50"
+            >
+              <option value="">ทุกมาตรฐาน</option>
+              {availableStandards.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
 
           {(activeTab === 'global' || activeTab === 'dist') && (
             <div className="relative flex items-center min-w-[150px]">
@@ -567,19 +584,21 @@ const Library = () => {
             </>
           )}
 
-          <button 
-            onClick={() => {
-              setSearchTerm('');
-              setFilterDept('');
-              setFilterType('');
-              setFilterStatus(currentUser.isDcc ? 'EFFECTIVE' : '');
-              setFilterDate('');
-            }}
-            className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-100  rounded-lg transition-colors flex-shrink-0"
-            title="ล้างตัวกรอง (Clear Filters)"
-          >
-            <FilterX size={24} strokeWidth={1.25}/>
-          </button>
+          {(searchTerm || filterType || filterStandard || filterStatus !== 'EFFECTIVE' || filterDate || filterDept) && (
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setFilterType('');
+                setFilterStandard('');
+                setFilterStatus('EFFECTIVE');
+                setFilterDate('');
+                setFilterDept('');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            >
+              <FilterX size={14} /> ล้างตัวกรอง
+            </button>
+          )}
           
           {(activeTab === 'dept' || currentUser.isDcc) && (
             <button 

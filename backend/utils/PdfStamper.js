@@ -5,9 +5,11 @@ class PdfStamper {
   /**
    * Stamps the given PDF buffer as "UNCONTROLLED WHEN PRINTED"
    * @param {Buffer} pdfBuffer - Original PDF Buffer
+   * @param {Object} options - { docType }
    * @returns {Promise<Buffer>} - Modified PDF Buffer
    */
-  static async stampUncontrolled(pdfBuffer) {
+  static async stampUncontrolled(pdfBuffer, options = {}) {
+    const { docType } = options;
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const pages = pdfDoc.getPages();
@@ -17,18 +19,31 @@ class PdfStamper {
       const text = 'UNCONTROLLED WHEN PRINTED';
       const textSize = 40;
       
-      // Calculate position for a diagonal watermark across the center
       const textWidth = font.widthOfTextAtSize(text, textSize);
       const textHeight = font.heightAtSize(textSize);
       
+      let x, y, rotation;
+      
+      if (docType && docType.startsWith('FM')) {
+        // Top-Left corner
+        x = 50;
+        y = height - 50;
+        rotation = 0;
+      } else {
+        // Diagonal across the center
+        x = width / 2 - textWidth / 2 + 50;
+        y = height / 2 - textHeight / 2 - 50;
+        rotation = degrees(45);
+      }
+      
       page.drawText(text, {
-        x: width / 2 - textWidth / 2 + 50,
-        y: height / 2 - textHeight / 2 - 50,
+        x,
+        y,
         size: textSize,
         font: font,
         color: rgb(0.8, 0.8, 0.8), // Light gray
         opacity: 0.4,
-        rotate: degrees(45),
+        rotate: rotation || undefined,
       });
     }
 
@@ -42,7 +57,13 @@ class PdfStamper {
    * @returns {Promise<Buffer>} - Modified PDF Buffer
    */
   static async stampControlled(pdfBuffer, options) {
-    const { ccNumber, department, issueNumber } = options;
+    const { ccNumber, department, issueNumber, docType } = options;
+    
+    // Zero Internal Watermark for Forms
+    if (docType && docType.startsWith('FM')) {
+      return pdfBuffer;
+    }
+
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const pages = pdfDoc.getPages();

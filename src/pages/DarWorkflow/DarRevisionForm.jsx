@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
-import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX } from 'lucide-react';
+import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX, ShieldAlert } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
@@ -103,7 +103,8 @@ const DarRevisionForm = () => {
       title: doc.name, // Default title to old name
       distributions: doc.distributions ? JSON.parse(JSON.stringify(doc.distributions)) : [], // copy old distributions as starting point
       relatedStandards: doc.relatedStandards ? [...doc.relatedStandards] : [],
-      otherStandardDetail: doc.otherStandardDetail || ''
+      otherStandardDetail: doc.otherStandardDetail || '',
+      ...(doc.title && doc.title.startsWith('FM') ? { ackRequirement: 'NOT_REQUIRED', ackUserId: '' } : {})
     });
     setSearchQuery('');
     setIsDropdownOpen(false);
@@ -458,32 +459,41 @@ const DarRevisionForm = () => {
             {/* Ack */}
             <div className="border-t border-gray-200  pt-6">
               <label className="block text-sm font-medium text-gray-700  mb-3">การรับทราบเอกสารฉบับแก้ไข (Acknowledgement) <span className="text-red-500 ">*</span></label>
-              <div className="flex gap-6 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="radio" 
-                    name="ack"
-                    value="NOT_REQUIRED"
-                    checked={formData.ackRequirement === 'NOT_REQUIRED'}
-                    onChange={(e) => setFormData({...formData, ackRequirement: e.target.value, ackUserId: ''})}
-                    className="w-4 h-4 text-orange-600  border-gray-300  focus:ring-orange-500 bg-white "
-                  />
-                  <span className="text-gray-700 ">ไม่ต้องรับทราบ (Not Required)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="radio" 
-                    name="ack"
-                    value="REQUIRED"
-                    checked={formData.ackRequirement === 'REQUIRED'}
-                    onChange={(e) => setFormData({...formData, ackRequirement: e.target.value})}
-                    className="w-4 h-4 text-orange-600  border-gray-300  focus:ring-orange-500 bg-white "
-                  />
-                  <span className="text-gray-700 ">ต้องรับทราบ (Required)</span>
-                </label>
-              </div>
+              {selectedDoc && selectedDoc.title && selectedDoc.title.startsWith('FM') ? (
+                <div className="flex items-start gap-3 text-cyan-800 bg-cyan-50 p-4 rounded-xl border border-cyan-100 mb-4">
+                  <ShieldAlert className="w-5 h-5 shrink-0 text-cyan-600 mt-0.5" />
+                  <div className="text-sm">
+                    <span className="font-semibold block mb-1">เอกสารประเภท Form ระบบจะตั้งค่าเป็นแบบไม่ต้องรับทราบโดยอัตโนมัติ</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-6 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="ack"
+                      value="NOT_REQUIRED"
+                      checked={formData.ackRequirement === 'NOT_REQUIRED'}
+                      onChange={(e) => setFormData({...formData, ackRequirement: e.target.value, ackUserId: ''})}
+                      className="w-4 h-4 text-orange-600  border-gray-300  focus:ring-orange-500 bg-white "
+                    />
+                    <span className="text-gray-700 ">ไม่ต้องรับทราบ (Not Required)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="ack"
+                      value="REQUIRED"
+                      checked={formData.ackRequirement === 'REQUIRED'}
+                      onChange={(e) => setFormData({...formData, ackRequirement: e.target.value})}
+                      className="w-4 h-4 text-orange-600  border-gray-300  focus:ring-orange-500 bg-white "
+                    />
+                    <span className="text-gray-700 ">ต้องรับทราบ (Required)</span>
+                  </label>
+                </div>
+              )}
 
-              {formData.ackRequirement === 'REQUIRED' && (
+              {formData.ackRequirement === 'REQUIRED' && !(selectedDoc && selectedDoc.title && selectedDoc.title.startsWith('FM')) && (
                 <div className={`p-4 rounded-xl border ${errors.ackUserId ? 'border-red-300 bg-red-50 ' : 'border-orange-100  bg-orange-50/30 '}`}>
                   <p className="text-sm font-medium text-gray-700  mb-3">เลือกผู้ที่ต้องรับทราบเอกสารนี้ (1 คน)</p>
                   <div className="w-full md:w-1/2">
@@ -506,6 +516,7 @@ const DarRevisionForm = () => {
                 distributions={formData.distributions}
                 oldDistributions={selectedDoc?.distributions || []}
                 onChange={(distributions) => setFormData({ ...formData, distributions })}
+                documentType={selectedDoc?.title ? selectedDoc.title.split('-')[0] : 'WI'}
               />
             </div>
 

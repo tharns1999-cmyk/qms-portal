@@ -4,6 +4,7 @@ import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { Calendar, X, Settings, Trash2, ShieldAlert, FileText } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const DarObsoleteForm = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const DarObsoleteForm = () => {
   });
   
   const [errors, setErrors] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Filter only EFFECTIVE documents for the current user's department
   const userDept = currentUser.department || currentUser.dept;
@@ -124,17 +126,22 @@ const DarObsoleteForm = () => {
     navigate('/dashboard');
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      const newDar = buildPayload(false);
-      if (draftId) deleteDar(draftId);
-      addDar(newDar);
-      toast.success('สร้างคำร้องขอยกเลิกเอกสารสำเร็จ และส่งต่อให้ Reviewer แล้ว');
-      navigate('/dashboard');
+      setShowConfirm(true);
     } else {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
     }
+  };
+
+  const executeSubmit = () => {
+    const newDar = buildPayload(false);
+    if (draftId) deleteDar(draftId);
+    addDar(newDar);
+    setShowConfirm(false);
+    toast.success('สร้างคำร้องขอยกเลิกเอกสารสำเร็จ และส่งต่อให้ Reviewer แล้ว');
+    navigate('/dashboard');
   };
 
   return (
@@ -144,7 +151,7 @@ const DarObsoleteForm = () => {
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอยกเลิกเอกสาร (Obsolete DAR)</h2>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         
         {/* Section 1: Select Effective Document */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
@@ -379,6 +386,22 @@ const DarObsoleteForm = () => {
           </button>
         </div>
       </form>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeSubmit}
+        title="Confirm Obsolete DAR Submission"
+        actionType="obsolete"
+        requireTypeToConfirm={true}
+        summaryData={[
+          { label: 'Action By', value: currentUser.name },
+          { label: 'Department', value: currentUser.department },
+          { label: 'Document', value: selectedDoc ? `[${selectedDoc.title}] ${selectedDoc.name}` : '' },
+          { label: 'Obsolete Reason', value: formData.obsoleteReason === 'OTHER' ? formData.otherReason : formData.obsoleteReason },
+          { label: 'Next Action / Routing', value: 'Routes to: Reviewer (Level 2)' }
+        ]}
+      />
     </div>
   );
 };

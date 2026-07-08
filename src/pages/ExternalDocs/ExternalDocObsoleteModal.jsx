@@ -4,6 +4,7 @@ import { X, Save, AlertTriangle } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import UserSelector from '../../components/UserSelector';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
   const { masterUsers, obsoleteExternalDoc } = useStore();
@@ -12,6 +13,7 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
     reviewerId: '',
     approverId: ''
   });
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!isOpen || !documentToObsolete) return null;
 
@@ -21,13 +23,16 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!formData.reason || !formData.reviewerId || !formData.approverId) {
       toast.error('กรุณาระบุข้อมูลให้ครบถ้วน');
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const executeSubmit = () => {
     obsoleteExternalDoc(documentToObsolete.id, {
       reason: formData.reason,
       reviewerId: formData.reviewerId,
@@ -35,6 +40,7 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
     });
     
     toast.success('ส่งคำขอยกเลิกเอกสารเรียบร้อยแล้ว');
+    setShowConfirm(false);
     onClose();
   };
 
@@ -65,7 +71,7 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
 
           {/* Body */}
           <div className="p-6 overflow-y-auto max-h-[60vh]">
-            <form id="obsolete-doc-form" onSubmit={handleSubmit} className="space-y-5">
+            <form id="obsolete-doc-form" onSubmit={handleFormSubmit} className="space-y-5">
               
               <div className="bg-amber-50  border border-amber-200  rounded-xl p-4 mb-4">
                 <p className="text-sm text-amber-800 ">
@@ -126,6 +132,20 @@ const ExternalDocObsoleteModal = ({ isOpen, onClose, documentToObsolete }) => {
           </div>
         </motion.div>
       </div>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeSubmit}
+        title="Confirm Obsolete External Document"
+        actionType="obsolete"
+        requireTypeToConfirm={true}
+        summaryData={[
+          { label: 'Document Title', value: documentToObsolete.title },
+          { label: 'Obsolete Reason', value: formData.reason },
+          { label: 'Next Action / Routing', value: 'Routes to: External Reviewer' }
+        ]}
+      />
     </AnimatePresence>
   );
 };

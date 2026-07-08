@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { FileText, CheckCircle, XCircle, Ban, ChevronLeft, Download, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getDarReason, getDarDetail, getDarDocInfo } from '../../utils/darHelper';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const TaskApprove = () => {
   const { id } = useParams();
@@ -13,6 +14,8 @@ const TaskApprove = () => {
   
   const [comment, setComment] = useState('');
   const [hasReadToBottom, setHasReadToBottom] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   const scrollRef = useRef(null);
 
   const task = tasks.find(t => t.id === id);
@@ -69,8 +72,14 @@ const TaskApprove = () => {
       toast.error('กรุณาระบุเหตุผล (Comment) สำหรับการตีกลับหรือไม่อนุมัติ');
       return;
     }
-    processWorkflow(task.id, action, comment);
-    toast.success(`ดำเนินการ ${action} สำเร็จ`);
+    setPendingAction(action);
+    setShowConfirm(true);
+  };
+
+  const executeAction = () => {
+    processWorkflow(task.id, pendingAction, comment);
+    toast.success(`ดำเนินการ ${pendingAction} สำเร็จ`);
+    setShowConfirm(false);
     navigate('/tasks');
   };
 
@@ -259,6 +268,21 @@ const TaskApprove = () => {
         </div>
 
       </div>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeAction}
+        title={pendingAction === 'APPROVE' ? 'Confirm Approval' : pendingAction === 'REJECT' ? 'Confirm Rejection' : 'Confirm Return'}
+        actionType={pendingAction === 'APPROVE' ? 'approve' : 'reject'}
+        summaryData={[
+          { label: 'Action By', value: currentUser.name },
+          { label: 'Department', value: currentUser.department },
+          { label: 'Document', value: dar ? `[${getDarDocInfo(dar, documents).docCode}] ${dar.title}` : '-' },
+          { label: 'Remarks', value: comment || '-' },
+          { label: 'Next Action / Routing', value: pendingAction === 'APPROVE' ? 'Routes to: DCC (Final Publish)' : pendingAction === 'REJECT' ? 'Routes to: Archive (Rejected)' : 'Routes to: Requester (Return for Edit)' }
+        ]}
+      />
     </motion.div>
   );
 };

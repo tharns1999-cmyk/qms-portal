@@ -1141,7 +1141,7 @@ const useStore = create(persist((set, _get) => ({
           newDocuments.push(newDoc);
           newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'เอกสารบังคับใช้แล้ว', message: `เอกสารใหม่ "${dar.title}" มีผลบังคับใช้แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
 
-          if (newDoc.distributions && newDoc.distributions.length > 0) {
+          if (newDoc.distributions && newDoc.distributions.length > 0 && !newDoc.title.startsWith('FM')) {
               
               newTasks.push({
                 id: `task-dist-${Date.now()}-${Math.random()}`,
@@ -1154,19 +1154,6 @@ const useStore = create(persist((set, _get) => ({
                 priority: 'HIGH',
                 darId: dar.id
               });
-
-            // Create Task for DCC to distribute
-            newTasks.push({
-              id: `task-dist-${Date.now()}-${Math.random()}`,
-              title: `แจกจ่ายเอกสาร Controlled Copy (NEW)`,
-              description: `กรุณาพิมพ์และแจกจ่ายสำเนาควบคุมสำหรับเอกสาร ${newDoc.title} จำนวน ${newDoc.distributions.length} แผนก`,
-              type: 'DCC_DISTRIBUTE',
-              status: 'PENDING',
-              assigneeId: 'U001',
-              dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              priority: 'HIGH',
-              darId: dar.id
-            });
 
             newDoc.distributions.forEach((dist, idx) => {
               const deptName = dist.departmentId || dist.dept;
@@ -1223,7 +1210,7 @@ const useStore = create(persist((set, _get) => ({
              newDocuments.push(newDoc);
              newNotifications.push({ id: Date.now() + Math.random(), userId: dar.requesterId, title: 'ฉบับปรับปรุงบังคับใช้แล้ว', message: `เอกสารปรับปรุง "${dar.title}" มีผลบังคับใช้เป็น Rev.${newDoc.rev} แล้ว`, isRead: false, link: '/library', timestamp: new Date().toISOString() });
 
-             if (newDoc.distributions && newDoc.distributions.length > 0) {
+             if (newDoc.distributions && newDoc.distributions.length > 0 && !newDoc.title.startsWith('FM')) {
                
                newTasks.push({
                  id: `task-dist-${Date.now()}-${Math.random()}`,

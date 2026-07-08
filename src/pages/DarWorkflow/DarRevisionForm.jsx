@@ -6,6 +6,7 @@ import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX, Shi
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const DarRevisionForm = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const DarRevisionForm = () => {
   });
   
   const [errors, setErrors] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [docTypeFilter, setDocTypeFilter] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -189,34 +191,39 @@ const DarRevisionForm = () => {
     navigate('/dashboard');
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      const newDar = {
-        type: 'REVISION',
-        title: formData.title,
-        requesterId: currentUser.id,
-        department: currentUser.department,
-        date: new Date().toISOString().split('T')[0],
-        docIdRef: formData.docId,
-        changeSummary: formData.changeSummary,
-        changeReason: formData.changeReason,
-        otherReason: formData.changeReason === 'OTHER' ? formData.otherReason : undefined,
-        ackRequirement: formData.ackRequirement,
-        ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
-        distributions: formData.distributions,
-        effectiveDate: formData.effectiveDate,
-        relatedStandards: formData.relatedStandards,
-        otherStandardDetail: formData.otherStandardDetail,
-        isDraft: false
-      };
-      if (draftId) deleteDar(draftId);
-      addDar(newDar);
-      toast.success('สร้างคำร้อง Revision สำเร็จ และส่งต่อให้ Reviewer แล้ว');
-      navigate('/dashboard');
+      setShowConfirm(true);
     } else {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
     }
+  };
+
+  const executeSubmit = () => {
+    const newDar = {
+      type: 'REVISION',
+      title: formData.title,
+      requesterId: currentUser.id,
+      department: currentUser.department,
+      date: new Date().toISOString().split('T')[0],
+      docIdRef: formData.docId,
+      changeSummary: formData.changeSummary,
+      changeReason: formData.changeReason,
+      otherReason: formData.changeReason === 'OTHER' ? formData.otherReason : undefined,
+      ackRequirement: formData.ackRequirement,
+      ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
+      distributions: formData.distributions,
+      effectiveDate: formData.effectiveDate,
+      relatedStandards: formData.relatedStandards,
+      otherStandardDetail: formData.otherStandardDetail,
+      isDraft: false
+    };
+    if (draftId) deleteDar(draftId);
+    addDar(newDar);
+    setShowConfirm(false);
+    toast.success('สร้างคำร้อง Revision สำเร็จ และส่งต่อให้ Reviewer แล้ว');
+    navigate('/dashboard');
   };
 
   return (
@@ -226,7 +233,7 @@ const DarRevisionForm = () => {
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอแก้ไขเอกสาร (Revision DAR)</h2>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         
         {/* Section 1: Select Effective Document */}
         <div className="premium-card overflow-visible border-none">
@@ -566,6 +573,22 @@ const DarRevisionForm = () => {
           </button>
         </div>
       </form>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeSubmit}
+        title="Confirm DAR Revision Submission"
+        actionType="submit"
+        summaryData={[
+          { label: 'Action By', value: currentUser.name },
+          { label: 'Department', value: currentUser.department },
+          { label: 'Document', value: selectedDoc ? `[${selectedDoc.title}] ${selectedDoc.name}` : '' },
+          { label: 'Revision To', value: `Rev. ${calculateNextRev(selectedDoc?.rev)}` },
+          { label: 'Change Summary', value: formData.changeSummary },
+          { label: 'Next Action / Routing', value: 'Routes to: Reviewer (Level 2)' }
+        ]}
+      />
     </div>
   );
 };

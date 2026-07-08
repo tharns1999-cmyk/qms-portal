@@ -145,7 +145,7 @@ const DistributionSetup = ({
         </div>
         {isSelected && (
           <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold tracking-wide shrink-0">
-            Copy {copyNo}
+            {isForm ? 'Authorized' : `Copy ${copyNo}`}
           </span>
         )}
       </div>
@@ -192,26 +192,67 @@ const DistributionSetup = ({
 
       {/* Right Column: Distribution List */}
       <div className="w-full md:w-2/3 p-6 flex flex-col">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="font-semibold text-slate-800 tracking-tight">Distribution List</h3>
-            <p className="text-sm text-slate-500 mt-1">เลือกแผนกที่ต้องการกระจายเอกสาร (Copy No. จะถูกเรียงลำดับอัตโนมัติ)</p>
-          </div>
-          {isForm && (
-            <button
-              type="button"
-              onClick={handleGlobalToggle}
-              className={`shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm ${
-                isAllSelected 
-                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-                  : 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white hover:from-indigo-600 hover:to-blue-700 hover:shadow-md border border-transparent'
-              }`}
-            >
-              <Globe className={`w-4 h-4 ${isAllSelected ? 'text-slate-500' : 'text-indigo-100'}`} />
-              {isAllSelected ? 'ยกเลิกแจกจ่ายทุกแผนก' : 'แจกจ่ายทุกแผนก (Global Form)'}
-            </button>
-          )}
+        <div className="flex flex-col mb-6">
+          <h3 className="font-semibold text-slate-800 tracking-tight">Distribution List</h3>
+          <p className="text-sm text-slate-500 mt-1">เลือกแผนกที่ต้องการกระจายเอกสาร (Copy No. จะถูกเรียงลำดับอัตโนมัติ)</p>
         </div>
+
+        {isForm && (
+          <div className="mb-6 space-y-3">
+            <label className="text-sm font-semibold text-slate-700">รูปแบบการแจกจ่าย (Distribution Type)</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => { if (!isAllSelected) handleGlobalToggle(); }}
+                className={`relative flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                  isAllSelected
+                    ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${isAllSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <span className={`font-bold ${isAllSelected ? 'text-blue-900' : 'text-slate-700'}`}>
+                    แจกจ่ายทุกแผนก (Global Form)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 ml-12">เอกสารแบบฟอร์มที่ทุกคนในองค์กรสามารถเข้าถึงและนำไปใช้งานได้</p>
+                {isAllSelected && (
+                  <div className="absolute top-4 right-4 text-blue-600">
+                    <Check className="w-5 h-5" />
+                  </div>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { if (isAllSelected) handleGlobalToggle(); }}
+                className={`relative flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                  !isAllSelected
+                    ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${!isAllSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <span className={`font-bold ${!isAllSelected ? 'text-blue-900' : 'text-slate-700'}`}>
+                    เลือกแผนกเอง (Specific Departments)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 ml-12">ระบุเฉพาะเจาะจงแผนกที่เกี่ยวข้องกับการใช้งานฟอร์มนี้</p>
+                {!isAllSelected && (
+                  <div className="absolute top-4 right-4 text-blue-600">
+                    <Check className="w-5 h-5" />
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {isForm && (
           <div className="flex items-start gap-3 text-cyan-800 bg-cyan-50 p-4 rounded-xl border border-cyan-100 mb-6">
@@ -243,7 +284,7 @@ const DistributionSetup = ({
                 )}
               </div>
               <span className="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-bold tracking-wide shrink-0">
-                Copy 01 (Master)
+                {isForm ? 'Master File' : 'Copy 01 (Master)'}
               </span>
             </div>
             

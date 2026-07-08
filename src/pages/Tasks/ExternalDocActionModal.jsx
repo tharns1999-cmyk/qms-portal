@@ -3,11 +3,14 @@ import { X, Check, XCircle, FileText } from 'lucide-react';
 import useStore from '../../store/useStore';
 import { motion } from 'framer-motion';
 import ExternalDocPreviewModal from '../ExternalDocs/ExternalDocPreviewModal';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const ExternalDocActionModal = ({ task, onClose }) => {
   const { externalDocuments, processExternalTask } = useStore();
   const [comment, setComment] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   
   // Find the external document for this task
   const doc = externalDocuments.find(d => d.id === task.referenceId);
@@ -17,7 +20,13 @@ const ExternalDocActionModal = ({ task, onClose }) => {
   }
 
   const handleAction = (action) => {
-    processExternalTask(task.id, action, comment);
+    setPendingAction(action);
+    setShowConfirm(true);
+  };
+
+  const executeAction = () => {
+    processExternalTask(task.id, pendingAction, comment);
+    setShowConfirm(false);
     onClose();
   };
 
@@ -173,6 +182,20 @@ const ExternalDocActionModal = ({ task, onClose }) => {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         document={doc}
+      />
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeAction}
+        title={pendingAction === 'APPROVE' ? (task.type === 'Ack' ? 'Confirm Acknowledge' : 'Confirm Approval') : 'Confirm Rejection'}
+        actionType={pendingAction === 'APPROVE' ? 'approve' : 'reject'}
+        summaryData={[
+          { label: 'Document Title', value: doc.title },
+          { label: 'Category', value: doc.category },
+          { label: 'Remarks', value: comment || '-' },
+          { label: 'Action', value: pendingAction === 'APPROVE' ? (task.type === 'Ack' ? 'Acknowledge' : 'Approve') : 'Reject' }
+        ]}
       />
     </div>
   );

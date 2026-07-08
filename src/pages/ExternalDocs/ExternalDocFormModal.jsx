@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import useStore from '../../store/useStore';
-import { X, Upload, Save, AlertCircle, ShieldAlert } from 'lucide-react';
+import { X, Upload, Save, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserSelector from '../../components/UserSelector';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
   const { masterUsers, registerExternalDoc, updateExternalDoc } = useStore();
@@ -380,78 +381,22 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
         </div>
       </motion.div>
       
-      {/* Smart Confirmation Dialog */}
-      <AnimatePresence>
-        {showConfirmModal && payloadToSubmit && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/40"
-              onClick={() => setShowConfirmModal(false)}
-            />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative premium-card w-full max-w-lg p-6 bg-white"
-            >
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <ShieldAlert className="text-indigo-500" size={28} strokeWidth={1.25}/> ยืนยันข้อมูลและสิทธิ์การเข้าถึง
-              </h2>
-              
-              <div className="space-y-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <p className="text-sm text-gray-500 mb-1">ชื่อเอกสาร</p>
-                  <p className="font-semibold text-gray-800">{payloadToSubmit.title}</p>
-                </div>
-                
-                <div className={`p-4 rounded-xl border ${payloadToSubmit.accessScope === 'Restricted' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
-                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    ระดับความลับ: 
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${payloadToSubmit.accessScope === 'Restricted' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
-                      {payloadToSubmit.accessScope}
-                    </span>
-                  </p>
-                  {payloadToSubmit.accessScope === 'Restricted' && (
-                    <div className="mt-2">
-                      <p className="text-sm text-red-700 font-medium mb-1">เอกสารลับเฉพาะบุคคล! อนุญาตแค่:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {payloadToSubmit.accessUsers.map(uid => {
-                          const u = masterUsers.find(mu => mu.id === uid);
-                          return <span key={uid} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">{u?.name || uid}</span>;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {payloadToSubmit.accessScope === 'Department' && (
-                    <div className="mt-2 text-sm text-blue-800">
-                      ให้สิทธิ์เฉพาะแผนก: {payloadToSubmit.accessDepartments.join(', ')}
-                    </div>
-                  )}
-                  {payloadToSubmit.accessScope === 'General' && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      ทุกคนในระบบสามารถเห็นเอกสารฉบับนี้ได้
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <button 
-                  onClick={() => setShowConfirmModal(false)}
-                  className="btn-ios-secondary"
-                >
-                  กลับไปแก้ไข
-                </button>
-                <button 
-                  onClick={handleConfirmSubmit}
-                  className="btn-ios-primary"
-                >
-                  ยืนยันการลงทะเบียน
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Smart Confirmation Dialog via ActionConfirmModal */}
+      {payloadToSubmit && (
+        <ActionConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmSubmit}
+          title={documentToEdit ? 'Confirm Update External Document' : 'Confirm Register External Document'}
+          actionType="submit"
+          summaryData={[
+            { label: 'Document Title', value: payloadToSubmit.title },
+            { label: 'Source & Version', value: `${payloadToSubmit.source} (${payloadToSubmit.sourceVersion})` },
+            { label: 'Access Scope', value: payloadToSubmit.accessScope },
+            { label: 'Next Action / Routing', value: 'Routes to: External Reviewer' }
+          ]}
+        />
+      )}
     </div>
   )}
 </AnimatePresence>

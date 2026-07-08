@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { getDarReason, getDarDetail, getDarDocInfo } from '../../utils/darHelper';
 import { FileText, CheckCircle, XCircle, ChevronLeft, Download, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const TaskReview = () => {
   const { id } = useParams();
@@ -13,6 +14,8 @@ const TaskReview = () => {
   
   const [comment, setComment] = useState('');
   const [hasReadToBottom, setHasReadToBottom] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   const scrollRef = useRef(null);
 
   const task = tasks.find(t => t.id === id);
@@ -70,8 +73,14 @@ const TaskReview = () => {
       toast.error('กรุณาระบุเหตุผลการส่งคืน (Comment)');
       return;
     }
-    processWorkflow(task.id, action, comment);
-    toast.success(`ดำเนินการ ${action} สำเร็จ`);
+    setPendingAction(action);
+    setShowConfirm(true);
+  };
+
+  const executeAction = () => {
+    processWorkflow(task.id, pendingAction, comment);
+    toast.success(`ดำเนินการ ${pendingAction} สำเร็จ`);
+    setShowConfirm(false);
     navigate('/tasks');
   };
 
@@ -250,6 +259,21 @@ const TaskReview = () => {
         </div>
 
       </div>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeAction}
+        title={pendingAction === 'APPROVE' ? 'Confirm Approval' : 'Confirm Return'}
+        actionType={pendingAction === 'APPROVE' ? 'approve' : 'reject'}
+        summaryData={[
+          { label: 'Action By', value: currentUser.name },
+          { label: 'Department', value: currentUser.department },
+          { label: 'Document', value: dar ? `[${getDarDocInfo(dar, documents).docCode}] ${dar.title}` : '-' },
+          { label: 'Review Remarks', value: comment || '-' },
+          { label: 'Next Action / Routing', value: pendingAction === 'APPROVE' ? 'Routes to: Approver (Level 3)' : 'Routes to: Requester (Return for Edit)' }
+        ]}
+      />
     </motion.div>
   );
 };

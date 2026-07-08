@@ -6,6 +6,7 @@ import { Upload, FileText, User, Calendar, Settings, X, ShieldAlert } from 'luci
 import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
+import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
 const DarNewForm = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const DarNewForm = () => {
   });
   
   const [errors, setErrors] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (draftId) {
@@ -142,34 +144,39 @@ const DarNewForm = () => {
     navigate('/dashboard');
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      const newDar = {
-        type: 'NEW',
-        title: formData.title,
-        requesterId: currentUser.id,
-        department: currentUser.department,
-        date: new Date().toISOString().split('T')[0],
-        docType: formData.docType,
-        docIdInput: getPreviewCode(),
-        requestDetail: formData.requestDetail,
-        requestReason: formData.requestReason,
-        ackRequirement: formData.ackRequirement,
-        ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
-        distributions: formData.distributions,
-        effectiveDate: formData.effectiveDate,
-        isDraft: false,
-        manualReviewerId: formData.manualReviewerId,
-        manualApproverId: formData.manualApproverId
-      };
-      if (draftId) deleteDar(draftId);
-      addDar(newDar);
-      toast.success('สร้างคำร้องสำเร็จ และส่งต่อให้ Reviewer แล้ว');
-      navigate('/dashboard');
+      setShowConfirm(true);
     } else {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
     }
+  };
+
+  const executeSubmit = () => {
+    const newDar = {
+      type: 'NEW',
+      title: formData.title,
+      requesterId: currentUser.id,
+      department: currentUser.department,
+      date: new Date().toISOString().split('T')[0],
+      docType: formData.docType,
+      docIdInput: getPreviewCode(),
+      requestDetail: formData.requestDetail,
+      requestReason: formData.requestReason,
+      ackRequirement: formData.ackRequirement,
+      ackUserIds: formData.ackRequirement === 'REQUIRED' ? [formData.ackUserId] : [],
+      distributions: formData.distributions,
+      effectiveDate: formData.effectiveDate,
+      isDraft: false,
+      manualReviewerId: formData.manualReviewerId,
+      manualApproverId: formData.manualApproverId
+    };
+    if (draftId) deleteDar(draftId);
+    addDar(newDar);
+    setShowConfirm(false);
+    toast.success('สร้างคำร้องสำเร็จ และส่งต่อให้ Reviewer แล้ว');
+    navigate('/dashboard');
   };
 
   // Get available candidates for Dev Test UI
@@ -183,7 +190,7 @@ const DarNewForm = () => {
         <h2 className="text-2xl font-bold text-gray-800 ">ยื่นคำขอสร้างเอกสารใหม่ (New Document DAR)</h2>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         
         <div className="premium-card overflow-visible border-none">
           <div className="px-6 py-4 border-b border-slate-200/50  bg-slate-50/50  flex items-center gap-2">
@@ -446,6 +453,22 @@ const DarNewForm = () => {
           </button>
         </div>
       </form>
+
+      <ActionConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={executeSubmit}
+        title="Confirm DAR Submission"
+        actionType="submit"
+        summaryData={[
+          { label: 'Action By', value: currentUser.name },
+          { label: 'Department', value: currentUser.department },
+          { label: 'Document Type', value: formData.docType },
+          { label: 'Document Title', value: formData.title },
+          { label: 'Request Reason', value: formData.requestReason },
+          { label: 'Next Action / Routing', value: 'Routes to: Reviewer (Level 2)' }
+        ]}
+      />
     </div>
   );
 };

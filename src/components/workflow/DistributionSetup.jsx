@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Building2, Check, FileText, ShieldAlert, ChevronDown, ChevronRight, Globe } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useStore from '../../store/useStore';
 
 /**
@@ -97,24 +98,38 @@ const DistributionSetup = ({
       
       return (
         <div key={dept.id} className="space-y-1 mb-2">
-          <div 
+          <motion.div 
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             onClick={(e) => toggleGroup(dept.id, e)}
-            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors duration-200 bg-slate-50 border-slate-200 hover:bg-slate-100`}
+            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors duration-200 bg-slate-50 border-slate-300 hover:bg-slate-100`}
           >
             <div className="flex items-center gap-3">
-              {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
+              <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronRight className="w-4 h-4 text-slate-500" />
+              </motion.div>
               <span className="font-semibold text-slate-700">{dept.name}</span>
             </div>
             {hasSelectedSubs && !isExpanded && (
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
             )}
-          </div>
+          </motion.div>
           
-          {isExpanded && (
-            <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-100 ml-4">
-              {dept.subs.map(sub => renderDeptItem(sub, true))}
-            </div>
-          )}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-100 ml-4">
+                  {dept.subs.map(sub => renderDeptItem(sub, true))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       );
     }
@@ -124,14 +139,16 @@ const DistributionSetup = ({
     const copyNo = isSelected ? String(selectionIndex + 2).padStart(2, '0') : null;
 
     return (
-      <div 
+      <motion.div 
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
         key={dept.id}
         onClick={() => handleToggle(dept.id)}
         className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors duration-200
           ${isSelected 
             ? 'border-blue-500 bg-blue-50/50' 
-            : 'border-slate-200 bg-white hover:border-slate-300'
-          } ${isSub ? 'shadow-sm' : ''}`}
+            : 'border-slate-300 bg-white hover:border-slate-300'
+          } ${isSub ? 'shadow-md' : ''}`}
       >
         <div className="flex items-center gap-3">
           <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors duration-200 shrink-0
@@ -144,11 +161,15 @@ const DistributionSetup = ({
           </span>
         </div>
         {isSelected && (
-          <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold tracking-wide shrink-0">
+          <motion.span 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold tracking-wide shrink-0"
+          >
             {isForm ? 'Authorized' : `Copy ${copyNo}`}
-          </span>
+          </motion.span>
         )}
-      </div>
+      </motion.div>
     );
   };
 
@@ -156,10 +177,10 @@ const DistributionSetup = ({
   const ownerDeptObj = masterDepartments.find(d => d.id === normalizedOwnerDept) || { id: normalizedOwnerDept, name: normalizedOwnerDept };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden w-full flex flex-col md:flex-row shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-300 overflow-hidden w-full flex flex-col md:flex-row shadow-md">
       
       {/* Left Column: Master Document Info */}
-      <div className="w-full md:w-1/3 bg-[#FAFAFA] border-b md:border-b-0 md:border-r border-slate-200 p-6 flex flex-col">
+      <div className="w-full md:w-1/3 bg-[#FAFAFA] border-b md:border-b-0 md:border-r border-slate-300 p-6 flex flex-col">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-blue-100 rounded-xl">
             <FileText className="w-5 h-5 text-blue-700" />
@@ -179,7 +200,7 @@ const DistributionSetup = ({
               {normalizedOwnerDept}
             </div>
           </div>
-          <div className="pt-4 border-t border-slate-200 mt-2">
+          <div className="pt-4 border-t border-slate-300 mt-2">
              <div className="flex items-start gap-2 text-blue-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
                 <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
                 <p className="text-xs leading-relaxed">
@@ -201,13 +222,15 @@ const DistributionSetup = ({
           <div className="mb-6 space-y-3">
             <label className="text-sm font-semibold text-slate-700">รูปแบบการแจกจ่าย (Distribution Type)</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => { if (!isAllSelected) handleGlobalToggle(); }}
                 className={`relative flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all duration-200 ${
                   isAllSelected
-                    ? 'border-blue-500 bg-blue-50/50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                    : 'border-slate-300 bg-white hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-2">
@@ -220,19 +243,21 @@ const DistributionSetup = ({
                 </div>
                 <p className="text-xs text-slate-500 ml-12">เอกสารแบบฟอร์มที่ทุกคนในองค์กรสามารถเข้าถึงและนำไปใช้งานได้</p>
                 {isAllSelected && (
-                  <div className="absolute top-4 right-4 text-blue-600">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-4 right-4 text-blue-600">
                     <Check className="w-5 h-5" />
-                  </div>
+                  </motion.div>
                 )}
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => { if (isAllSelected) handleGlobalToggle(); }}
                 className={`relative flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all duration-200 ${
                   !isAllSelected
-                    ? 'border-blue-500 bg-blue-50/50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                    : 'border-slate-300 bg-white hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-2">
@@ -245,11 +270,11 @@ const DistributionSetup = ({
                 </div>
                 <p className="text-xs text-slate-500 ml-12">ระบุเฉพาะเจาะจงแผนกที่เกี่ยวข้องกับการใช้งานฟอร์มนี้</p>
                 {!isAllSelected && (
-                  <div className="absolute top-4 right-4 text-blue-600">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-4 right-4 text-blue-600">
                     <Check className="w-5 h-5" />
-                  </div>
+                  </motion.div>
                 )}
-              </button>
+              </motion.button>
             </div>
           </div>
         )}
@@ -269,7 +294,7 @@ const DistributionSetup = ({
           {/* Owner Dept - Locked as Copy 01, with optional subs inline */}
           <div className="mb-4">
             <div 
-              className={`flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-[#FAFAFA] opacity-80 ${ownerDeptObj.isGroup ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+              className={`flex items-center justify-between p-4 rounded-xl border border-slate-300 bg-[#FAFAFA] opacity-80 ${ownerDeptObj.isGroup ? 'cursor-pointer hover:bg-slate-50' : ''}`}
               onClick={(e) => ownerDeptObj.isGroup && toggleGroup(ownerDeptObj.id, e)}
             >
               <div className="flex items-center gap-3">

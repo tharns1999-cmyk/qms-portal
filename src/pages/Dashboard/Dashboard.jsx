@@ -313,11 +313,11 @@ const Dashboard = () => {
     >
 
       {/* Section 1: Context Indicator & Header */}
-      <div className="premium-card p-4 border-none">
+      <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 ">ยินดีต้อนรับ, {currentUser.name.split(' ')[0]}</h2>
-            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700  rounded-lg text-sm font-medium border border-blue-100  ">
+            <h2 className="text-2xl font-bold text-slate-800">ยินดีต้อนรับ, {currentUser.name.split(' ')[0]}</h2>
+            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-100">
               <Briefcase size={24} strokeWidth={1.25}/>
               <span>คุณกำลังดูข้อมูลในบทบาท: {currentUser.position} | แผนก: {currentUser.department}</span>
             </div>
@@ -333,33 +333,33 @@ const Dashboard = () => {
           <div className="flex flex-wrap gap-3">
             {isAdmin ? (
               <>
-                <button onClick={() => navigate('/master-list')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/master-list')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-colors">
                   <Library size={20} strokeWidth={1.25}/> DCC Master Registry
-                </button>
-                <button onClick={simulateNextDay} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-xl text-white font-medium transition-transform duration-300 active:scale-95 text-sm">
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={simulateNextDay} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-xl text-white font-medium text-sm transition-colors">
                   <Clock size={20} strokeWidth={1.25}/> Simulate Next Day
-                </button>
-                <button onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   จัดการทั้งหมด <ChevronRight size={20} strokeWidth={1.25}/> Document Distribution Log
-                </button>
+                </motion.button>
               </>
             ) : currentUser.level <= 3 ? (
               <>
-                <button onClick={() => navigate('/dar/new')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/dar/new')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-colors">
                   <Plus size={20} strokeWidth={1.25}/> สร้างเอกสารใหม่ (Draft)
-                </button>
-                <button onClick={() => navigate('/dar/new/revision')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-blue-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/dar/new/revision')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-blue-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   <FileEdit size={20} strokeWidth={1.25}/> ขอแก้ไขเอกสาร (Revision)
-                </button>
+                </motion.button>
               </>
             ) : (
               <>
-                <button onClick={() => navigate('/tasks')} className="flex items-center gap-2 px-4 py-2 btn-ios-primary transition-all duration-300 ease-fluid active:scale-[0.97] text-sm">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/tasks')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition-colors">
                   <Activity size={20} strokeWidth={1.25}/> ตรวจสอบคิวงาน (Task Inbox)
-                </button>
-                <button onClick={() => navigate('/library')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl font-medium text-sm transition-transform duration-300 active:scale-95 border border-slate-200">
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/library')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   <Library size={20} strokeWidth={1.25}/> ดูคลังเอกสารแผนก
-                </button>
+                </motion.button>
               </>
             )}
           </div>
@@ -369,7 +369,7 @@ const Dashboard = () => {
       {/* Section 2: System Overview (Unified for Admin, Tabs for Users) */}
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-300/50 pb-2">
           <div className="flex space-x-4">
             {isAdmin ? (
               <>
@@ -387,7 +387,7 @@ const Dashboard = () => {
                   <span className="flex items-center gap-2">
                     <Copy size={20} strokeWidth={1.25}/> งานควบคุมเอกสาร (Document Control)
                     {(pendingPrintCount + pendingRecallCount + replacementRequestCount) > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-1 animate-pulse">
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md ml-1 animate-pulse">
                         {pendingPrintCount + pendingRecallCount + replacementRequestCount}
                       </span>
                     )}
@@ -412,7 +412,7 @@ const Dashboard = () => {
                   <span className="flex items-center gap-2">
                     <Activity size={20} strokeWidth={1.25}/> งานที่ต้องจัดการ (Action Required)
                     {myTasks.length > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-1 animate-pulse">
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md ml-1 animate-pulse">
                         {myTasks.length}
                       </span>
                     )}
@@ -429,15 +429,15 @@ const Dashboard = () => {
             {isAdmin && <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">สถานะคำขอเอกสาร (Document Requests)</h4>}
             <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {/* Draft */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_DRAFT' ? '' : 'MY_DRAFT')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_DRAFT' ? 'premium-card ring-2 ring-gray-300 bg-gray-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_DRAFT' ? '' : 'MY_DRAFT')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'MY_DRAFT' ? 'border-blue-500 bg-slate-50' : 'border-slate-300 bg-white hover:bg-slate-50'}`}>
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-semibold text-gray-500">Draft (ร่าง)</h3>
+                  <h3 className="text-sm font-semibold text-slate-500">Draft (ร่าง)</h3>
                 </div>
-                <span className="text-4xl font-bold text-gray-800">{myDraftCount}</span>
+                <span className="text-4xl font-bold text-slate-800">{myDraftCount}</span>
               </motion.div>
               
               {/* In Progress */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_IN_PROGRESS' ? '' : 'MY_IN_PROGRESS')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_IN_PROGRESS' ? 'premium-card ring-2 ring-blue-300 bg-blue-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_IN_PROGRESS' ? '' : 'MY_IN_PROGRESS')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'MY_IN_PROGRESS' ? 'border-blue-500 bg-blue-50' : 'border-blue-100 bg-white hover:bg-blue-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-blue-600 font-semibold">{isAdmin ? 'In Progress (รวม)' : 'In Progress (กำลังดำเนินการ)'}</p>
                   <Clock className="text-blue-400" size={24} strokeWidth={1.25}/>
@@ -446,7 +446,7 @@ const Dashboard = () => {
               </motion.div>
               
               {/* Returned */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_RETURNED' ? '' : 'MY_RETURNED')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_RETURNED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_RETURNED' ? '' : 'MY_RETURNED')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'MY_RETURNED' ? 'border-red-500 bg-red-50' : 'border-red-100 bg-white hover:bg-red-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Returned (รวม)' : 'Returned (ให้แก้ไข)'}</p>
                   <AlertCircle className="text-red-400" size={24} strokeWidth={1.25}/>
@@ -455,7 +455,7 @@ const Dashboard = () => {
               </motion.div>
 
               {/* Waiting Effective */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_WAITING' ? '' : 'MY_WAITING')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_WAITING' ? 'premium-card ring-2 ring-green-300 bg-green-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_WAITING' ? '' : 'MY_WAITING')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'MY_WAITING' ? 'border-green-500 bg-green-50' : 'border-green-100 bg-white hover:bg-green-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-green-600 font-semibold">{isAdmin ? 'Waiting (รวม)' : 'Waiting (รอประกาศ)'}</p>
                   <CheckCircle className="text-green-400" size={24} strokeWidth={1.25}/>
@@ -464,7 +464,7 @@ const Dashboard = () => {
               </motion.div>
 
               {/* Cancelled (Overdue) */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_CANCELLED' ? '' : 'MY_CANCELLED')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'MY_CANCELLED' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'MY_CANCELLED' ? '' : 'MY_CANCELLED')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'MY_CANCELLED' ? 'border-red-500 bg-red-50' : 'border-red-100 bg-white hover:bg-red-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-red-600 font-semibold">{isAdmin ? 'Cancelled (รวม)' : 'Cancelled (ถูกยกเลิก)'}</p>
                   <Trash2 className="text-red-400" size={24} strokeWidth={1.25}/>
@@ -481,39 +481,39 @@ const Dashboard = () => {
             <motion.div variants={containerVariants} initial="hidden" animate="show" className={`grid grid-cols-2 md:grid-cols-4 gap-3`}>
               
               {/* Pending Review */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_REVIEW' ? 'premium-card ring-2 ring-indigo-300 bg-indigo-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_REVIEW' ? '' : 'ACTION_REVIEW')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'ACTION_REVIEW' ? 'border-indigo-500 bg-indigo-50' : 'border-indigo-100 bg-white hover:bg-indigo-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-indigo-600 font-semibold">Pending Review</p>
                   <Clock className="text-indigo-400" size={24} strokeWidth={1.25}/>
                 </div>
-                <p className="text-4xl font-bold text-gray-800">{actionReviewCount}</p>
+                <p className="text-4xl font-bold text-slate-800">{actionReviewCount}</p>
               </motion.div>
               
               {/* Pending Approval */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_APPROVE' ? 'premium-card ring-2 ring-yellow-400 bg-yellow-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_APPROVE' ? '' : 'ACTION_APPROVE')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'ACTION_APPROVE' ? 'border-yellow-500 bg-yellow-50' : 'border-yellow-100 bg-white hover:bg-yellow-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-yellow-600 font-semibold">Pending Approval</p>
                   <AlertCircle className="text-yellow-500" size={24} strokeWidth={1.25}/>
                 </div>
-                <p className="text-4xl font-bold text-gray-800">{actionApproveCount}</p>
+                <p className="text-4xl font-bold text-slate-800">{actionApproveCount}</p>
               </motion.div>
               
               {/* Due Soon */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_DUE_SOON' ? 'premium-card ring-2 ring-orange-300 bg-orange-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_DUE_SOON' ? '' : 'ACTION_DUE_SOON')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'ACTION_DUE_SOON' ? 'border-orange-500 bg-orange-50' : 'border-orange-100 bg-white hover:bg-orange-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-orange-600 font-semibold">Due Soon</p>
                   {activeCardFilter === 'ACTION_DUE_SOON' ? <span className="flex h-2 w-2 rounded-full bg-orange-500"></span> : <Clock className="text-orange-500" size={24} strokeWidth={1.25}/>}
                 </div>
-                <p className="text-4xl font-bold text-gray-800">{actionDueSoonCount}</p>
+                <p className="text-4xl font-bold text-slate-800">{actionDueSoonCount}</p>
               </motion.div>
   
               {/* Overdue */}
-              <motion.div variants={itemVariants} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-4 flex flex-col justify-between h-full border-none jelly-interactive ${activeCardFilter === 'ACTION_OVERDUE' ? 'premium-card ring-2 ring-red-300 bg-red-50' : 'premium-card bg-white'}`}>
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveCardFilter(activeCardFilter === 'ACTION_OVERDUE' ? '' : 'ACTION_OVERDUE')} className={`p-4 flex flex-col justify-between h-full rounded-2xl border shadow-md cursor-pointer transition-colors ${activeCardFilter === 'ACTION_OVERDUE' ? 'border-red-500 bg-red-50' : 'border-red-100 bg-white hover:bg-red-50/50'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-sm text-red-600 font-semibold">Overdue</p>
                   {activeCardFilter === 'ACTION_OVERDUE' ? <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping"></span> : <AlertTriangle className="text-red-500" size={24} strokeWidth={1.25}/>}
                 </div>
-                <p className="text-4xl font-bold text-gray-800">{actionOverdueCount}</p>
+                <p className="text-4xl font-bold text-slate-800">{actionOverdueCount}</p>
               </motion.div>
             </motion.div>
           </div>
@@ -525,8 +525,9 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Pending Print & Issue */}
               <motion.div variants={itemVariants}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-                className="premium-card p-4 flex flex-col justify-between group bg-teal-50 border border-teal-100 jelly-interactive"
+                className="p-4 flex flex-col justify-between group bg-teal-50 border border-teal-100 rounded-2xl shadow-md cursor-pointer transition-colors hover:bg-teal-100/50"
               >
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-teal-800 font-semibold text-sm">รอพิมพ์แจกจ่าย (Pending Print)</p>
@@ -539,8 +540,9 @@ const Dashboard = () => {
 
               {/* Pending Recall */}
               <motion.div variants={itemVariants}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-                className="p-4 border border-rose-100 bg-rose-50 rounded-2xl jelly-interactive flex flex-col justify-between"
+                className="p-4 flex flex-col justify-between border border-rose-100 bg-rose-50 rounded-2xl shadow-md cursor-pointer transition-colors hover:bg-rose-100/50"
               >
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-rose-800 font-semibold text-sm">รอเรียกคืน (Pending Recall)</p>
@@ -553,8 +555,9 @@ const Dashboard = () => {
 
               {/* Replacement Requests */}
               <motion.div variants={itemVariants}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')}
-                className="p-4 border border-amber-100 bg-amber-50 rounded-2xl jelly-interactive flex flex-col justify-between"
+                className="p-4 flex flex-col justify-between border border-amber-100 bg-amber-50 rounded-2xl shadow-md cursor-pointer transition-colors hover:bg-amber-100/50"
               >
                 <div className="flex justify-between items-start mb-1">
                   <p className="text-amber-800 font-semibold text-sm">คำขอทดแทน (Replacement)</p>
@@ -576,7 +579,7 @@ const Dashboard = () => {
         {/* Section 5: Recent DARs Table */}
         <div className="lg:col-span-4">
           <div className="premium-card overflow-hidden h-full flex flex-col border-none">
-            <div className="p-3 border-b border-slate-200/50 bg-white flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="p-3 border-b border-slate-300/50 bg-white flex flex-col md:flex-row justify-between items-center gap-3">
               <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
                 <FileText className="text-blue-600" size={20} strokeWidth={1.25}/> Recent Action Items
               </h3>
@@ -622,7 +625,7 @@ const Dashboard = () => {
             <div className="overflow-x-auto flex-1 max-h-[400px]">
               {recentDars.length > 0 ? (
                 <table className="w-full text-left text-sm text-gray-600 border-collapse">
-                  <thead className="sticky top-0 bg-slate-50 text-gray-500 uppercase border-b border-slate-200/50 z-10 shadow-sm">
+                  <thead className="sticky top-0 bg-slate-50 text-gray-500 uppercase border-b border-slate-300/50 z-10 shadow-md">
                     <tr>
                       <th className="px-3 py-2 font-medium w-16 text-center text-xs">Action</th>
                       <th className="px-3 py-2 font-medium whitespace-nowrap text-xs">DAR No.</th>

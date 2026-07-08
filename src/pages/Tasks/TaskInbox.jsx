@@ -12,6 +12,16 @@ const TaskInbox = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExtTask, setSelectedExtTask] = useState(null);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+  };
+
   // Run SLA Check on load (simulated)
   useEffect(() => {
     checkSLA();
@@ -128,8 +138,8 @@ const TaskInbox = () => {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="px-4 pt-3 border-b border-gray-200 bg-white flex flex-col md:flex-row gap-4 justify-between items-end">
+      <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden">
+        <div className="px-4 pt-3 border-b border-gray-300 bg-white flex flex-col md:flex-row gap-4 justify-between items-end">
           <div className="flex gap-6 overflow-x-auto w-full md:w-auto hide-scrollbar">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id;
@@ -169,7 +179,7 @@ const TaskInbox = () => {
                 placeholder="ค้นหา DAR No. หรือ ชื่อเอกสาร..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white  border border-gray-200  rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
+                className="w-full pl-10 pr-4 py-2 bg-white  border border-gray-300  rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
               />
             </div>
             <button
@@ -185,7 +195,7 @@ const TaskInbox = () => {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 ">
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100 ">
           {getFilteredTasks().length > 0 ? (
             getFilteredTasks().map(task => {
               const isExternal = task.referenceType === 'EXTERNAL_DOC';
@@ -196,19 +206,21 @@ const TaskInbox = () => {
               const displayType = isExternal ? 'External Document' : dar?.type;
 
               return (
-                <div
+                <motion.div
+                  layoutId={`task-item-${task.id}`}
+                  variants={itemVariants}
                   key={task.id}
                   onClick={() => handleTaskClick(task)}
-                  className="p-5 hover:bg-blue-50  cursor-pointer transition-colors group flex items-center justify-between"
+                  className="p-5 hover:bg-slate-50 cursor-pointer transition-colors group flex items-center justify-between"
                 >
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl bg-gray-100  text-gray-500  group-hover:bg-blue-100 group-hover:text-blue-600    transition-colors">
+                    <motion.div layoutId={`task-icon-${task.id}`} className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                       {(task.type === 'Review' || task.type === 'EXT_REVIEW') && <Eye size={28} strokeWidth={1.25}/>}
                       {(task.type === 'Approve' || task.type === 'EXT_APPROVAL') && <CheckCircle size={28} strokeWidth={1.25}/>}
                       {task.type === 'Ack' && <CheckCircle size={28} strokeWidth={1.25}/>}
                       {task.type === 'Revise' && <FileEdit size={28} strokeWidth={1.25}/>}
                       {(task.type || '').startsWith('DCC_') && <AlertCircle className="text-indigo-500" size={28} strokeWidth={1.25}/>}
-                    </div>
+                    </motion.div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-semibold text-gray-900  group-hover:text-blue-700   transition-colors">
@@ -242,8 +254,8 @@ const TaskInbox = () => {
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} strokeWidth={1.25}/>
-                </div>
+                  <ChevronRight className="text-slate-400 group-hover:text-blue-500 transition-colors" size={24} strokeWidth={1.25}/>
+                </motion.div>
               );
             })
           ) : (
@@ -253,14 +265,16 @@ const TaskInbox = () => {
               <p className="text-sm">ยอดเยี่ยมมาก คุณจัดการงานเสร็จหมดแล้ว</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       <AnimatePresence>
         {selectedExtTask && (
-          <ExternalDocActionModal
-            task={selectedExtTask}
-            onClose={() => setSelectedExtTask(null)}
+          <ExternalDocActionModal 
+            isOpen={!!selectedExtTask} 
+            onClose={() => setSelectedExtTask(null)} 
+            task={selectedExtTask} 
+            layoutId={`task-item-${selectedExtTask.id}`}
           />
         )}
       </AnimatePresence>

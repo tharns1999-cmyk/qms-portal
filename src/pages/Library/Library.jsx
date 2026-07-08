@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { Search, BookOpen, Layers, Share2, Globe, FilterX, Download, FileText, Eye, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getRequesterName, getReviewerName, getApproverName, getAckNames } from '../../utils/darHelper';
 import ReplacementModal from './ReplacementModal';
 import toast from 'react-hot-toast';
@@ -228,7 +228,7 @@ const Library = () => {
   };
 
   const renderFlatTable = (docs) => (
-    <div className="bg-white  rounded-xl shadow-sm border border-gray-100  overflow-hidden">
+    <div className="bg-white  rounded-xl shadow-md border border-gray-100  overflow-hidden">
       <div className="overflow-x-auto min-h-[200px]">
         <table className="w-full text-left text-sm text-gray-600 ">
           <thead className="bg-white  text-gray-500  uppercase border-b border-gray-100 ">
@@ -249,11 +249,25 @@ const Library = () => {
               <th className="px-4 py-3 font-medium">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50 ">
+          <motion.tbody 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { staggerChildren: 0.03 } }}
+            className="divide-y divide-gray-50 "
+          >
             {docs.map((doc, idx) => {
               const dar = dars.find(d => d.id === doc.darId);
               return (
-              <tr key={doc.id} className="hover:bg-slate-50/80  transition-colors cursor-pointer" onClick={() => navigate(`/library/${doc.id}`)}>
+              <motion.tr 
+                variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                layoutId={`library-item-${doc.id}`}
+                key={doc.id} 
+                className="hover:bg-slate-50 transition-colors cursor-pointer" 
+                onClick={(e) => {
+                  // Only navigate if it's not a click on buttons
+                  if (e.target.closest('button')) return;
+                  navigate(`/library/${doc.id}`);
+                }}
+              >
                 <td className="px-4 py-3 text-center flex justify-center gap-2">
                   <button 
                     onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
@@ -313,7 +327,7 @@ const Library = () => {
                   {(doc.distributions || []).map(d => d.departmentId).join(', ') || '-'}
                 </td>
                 <td className="px-4 py-3"><span className="px-2 py-1 bg-green-100 text-green-700  rounded-full text-xs font-medium">Effective</span></td>
-              </tr>
+              </motion.tr>
             )})}
             {docs.length === 0 && (
               <tr>
@@ -323,7 +337,7 @@ const Library = () => {
                 </td>
               </tr>
             )}
-          </tbody>
+          </motion.tbody>
         </table>
       </div>
     </div>
@@ -352,7 +366,7 @@ const Library = () => {
     return (
       <div className="space-y-6">
         {Object.keys(groups).sort().map(prefix => (
-          <div key={prefix} className="bg-white  rounded-xl shadow-sm border border-gray-100  overflow-hidden">
+          <div key={prefix} className="bg-white  rounded-xl shadow-md border border-gray-100  overflow-hidden">
             <div className="bg-gray-50  px-6 py-3 border-b border-gray-100  font-semibold text-gray-700  flex items-center gap-2">
               <Layers className="text-indigo-500" size={24} strokeWidth={1.25}/> {typeNames[prefix] || prefix}
               <span className="ml-auto bg-gray-200  text-gray-600  px-2 py-0.5 rounded-full text-xs">{groups[prefix].length}</span>
@@ -469,7 +483,7 @@ const Library = () => {
         </div>
       </div>
 
-      <div className="flex border-b border-gray-200 overflow-x-auto">
+      <div className="flex border-b border-gray-300 overflow-x-auto">
         {[
           ...(!currentUser.isDcc ? [{ id: 'dept', icon: Layers, label: 'เอกสารในแผนก (My Department)', color: 'blue' }] : []),
           ...(!currentUser.isDcc ? [{ id: 'dist', icon: Share2, label: 'เอกสารที่ถูกแจกจ่าย (Distributed to Me)', color: 'blue' }] : []),
@@ -501,7 +515,7 @@ const Library = () => {
         })}
       </div>
 
-      <div className="p-6 bg-white  rounded-xl shadow-sm border border-gray-100  flex flex-col md:flex-row gap-4 items-center">
+      <div className="p-6 bg-white  rounded-xl shadow-md border border-gray-100  flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} strokeWidth={1.25}/>
           <input 
@@ -509,7 +523,7 @@ const Library = () => {
             placeholder="ค้นหาตามรหัสเอกสาร หรือ ชื่อเอกสาร..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
           />
         </div>
         
@@ -519,7 +533,7 @@ const Library = () => {
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               disabled={availableTypes.length === 0}
-              className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none disabled:opacity-50"
+              className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  outline-none disabled:opacity-50"
             >
               <option value="">ทุกประเภท</option>
               {availableTypes.map(t => {
@@ -534,7 +548,7 @@ const Library = () => {
               value={filterStandard}
               onChange={(e) => setFilterStandard(e.target.value)}
               disabled={availableStandards.length === 0}
-              className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none disabled:opacity-50"
+              className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  outline-none disabled:opacity-50"
             >
               <option value="">ทุกมาตรฐาน</option>
               {availableStandards.map(s => (
@@ -549,7 +563,7 @@ const Library = () => {
                 value={filterDept}
                 onChange={(e) => setFilterDept(e.target.value)}
                 disabled={availableDepts.length === 0}
-                className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none disabled:opacity-50"
+                className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  outline-none disabled:opacity-50"
               >
                 <option value="">ทุกแผนก (All)</option>
                 {availableDepts.map(d => (
@@ -565,7 +579,7 @@ const Library = () => {
                 <select 
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none"
+                  className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  outline-none"
                 >
                   <option value="">ทุกสถานะ</option>
                   <option value="EFFECTIVE">Effective (บังคับใช้)</option>
@@ -577,7 +591,7 @@ const Library = () => {
                   type="date"
                   value={filterDate}
                   onChange={(e) => setFilterDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-200  rounded-lg text-gray-800  outline-none"
+                  className="w-full px-3 py-2 text-sm bg-slate-50  border border-slate-300  rounded-lg text-gray-800  outline-none"
                   title="Effective Date"
                 />
               </div>
@@ -603,7 +617,7 @@ const Library = () => {
           {(activeTab === 'dept' || currentUser.isDcc) && (
             <button 
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700    rounded-lg text-sm font-medium transition-colors border border-slate-200  flex-shrink-0 ml-auto"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700    rounded-lg text-sm font-medium transition-colors border border-slate-300  flex-shrink-0 ml-auto"
             >
               <Download size={24} strokeWidth={1.25}/> {currentUser.isDcc ? 'Export Master List' : 'Export Dept List'}
             </button>
@@ -614,29 +628,39 @@ const Library = () => {
       {activeTab === 'dept' ? renderCategorizedTables(filteredDocs) : renderFlatTable(filteredDocs)}
       
       {/* Inline PDF Preview Modal */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-              <div>
-                <h3 className="font-bold text-gray-800 ">{previewDoc.title}: {previewDoc.name}</h3>
-                <p className="text-sm text-gray-500 ">Revision {previewDoc.rev} • {previewDoc.status}</p>
+      <AnimatePresence>
+        {previewDoc && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
+              onClick={() => setPreviewDoc(null)} 
+            />
+            <motion.div 
+              layoutId={`library-item-${previewDoc.id}`}
+              className="relative bg-white rounded-2xl shadow-xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden border border-slate-300"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+                <div>
+                  <h3 className="font-bold text-gray-800 ">{previewDoc.title}: {previewDoc.name}</h3>
+                  <p className="text-sm text-gray-500 ">Revision {previewDoc.rev} • {previewDoc.status}</p>
+                </div>
+                <button 
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X size={24} strokeWidth={1.25}/>
+                </button>
               </div>
-              <button 
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 text-gray-400  hover:text-gray-600  hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <X size={24} strokeWidth={1.25}/>
-              </button>
-            </div>
-            <div className="flex-1 bg-gray-200 flex flex-col items-center justify-center p-8">
-              <FileText className="text-gray-400 mb-4 opacity-50" size={64} strokeWidth={1.25}/>
-              <p className="text-gray-500  font-medium">PDF Preview Simulator</p>
-              <p className="text-gray-400  text-sm mt-2">Displaying document: {previewDoc.id}</p>
-            </div>
+              <div className="flex-1 bg-slate-100 flex flex-col items-center justify-center p-8">
+                <FileText className="text-gray-400 mb-4 opacity-50" size={64} strokeWidth={1.25}/>
+                <p className="text-gray-500  font-medium">PDF Preview Simulator</p>
+                <p className="text-gray-400  text-sm mt-2">Displaying document: {previewDoc.id}</p>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Replacement Modal */}
       <ReplacementModal 

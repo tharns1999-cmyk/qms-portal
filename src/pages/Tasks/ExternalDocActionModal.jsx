@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import ExternalDocPreviewModal from '../ExternalDocs/ExternalDocPreviewModal';
 import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 
-const ExternalDocActionModal = ({ task, onClose }) => {
+const ExternalDocActionModal = ({ task, onClose, layoutId }) => {
   const { externalDocuments, processExternalTask } = useStore();
   const [comment, setComment] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -57,11 +57,12 @@ const ExternalDocActionModal = ({ task, onClose }) => {
 
       {/* Modal Content - Premium iOS style */}
       <motion.div 
+        layoutId={layoutId}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-2xl bg-white border border-gray-200 rounded-3xl p-6 sm:p-8"
+        className="relative w-full max-w-2xl bg-white border border-gray-300 rounded-3xl p-6 sm:p-8"
       >
         
         {/* Header */}
@@ -84,7 +85,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
         </div>
 
         {/* Document Info */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 space-y-4">
+        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100 mb-6 space-y-4">
           <div>
             <span className="text-xs font-bold text-gray-400  uppercase tracking-wider">ชื่อเอกสาร / Document Name</span>
             <p className="text-gray-800  font-medium mt-1">{doc.title}</p>
@@ -144,7 +145,7 @@ const ExternalDocActionModal = ({ task, onClose }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/60">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-300/60">
           <button
             onClick={onClose}
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"

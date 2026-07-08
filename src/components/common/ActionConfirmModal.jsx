@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, FileText, ArrowRight, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * @typedef {Object} SummaryItem
@@ -33,13 +34,22 @@ const ActionConfirmModal = ({
   confirmText
 }) => {
   const [typedConfirmation, setTypedConfirmation] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Reset typed confirmation when modal opens
   useEffect(() => {
-    if (isOpen) setTypedConfirmation('');
+    if (isOpen) {
+      setTypedConfirmation('');
+      setIsSuccess(false);
+    }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const handleConfirmClick = () => {
+    setIsSuccess(true);
+    setTimeout(() => {
+      onConfirm();
+    }, 800);
+  };
 
   const getStyles = () => {
     switch (actionType) {
@@ -97,18 +107,24 @@ const ActionConfirmModal = ({
 
   const styles = getStyles();
   const isTypeConfirmed = !requireTypeToConfirm || typedConfirmation === 'CONFIRM';
-  const isConfirmDisabled = isLoading || !isTypeConfirmed;
+  const isConfirmDisabled = isLoading || !isTypeConfirmed || isSuccess;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div 
-        className="bg-white rounded-2xl w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="bg-white rounded-2xl w-full max-w-2xl shadow-md border border-slate-300 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Header */}
         <div className={`px-6 py-4 border-b flex items-center justify-between ${styles.bg} rounded-t-2xl`}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 bg-white rounded-xl shadow-sm ${styles.border} border`}>
+            <div className={`p-2 bg-white rounded-xl shadow-md ${styles.border} border`}>
               {styles.icon}
             </div>
             <h2 className="text-xl font-bold text-slate-800">{title}</h2>
@@ -126,7 +142,7 @@ const ActionConfirmModal = ({
         <div className="p-6 overflow-y-auto flex-1">
           <p className="text-slate-600 mb-6">Please review the summary details below before proceeding.</p>
 
-          <div className="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-100">
+          <div className="bg-slate-50 rounded-xl border border-slate-300 divide-y divide-slate-100">
             {summaryData.map((item, idx) => (
               <div key={idx} className="flex flex-col sm:flex-row sm:items-start p-4 gap-2 sm:gap-4 hover:bg-slate-50/80 transition-colors">
                 <span className="text-sm font-medium text-slate-500 w-1/3 shrink-0">{item.label}</span>
@@ -154,27 +170,54 @@ const ActionConfirmModal = ({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
             type="button"
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-200 transition-colors"
-            disabled={isLoading}
+            disabled={isLoading || isSuccess}
           >
             Cancel
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={!isConfirmDisabled ? { scale: 1.02 } : {}}
+            whileTap={!isConfirmDisabled ? { scale: 0.95 } : {}}
             type="button"
-            onClick={onConfirm}
+            onClick={handleConfirmClick}
             disabled={isConfirmDisabled}
-            className={`px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
+            className={`px-5 py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 min-w-[120px] ${
               isConfirmDisabled ? 'opacity-50 cursor-not-allowed grayscale' : styles.btn
             }`}
           >
-            {isLoading ? 'Processing...' : (confirmText || styles.defaultText)}
-          </button>
+            {isSuccess ? (
+              <motion.svg 
+                className="w-5 h-5 text-white" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <motion.path
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  d="M20 6L9 17l-5-5"
+                />
+              </motion.svg>
+            ) : isLoading ? (
+              'Processing...'
+            ) : (
+              confirmText || styles.defaultText
+            )}
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 };
 

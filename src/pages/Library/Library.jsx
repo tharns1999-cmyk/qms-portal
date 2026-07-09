@@ -343,134 +343,7 @@ const Library = () => {
     </div>
   );
 
-  const renderCategorizedTables = (docs) => {
-    const groups = docs.reduce((acc, doc) => {
-      const prefix = doc.title.split('-')[0] || 'OTHER';
-      if (!acc[prefix]) acc[prefix] = [];
-      acc[prefix].push(doc);
-      return acc;
-    }, {});
-    
-    if (docs.length === 0) {
-      return renderFlatTable([]);
-    }
 
-    const typeNames = {
-      QP: 'Procedure (QP)',
-      WI: 'Work Instruction (WI)',
-      FM: 'Form (FM)',
-      SD: 'Standard (SD)',
-      MN: 'Manual (MN)'
-    };
-
-    return (
-      <div className="space-y-6">
-        {Object.keys(groups).sort().map(prefix => (
-          <div key={prefix} className="bg-white  rounded-xl shadow-md border border-gray-100  overflow-hidden">
-            <div className="bg-gray-50  px-6 py-3 border-b border-gray-100  font-semibold text-gray-700  flex items-center gap-2">
-              <Layers className="text-indigo-500" size={24} strokeWidth={1.25}/> {typeNames[prefix] || prefix}
-              <span className="ml-auto bg-gray-200  text-gray-600  px-2 py-0.5 rounded-full text-xs">{groups[prefix].length}</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600 ">
-                <thead className="bg-white  text-gray-500  uppercase border-b border-gray-100 ">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-center w-12">Action</th>
-                    <th className="px-4 py-3 font-medium w-12">No.</th>
-                    <th className="px-4 py-3 font-medium">Doc No.</th>
-                    <th className="px-4 py-3 font-medium">Title</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Owner Dept</th>
-                    <th className="px-4 py-3 font-medium text-center">Rev.</th>
-                    <th className="px-4 py-3 font-medium">Effective Date</th>
-                    <th className="px-4 py-3 font-medium">Requester</th>
-                    <th className="px-4 py-3 font-medium">Reviewer</th>
-                    <th className="px-4 py-3 font-medium">Approver</th>
-                    <th className="px-4 py-3 font-medium">Ack</th>
-                    <th className="px-4 py-3 font-medium">Distribution</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 ">
-                  {groups[prefix].map((doc, idx) => {
-                    const dar = dars.find(d => d.id === doc.darId);
-                    return (
-                    <tr key={doc.id} className="hover:bg-slate-50/80  transition-colors duration-200 cursor-pointer" onClick={() => navigate(`/library/${doc.id}`)}>
-                      <td className="px-4 py-3 text-center flex justify-center gap-2">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
-                          className="text-blue-500  hover:text-blue-700  p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                          title="Preview Document"
-                        >
-                          <Eye size={24} strokeWidth={1.25}/>
-                        </button>
-                        {canDownloadDocument(doc, currentUser) && (
-                          <>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toast.success(doc.title.startsWith('FM') ? 'ดาวน์โหลด Form สำเร็จ' : 'ดาวน์โหลด Master Document สำเร็จ');
-                              }}
-                              className="text-green-600  hover:text-green-700  p-1.5 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
-                              title={doc.title.startsWith('FM') ? "Print / Download Form (No Watermark)" : "Download Master (DCC Only)"}
-                            >
-                              <Download size={24} strokeWidth={1.25}/>
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toast.success('ดาวน์โหลดเอกสารสำหรับหน่วยงานภายนอกสำเร็จ');
-                              }}
-                              className="text-indigo-600  hover:text-indigo-700  p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
-                              title="Download for External Use"
-                            >
-                              <Share2 size={24} strokeWidth={1.25}/>
-                            </button>
-                          </>
-                        )}
-                        {activeTab === 'dist' && (
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const instance = controlledCopyInstances.find(i => i.docId === doc.id && isSameDept(userDepts, i.department) && i.status === 'ACTIVE');
-                              if (instance) {
-                                setReplacementInstance(instance);
-                              } else {
-                                toast.error('ไม่พบสำเนาควบคุมของแผนกคุณที่เป็นสถานะ ACTIVE (อาจอยู่ระหว่างดำเนินการหรือเกิดข้อผิดพลาด)');
-                              }
-                            }}
-                            className="text-amber-500  hover:text-amber-700 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
-                            title="ขอสำเนาควบคุมใหม่ (Request Replacement)"
-                          >
-                            <FileText size={24} strokeWidth={1.25}/>
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 ">{idx + 1}</td>
-                      <td className="px-4 py-3 font-medium text-indigo-600 ">{doc.title}</td>
-                      <td className="px-4 py-3 font-medium text-gray-800  max-w-xs truncate" title={doc.name}>{doc.name}</td>
-                      <td className="px-4 py-3"><span className="px-2 py-0.5 bg-gray-100  rounded text-xs">{doc.title.split('-')[0]}</span></td>
-                      <td className="px-4 py-3 font-medium text-gray-700 ">{doc.department}</td>
-                      <td className="px-4 py-3 text-center">{doc.rev}</td>
-                      <td className="px-4 py-3">{doc.effectiveDate}</td>
-                      <td className="px-4 py-3 text-gray-500  max-w-[120px] truncate" title={dar ? getRequesterName(dar, masterUsers) : '-'}>{dar ? getRequesterName(dar, masterUsers) : '-'}</td>
-                      <td className="px-4 py-3 text-gray-500  max-w-[120px] truncate" title={dar ? getReviewerName(dar, timeline) : '-'}>{dar ? getReviewerName(dar, timeline) : '-'}</td>
-                      <td className="px-4 py-3 text-gray-500  max-w-[120px] truncate" title={dar ? getApproverName(dar, timeline) : '-'}>{dar ? getApproverName(dar, timeline) : '-'}</td>
-                      <td className="px-4 py-3 text-gray-500  max-w-[120px] truncate" title={dar ? getAckNames(dar, timeline) : '-'}>{dar ? getAckNames(dar, timeline) : '-'}</td>
-                      <td className="px-4 py-3 text-xs max-w-[120px] truncate" title={(doc.distributions || []).map(d => d.departmentId).join(', ')}>
-                        {(doc.distributions || []).map(d => d.departmentId).join(', ') || '-'}
-                      </td>
-                      <td className="px-4 py-3"><span className="px-2 py-1 bg-green-100 text-green-700  rounded-full text-xs font-medium">Effective</span></td>
-                    </tr>
-                  )})}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -625,7 +498,7 @@ const Library = () => {
         </div>
       </div>
 
-      {activeTab === 'dept' ? renderCategorizedTables(filteredDocs) : renderFlatTable(filteredDocs)}
+      {renderFlatTable(filteredDocs)}
       
       {/* Inline PDF Preview Modal */}
       <AnimatePresence>

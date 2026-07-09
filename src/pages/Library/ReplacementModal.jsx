@@ -39,7 +39,6 @@ const ReplacementModal = ({ isOpen, onClose, instance }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-slate-900/40"
-            onClick={() => !isSubmitting && onClose()}
           />
           
           <motion.div 

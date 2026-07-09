@@ -153,7 +153,6 @@ const ExternalDocFormModal = ({ isOpen, onClose, documentToEdit = null }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-slate-900/40"
-            onClick={onClose}
           />
           
           <motion.div 

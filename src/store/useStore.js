@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { resolveReviewer, resolveApprover } from '../utils/workflowResolver';
-
+import { generateSchedules, generateTasksForSchedules, calculateNextReviewDate } from '../services/PeriodicReviewService';
 // 4 Master Data Tables (Separated as requested)
 export const MASTER_DATA_USER = [
   { id: 'U001', name: 'Admin QA (DCC)', position: 'Officer', level: 1, isDcc: true, depts: ['QA'] },
@@ -48,15 +48,179 @@ const MOCK_DOC_FORMATS = [
   { id: 2, format: 'MN-[YY]-[RUN_NO]' },
 ];
 
-const MOCK_DARS = [];
+const MOCK_DARS = [
+  {
+    id: 'DAR-MOCK-1',
+    darNo: 'DAR-2607-001',
+    type: 'NEW',
+    title: 'MN-QA-001',
+    name: 'คู่มือคุณภาพ (Quality Manual)',
+    status: 'PENDING_REVIEW',
+    department: 'QA',
+    requesterId: 'U005',
+    requestDate: '2026-07-01T08:00:00Z',
+    reason: 'จัดทำคู่มือคุณภาพฉบับใหม่ให้สอดคล้องกับนโยบาย',
+    reviewerId: 'U003',
+    approverId: 'U009'
+  },
+  {
+    id: 'DAR-MOCK-2',
+    darNo: 'DAR-2607-002',
+    type: 'REVISION',
+    title: 'SOP-WH-002',
+    name: 'ขั้นตอนการรับสินค้าเข้าคลัง',
+    status: 'PENDING_APPROVAL',
+    department: 'WH',
+    requesterId: 'U002',
+    requestDate: '2026-06-25T08:00:00Z',
+    reason: 'ปรับปรุงขั้นตอนการตรวจสอบพาเลท',
+    reviewerId: 'U005',
+    approverId: 'U004',
+    docId: 'DOC-MOCK-WH-002',
+    revisesRev: '02'
+  },
+  {
+    id: 'DAR-MOCK-3',
+    darNo: 'DAR-2607-003',
+    type: 'OBSOLETE',
+    title: 'WI-PD-010',
+    name: 'การใช้งานเครื่องซีลถุง',
+    status: 'PENDING_DCC',
+    department: 'PD',
+    requesterId: 'U002',
+    requestDate: '2026-07-08T08:00:00Z',
+    reason: 'ยกเลิกเครื่องจักร เลิกผลิต',
+    reviewerId: 'U003',
+    approverId: 'U004',
+    docId: 'DOC-MOCK-PD-010'
+  }
+];
 
-const MOCK_TASKS = [];
+const MOCK_TASKS = [
+  {
+    id: 'TASK-MOCK-1',
+    type: 'REVIEW',
+    darId: 'DAR-MOCK-1',
+    title: 'ทบทวนคำร้อง (Review DAR) - MN-QA-001',
+    assigneeId: 'U003',
+    status: 'PENDING',
+    createdAt: '2026-07-01T08:00:00Z',
+    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Due Soon (in 2 days)
+  },
+  {
+    id: 'TASK-MOCK-2',
+    type: 'APPROVE',
+    darId: 'DAR-MOCK-2',
+    title: 'อนุมัติคำร้อง (Approve DAR) - SOP-WH-002',
+    assigneeId: 'U004',
+    status: 'PENDING',
+    createdAt: '2026-06-25T08:00:00Z',
+    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Overdue (5 days ago)
+  },
+  {
+    id: 'TASK-MOCK-3',
+    type: 'DCC_ACTION',
+    darId: 'DAR-MOCK-3',
+    title: 'ดำเนินการอัปเดตระบบ (DCC Action) - WI-PD-010',
+    assigneeId: 'U001',
+    status: 'PENDING',
+    createdAt: '2026-07-08T08:00:00Z',
+    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // Normal
+  },
+  {
+    id: 'TASK-MOCK-4',
+    type: 'ACKNOWLEDGE',
+    docId: 'DOC-MOCK-1', // SOP-PD-001
+    title: 'รับทราบการประกาศใช้เอกสารใหม่ - SOP-PD-001',
+    assigneeId: 'U002',
+    status: 'PENDING',
+    createdAt: '2026-07-05T08:00:00Z',
+    dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Overdue by 1 day
+  }
+];
 
-const MOCK_TIMELINE = [];
+const MOCK_TIMELINE = [
+  {
+    id: 'TL-1',
+    darId: 'DAR-MOCK-2',
+    action: 'SUBMIT',
+    actor: 'U002',
+    timestamp: '2026-06-25T08:00:00Z',
+    comment: 'ปรับปรุงขั้นตอนการตรวจสอบพาเลท'
+  },
+  {
+    id: 'TL-2',
+    darId: 'DAR-MOCK-2',
+    action: 'REVIEW',
+    actor: 'U005',
+    timestamp: '2026-06-26T10:00:00Z',
+    comment: 'ตรวจสอบความถูกต้องเรียบร้อย'
+  }
+];
 
-const MOCK_DOCUMENTS = [];
+const MOCK_DOCUMENTS = [
+  {
+    id: 'DOC-MOCK-1',
+    title: 'SOP-PD-001',
+    name: 'มาตรฐานการควบคุมเครื่องตรวจจับโลหะ (Metal Detector)',
+    status: 'EFFECTIVE',
+    department: 'PD',
+    ownerId: 'U002', // Document Owner (Production Supervisor)
+    effectiveDate: '2025-07-16', // Due Soon (7 days left for 12 months)
+    rev: '01'
+  },
+  {
+    id: 'DOC-MOCK-2',
+    title: 'WI-PD-015',
+    name: 'ขั้นตอนการล้างทำความสะอาดข้าวเหนียว',
+    status: 'EFFECTIVE',
+    department: 'PD',
+    ownerId: 'U002',
+    effectiveDate: '2025-05-25', // Overdue (Escalated)
+    rev: '01'
+  },
+  {
+    id: 'DOC-MOCK-WH-002',
+    title: 'SOP-WH-002',
+    name: 'ขั้นตอนการรับสินค้าเข้าคลัง',
+    status: 'EFFECTIVE',
+    department: 'WH',
+    ownerId: 'U005',
+    effectiveDate: '2024-11-20',
+    rev: '02'
+  },
+  {
+    id: 'DOC-MOCK-PD-010',
+    title: 'WI-PD-010',
+    name: 'การใช้งานเครื่องซีลถุง',
+    status: 'EFFECTIVE',
+    department: 'PD',
+    ownerId: 'U002',
+    effectiveDate: '2024-03-10',
+    rev: '05'
+  }
+];
 
-const MOCK_CONTROLLED_COPY_INSTANCES = [];
+const MOCK_CONTROLLED_COPY_INSTANCES = [
+  {
+    id: 'CC-MOCK-1',
+    docId: 'DOC-MOCK-1',
+    departmentId: 'PD (K1)',
+    holderId: 'U002',
+    copyNo: 1,
+    status: 'ACTIVE',
+    issuedDate: '2025-07-17T08:00:00Z'
+  },
+  {
+    id: 'CC-MOCK-2',
+    docId: 'DOC-MOCK-WH-002',
+    departmentId: 'WH',
+    holderId: 'U005',
+    copyNo: 1,
+    status: 'PENDING_RECEIPT',
+    issuedDate: '2026-07-08T10:00:00Z'
+  }
+];
 
 export const calculateSLAStatus = (effectiveDate, currentDate) => {
   if (!effectiveDate) return 'NORMAL';
@@ -125,17 +289,114 @@ const useStore = create(persist((set, _get) => ({
   tasks: MOCK_TASKS,
   timeline: MOCK_TIMELINE,
   documents: MOCK_DOCUMENTS,
-  externalDocuments: [],
+  externalDocuments: [
+    {
+      id: 'EXT-MOCK-1',
+      title: 'FSSC 22000 Version 6.0 Guidelines',
+      status: 'ACTIVE',
+      department: 'QA',
+      ownerId: 'U001', // DCC Admin
+      receivedDate: '2024-07-16', // Due Soon (7 days left for 2-year frequency)
+      rev: '01'
+    },
+    {
+      id: 'EXT-MOCK-2',
+      title: 'ISO 14001:2015 Environmental Management',
+      status: 'ACTIVE',
+      department: 'HSE',
+      ownerId: 'U001',
+      receivedDate: '2025-01-15',
+      rev: '02'
+    }
+  ],
   externalAuditTrail: [],
   notifications: [],
   actionLog: [],
   copyRequests: [],
   controlledCopyInstances: MOCK_CONTROLLED_COPY_INSTANCES,
   controlledCopyAuditTrail: [],
+  periodicReviewSchedules: [],
+  periodicReviewTasks: [],
+  periodicReviewRecords: [],
   mockDateOffset: 0, // Used to simulate passing days for SLA testing
 
   setMockDateOffset: (days) => set({ mockDateOffset: days }),
 
+  initializePeriodicReviews: () => set(state => {
+    if (state.periodicReviewSchedules && state.periodicReviewSchedules.length > 0) return state;
+    const schedules = generateSchedules(state.documents || [], state.externalDocuments || [], []);
+    const tasks = generateTasksForSchedules(schedules, []);
+    return { periodicReviewSchedules: schedules, periodicReviewTasks: tasks };
+  }),
+
+  submitPeriodicReview: (scheduleId, outcome, comment, linkedActionId = null) => set(state => {
+    const schedules = [...state.periodicReviewSchedules];
+    const tasks = [...state.periodicReviewTasks];
+    const records = [...(state.periodicReviewRecords || [])];
+    
+    const scheduleIndex = schedules.findIndex(s => s.id === scheduleId);
+    if (scheduleIndex === -1) return state;
+    
+    const schedule = { ...schedules[scheduleIndex] };
+    
+    // Find active task
+    const taskIndex = tasks.findIndex(t => t.scheduleId === scheduleId && t.status === 'ACTION_REQUIRED');
+    if (taskIndex !== -1) {
+      tasks[taskIndex] = { ...tasks[taskIndex], status: 'COMPLETED', updatedAt: new Date().toISOString() };
+    }
+
+    let newStatus = '';
+    let requiresLinkedAction = false;
+
+    switch (outcome) {
+      case 'INTERNAL_NO_CHANGE': newStatus = 'COMPLETED_NO_CHANGE'; break;
+      case 'INTERNAL_REVISION_REQUIRED': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
+      case 'INTERNAL_OBSOLETE_REQUIRED': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
+      case 'EXTERNAL_CONFIRM_CURRENT': newStatus = 'COMPLETED_EXTERNAL_CONFIRMED'; break;
+      case 'EXTERNAL_NEW_VERSION': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
+      case 'EXTERNAL_NO_LONGER_APPLICABLE': newStatus = 'COMPLETED_NO_LONGER_APPLICABLE'; break;
+      default: newStatus = 'COMPLETED';
+    }
+
+    schedule.status = newStatus;
+    schedule.dueState = 'NOT_YET_DUE';
+    schedule.updatedAt = new Date().toISOString();
+    
+    // Calculate new anchor only if it's fully completed (no linked action needed, or linked action completes later)
+    // Actually, anchor never shifts. Next review date is just Anchor + N years.
+    // We update the currentScheduledReviewDate to the next one if it's COMPLETED.
+    if (!requiresLinkedAction) {
+      schedule.currentScheduledReviewDate = calculateNextReviewDate(schedule.originalReviewAnchorDate, schedule.frequencyMonths, new Date());
+      schedule.nextReviewDate = schedule.currentScheduledReviewDate;
+      schedule.status = 'NOT_YET_DUE';
+    }
+
+    schedules[scheduleIndex] = schedule;
+
+    records.push({
+      id: `PRR-${Date.now()}`,
+      scheduleId,
+      outcome,
+      comment,
+      linkedActionId,
+      reviewedByUserId: state.currentUser.id,
+      reviewedAt: new Date().toISOString()
+    });
+
+    return {
+      periodicReviewSchedules: schedules,
+      periodicReviewTasks: tasks,
+      periodicReviewRecords: records,
+      actionLog: [{
+        id: `LOG-${Date.now()}`,
+        actionType: 'PERIODIC_REVIEW_SUBMITTED',
+        details: `Periodic review submitted for ${schedule.documentNumber} with outcome ${outcome}`,
+        actor: state.currentUser.name,
+        actorId: state.currentUser.id,
+        date: new Date().toISOString()
+      }, ...(state.actionLog || [])]
+    };
+  }),
   // Default user is PD Supervisor (U002)
   currentUser: { ...MASTER_DATA_USER[1], department: 'PD', depts: ['PD'] },
 
@@ -1738,7 +1999,7 @@ const useStore = create(persist((set, _get) => ({
   setDars: (dars) => set({ dars }),
   setTimeline: (timeline) => set({ timeline })
 }), {
-  name: 'qms-storage-uat-v5',
+  name: 'qms-storage-uat-v6',
   version: 1,
   migrate: (persistedState, version) => {
     if (version === 0 || !version) {
@@ -1761,7 +2022,10 @@ const useStore = create(persist((set, _get) => ({
     externalDocuments: state.externalDocuments,
     controlledCopyInstances: state.controlledCopyInstances,
     controlledCopyAuditTrail: state.controlledCopyAuditTrail,
-    actionLog: state.actionLog
+    actionLog: state.actionLog,
+    periodicReviewSchedules: state.periodicReviewSchedules,
+    periodicReviewTasks: state.periodicReviewTasks,
+    periodicReviewRecords: state.periodicReviewRecords
   })
 }));
 

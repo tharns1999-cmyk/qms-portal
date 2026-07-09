@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import useStore from './store/useStore';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import DarSelection from './pages/DarWorkflow/DarSelection';
@@ -27,11 +28,22 @@ import TaskRevise from './pages/Tasks/TaskRevise';
 import TaskApproveReplacement from './pages/Tasks/TaskApproveReplacement';
 import SLAEngine from './components/SLAEngine';
 
+import PeriodicReviewDashboard from './pages/PeriodicReviews/PeriodicReviewDashboard';
+import MasterReviewSchedule from './pages/PeriodicReviews/MasterReviewSchedule';
+import MyReviewTasks from './pages/PeriodicReviews/MyReviewTasks';
+import PeriodicReviewDetail from './pages/PeriodicReviews/PeriodicReviewDetail';
+
 import { AdminHealth, NotFound } from './pages/Placeholders';
 import MasterList from './pages/MasterList/MasterList';
 import DistributionDemo from './pages/Placeholders/DistributionDemo';
 
 function App() {
+  const initializePeriodicReviews = useStore(state => state.initializePeriodicReviews);
+
+  useEffect(() => {
+    initializePeriodicReviews();
+  }, [initializePeriodicReviews]);
+
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
@@ -66,6 +78,11 @@ function App() {
           <Route path="external-docs" element={<ExternalDocsList />} />
           <Route path="master-list" element={<MasterList />} />
           
+          <Route path="periodic-reviews" element={<PeriodicReviewDashboard />} />
+          <Route path="periodic-reviews/schedule" element={<MasterReviewSchedule />} />
+          <Route path="periodic-reviews/my-tasks" element={<MyReviewTasks />} />
+          <Route path="periodic-reviews/:reviewId" element={<PeriodicReviewDetail />} />
+
           {/* Prototypes */}
           <Route path="demo-distribution" element={<DistributionDemo />} />
 

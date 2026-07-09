@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { Upload, FileText, Calendar, Settings, FileEdit, Search, X, FilterX, ShieldAlert } from 'lucide-react';
@@ -11,7 +11,9 @@ import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 const DarRevisionForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const draftId = searchParams.get('draftId');
+  const prefillDocId = location.state?.prefillDocId;
   const { currentUser, addDar, deleteDar, masterUsers, documents, dars, simulatedDate } = useStore();
   
   const [formData, setFormData] = useState({
@@ -57,6 +59,13 @@ const DarRevisionForm = () => {
       }
     }
   }, [draftId, dars, currentUser.department]);
+
+  // Handle Prefill from Periodic Review
+  useEffect(() => {
+    if (prefillDocId) {
+      setFormData(prev => ({ ...prev, docId: prefillDocId }));
+    }
+  }, [prefillDocId]);
 
   // Handle click outside to close dropdown
   useEffect(() => {

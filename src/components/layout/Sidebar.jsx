@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, UserCircle, Bell } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, UserCircle, Bell, Calendar } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -224,6 +224,7 @@ const Sidebar = () => {
           <NavItem to="/controlled-copy" icon={Copy} label="Controlled Copy" badgeCount={ccTaskCount} />
         )}
         <NavItem to="/external-docs" icon={Globe} label="External Documents" />
+        <NavItem to="/periodic-reviews" icon={Calendar} label="การทบทวนเอกสารตามรอบ" />
       </nav>
 
       {/* BOTTOM SECTION: User Profile & Actions */}

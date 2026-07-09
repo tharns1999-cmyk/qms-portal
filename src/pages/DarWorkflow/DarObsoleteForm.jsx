@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { Calendar, X, Settings, Trash2, ShieldAlert, FileText } from 'lucide-react';
@@ -9,7 +9,9 @@ import ActionConfirmModal from '../../components/common/ActionConfirmModal';
 const DarObsoleteForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const draftId = searchParams.get('draftId');
+  const prefillDocId = location.state?.prefillDocId;
   const { currentUser, addDar, deleteDar, masterUsers, documents, dars, simulatedDate } = useStore();
   
   const [formData, setFormData] = useState({
@@ -39,6 +41,13 @@ const DarObsoleteForm = () => {
       }
     }
   }, [currentUser, formData.docId, effectiveDocs]);
+
+  // Handle Prefill from Periodic Review
+  useEffect(() => {
+    if (prefillDocId) {
+      setFormData(prev => ({ ...prev, docId: prefillDocId }));
+    }
+  }, [prefillDocId]);
 
   useEffect(() => {
     if (draftId) {

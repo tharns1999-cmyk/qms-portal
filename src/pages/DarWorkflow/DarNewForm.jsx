@@ -234,9 +234,10 @@ const DarNewForm = () => {
                 className={`input-ios w-full px-3 py-2 ${errors.docType ? 'ring-2 ring-red-400 bg-red-50/50 ' : ''}`}
               >
                 <option value="">-- เลือกชนิดเอกสาร --</option>
-                {['MA', 'HA', 'FSP', 'QP', 'WI', 'SD', 'FM', 'PS', 'VA'].map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
+                {['MA', 'HA', 'HAP', 'FSP', 'QP', 'WI', 'SD', 'FM', 'PS', 'VA'].map(t => {
+                  const typeNames = { MA: 'Manual', HA: 'Hazard Analysis', HAP: 'Haccp Plan', FSP: 'Food Safety Plan', QP: 'Quality Procedure', WI: 'Work Instructions', SD: 'Support Document', FM: 'Form', PS: 'Product Specification', VA: 'Validation' };
+                  return <option key={t} value={t}>{typeNames[t]} ({t})</option>;
+                })}
               </select>
               {errors.docType && <p className="text-red-500  text-xs mt-1">{errors.docType}</p>}
             </div>

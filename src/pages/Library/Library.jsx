@@ -410,7 +410,7 @@ const Library = () => {
             >
               <option value="">ทุกประเภท</option>
               {availableTypes.map(t => {
-                const typeNames = { QP: 'Procedure (QP)', WI: 'Work Instruction (WI)', FM: 'Form (FM)', SD: 'Standard (SD)', MN: 'Manual (MN)' };
+                const typeNames = { MA: 'Manual (MA)', HA: 'Hazard Analysis (HA)', HAP: 'Haccp Plan (HAP)', FSP: 'Food Safety Plan (FSP)', QP: 'Quality Procedure (QP)', WI: 'Work Instructions (WI)', SD: 'Support Document (SD)', FM: 'Form (FM)', PS: 'Product Specification (PS)', VA: 'Validation (VA)' };
                 return <option key={t} value={t}>{typeNames[t] || t}</option>;
               })}
             </select>

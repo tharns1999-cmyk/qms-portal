@@ -276,11 +276,16 @@ const DarRevisionForm = () => {
                     className="input-ios w-full px-3 py-2 text-sm h-[42px]"
                   >
                     <option value="">ทั้งหมด (All Types)</option>
-                    <option value="QM">Manual (QM)</option>
-                    <option value="QP">Procedure (QP)</option>
-                    <option value="WI">Work Instruction (WI)</option>
-                    <option value="FM">Form (FM/FORM)</option>
-                    <option value="SD">Standard (SD/SPEC)</option>
+                    <option value="MA">Manual (MA)</option>
+                    <option value="HA">Hazard Analysis (HA)</option>
+                    <option value="HAP">Haccp Plan (HAP)</option>
+                    <option value="FSP">Food Safety Plan (FSP)</option>
+                    <option value="QP">Quality Procedure (QP)</option>
+                    <option value="WI">Work Instructions (WI)</option>
+                    <option value="SD">Support Document (SD)</option>
+                    <option value="FM">Form (FM)</option>
+                    <option value="PS">Product Specification (PS)</option>
+                    <option value="VA">Validation (VA)</option>
                   </select>
                 </div>
                 

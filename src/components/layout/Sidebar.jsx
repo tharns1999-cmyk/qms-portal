@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle, AlertTriangle } from 'lucide-react';
@@ -10,6 +10,7 @@ dayjs.extend(relativeTime);
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     currentUser, requestUsers, reviewUsers, approveUsers, tasks, controlledCopyInstances, documents, 
     masterUsers, setCurrentUser, notifications, markNotificationAsRead, markAllNotificationsAsRead 
@@ -20,6 +21,13 @@ const Sidebar = () => {
   const notiRef = useRef(null);
   
   const isExpanded = isHovered || showNoti;
+  
+  const path = location.pathname;
+  const isPortal = path === '/portal' || path === '/';
+  const isNcCapa = path.startsWith('/nc-capa');
+  // Everything else that is not portal or nc-capa is considered DCC context for now
+  // Includes /dcc, /dashboard, /dar, etc (old routes)
+  const isDcc = !isPortal && !isNcCapa;
 
   const isRequester = (requestUsers || []).some(u => u.id === currentUser.id);
   const isReviewerOrApprover = (reviewUsers || []).some(u => u.id === currentUser.id) || (approveUsers || []).some(u => u.id === currentUser.id);
@@ -68,42 +76,46 @@ const Sidebar = () => {
 
   const NavItem = ({ to, icon: IconComponent, label, badgeCount }) => (
     <NavLink to={to} className="relative flex items-center mx-3 my-1 py-2.5 rounded-lg group">
-      {({ isActive }) => (
-        <>
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-indicator"
-              className="absolute inset-0 bg-zinc-100/80 rounded-lg z-0"
-              initial={false}
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            />
-          )}
-          <div className={`relative z-10 w-12 flex items-center justify-center shrink-0 transition-colors duration-200 ${isActive ? 'text-zinc-900' : 'text-zinc-500 group-hover:text-zinc-900'}`}>
-            <IconComponent className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
-          </div>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.span 
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -5 }}
-                transition={{ duration: 0.15 }}
-                className={`relative z-10 whitespace-nowrap text-[14px] flex-1 flex items-center justify-between pr-3 ${isActive ? 'text-zinc-900 font-semibold' : 'text-zinc-600 font-medium group-hover:text-zinc-900'}`}
-              >
-                {label}
-                {badgeCount > 0 && (
-                  <span className="bg-zinc-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
-                    {badgeCount}
-                  </span>
-                )}
-              </motion.span>
+      {({ isActive }) => {
+        // If navigating to old route via alias, let's just use exact or base matches,
+        // NavLink naturally matches 'to' prop against URL.
+        return (
+          <>
+            {isActive && (
+              <motion.div
+                layoutId="sidebar-active-indicator"
+                className="absolute inset-0 bg-zinc-100/80 rounded-lg z-0"
+                initial={false}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
             )}
-          </AnimatePresence>
-          {badgeCount > 0 && !isExpanded && (
-             <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-zinc-900 rounded-full" />
-          )}
-        </>
-      )}
+            <div className={`relative z-10 w-12 flex items-center justify-center shrink-0 transition-colors duration-200 ${isActive ? 'text-zinc-900' : 'text-zinc-500 group-hover:text-zinc-900'}`}>
+              <IconComponent className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span 
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -5 }}
+                  transition={{ duration: 0.15 }}
+                  className={`relative z-10 whitespace-nowrap text-[14px] flex-1 flex items-center justify-between pr-3 ${isActive ? 'text-zinc-900 font-semibold' : 'text-zinc-600 font-medium group-hover:text-zinc-900'}`}
+                >
+                  {label}
+                  {badgeCount > 0 && (
+                    <span className="bg-zinc-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                      {badgeCount}
+                    </span>
+                  )}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {badgeCount > 0 && !isExpanded && (
+               <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-zinc-900 rounded-full" />
+            )}
+          </>
+        );
+      }}
     </NavLink>
   );
 
@@ -115,7 +127,7 @@ const Sidebar = () => {
     >
       {/* TOP SECTION: Logo & System Name */}
       <div className="flex flex-col items-center pt-5 pb-3 mx-3">
-        <div className="flex items-center w-full h-12 mb-2 overflow-hidden">
+        <div className="flex items-center w-full h-12 mb-2 overflow-hidden cursor-pointer" onClick={() => navigate('/portal')}>
           <div className="w-14 flex items-center justify-center shrink-0">
             <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain translate-x-[2px]" />
           </div>
@@ -214,34 +226,55 @@ const Sidebar = () => {
 
       {/* CENTER SECTION: Navigation */}
       <nav className="flex-1 py-2 space-y-0.5 overflow-x-hidden overflow-y-auto hide-scrollbar">
-        <NavItem to="/dashboard" icon={Home} label="Dashboard" />
+        <NavItem to="/portal" icon={Home} label="Portal Home" />
         
-        {isRequester && (
+        {isDcc && (
           <>
-            <NavItem to="/dar/new" icon={FilePlus} label="Create DAR" />
-            <NavItem to="/dar/list" icon={List} label="My DARs" />
+            <div className={`px-5 pt-3 pb-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isExpanded && 'hidden'}`}>
+              DCC Module
+            </div>
+            
+            <NavItem to="/dcc/dashboard" icon={Library} label="Dashboard" />
+            
+            {isRequester && (
+              <>
+                <NavItem to="/dcc/dar/new" icon={FilePlus} label="Create DAR" />
+                <NavItem to="/dcc/dar/list" icon={List} label="My DARs" />
+              </>
+            )}
+            
+            {isReviewerOrApprover && (
+              <NavItem to="/dcc/tasks" icon={CheckSquare} label="Task Inbox" badgeCount={myTaskCount} />
+            )}
+            
+            {isAdmin && (
+              <NavItem to="/dcc/admin/action-log" icon={History} label="Action Log" />
+            )}
+            
+            {isMasterListAccess && (
+              <NavItem to="/dcc/master-list" icon={Database} label="Master List" />
+            )}
+            <NavItem to="/dcc/library" icon={Library} label="Document Library" />
+            
+            {currentUser.isDcc && (
+              <NavItem to="/dcc/controlled-copy" icon={Copy} label="Controlled Copy" badgeCount={ccTaskCount} />
+            )}
+            <NavItem to="/dcc/external-docs" icon={Globe} label="External Docs" />
+            <NavItem to="/dcc/periodic-reviews" icon={Calendar} label="Periodic Reviews" />
           </>
         )}
-        
-        {isReviewerOrApprover && (
-          <NavItem to="/tasks" icon={CheckSquare} label="Task Inbox" badgeCount={myTaskCount} />
+
+        {isNcCapa && (
+          <>
+            <div className={`px-5 pt-3 pb-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isExpanded && 'hidden'}`}>
+              NC / CAPA
+            </div>
+            <NavItem to="/nc-capa" icon={AlertTriangle} label="Dashboard" />
+            <NavItem to="/nc-capa/list" icon={List} label="NC/CAPA List" />
+            <NavItem to="/nc-capa/new" icon={FilePlus} label="Create NC" />
+            <NavItem to="/nc-capa/my-tasks" icon={CheckSquare} label="My Tasks" />
+          </>
         )}
-        
-        {isAdmin && (
-          <NavItem to="/admin/action-log" icon={History} label="Action Log" />
-        )}
-        
-        {isMasterListAccess && (
-          <NavItem to="/master-list" icon={Database} label="Master List" />
-        )}
-        <NavItem to="/library" icon={Library} label="Document Library" />
-        
-        {currentUser.isDcc && (
-          <NavItem to="/controlled-copy" icon={Copy} label="Controlled Copy" badgeCount={ccTaskCount} />
-        )}
-        <NavItem to="/external-docs" icon={Globe} label="External Docs" />
-        <NavItem to="/periodic-reviews" icon={Calendar} label="Periodic Reviews" />
-        <NavItem to="/nc-capa" icon={AlertTriangle} label="NC / CAPA" />
       </nav>
 
       {/* BOTTOM SECTION: User Profile */}

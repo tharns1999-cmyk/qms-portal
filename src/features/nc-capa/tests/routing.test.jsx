@@ -24,7 +24,8 @@ vi.mock('../services/NcCapaService', () => ({
     getById: vi.fn().mockImplementation((id) => {
       if (id === 'invalid') return Promise.resolve(null);
       return Promise.resolve({ id, ncNumber: 'NC-2023-001', title: 'Test NC', status: 'OPEN', severity: 'LOW', createdAt: '2023-01-01', description: 'desc' });
-    })
+    }),
+    createDraftShell: vi.fn(() => ({}))
   }
 }));
 
@@ -36,9 +37,10 @@ vi.mock('../services/NcCapaTaskService', () => ({
 
 describe('NC/CAPA Routing', () => {
   beforeEach(() => {
+    localStorage.setItem('language', 'en');
     // Setup an admin user to bypass permission blocks for basic routing tests
     useStore.setState({
-      currentUser: { id: 'u5', name: 'Admin', role: 'DCC_ADMIN', level: 5 }
+      currentUser: { id: 'u5', name: 'Admin', permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL', 'NC_CAPA_CREATE'] }
     });
   });
 
@@ -88,13 +90,14 @@ describe('NC/CAPA Routing', () => {
     await act(async () => {
       renderWithRouter('/nc-capa/nc-1');
     });
-    expect(screen.getByText(/NC-2023-001: Test NC/i)).toBeInTheDocument();
+    expect(screen.getByText('NC-2023-001')).toBeInTheDocument();
+    expect(screen.getByText('Test NC')).toBeInTheDocument();
   });
 
   it('renders Not Found at /nc-capa/:ncId for invalid ID', async () => {
     await act(async () => {
       renderWithRouter('/nc-capa/invalid');
     });
-    expect(screen.getByText(/ไม่พบข้อมูล NC|NC Not Found/i)).toBeInTheDocument();
+    expect(screen.getByText(/Could not load NC record/i)).toBeInTheDocument();
   });
 });

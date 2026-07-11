@@ -4,15 +4,15 @@ import { resolveReviewer, resolveApprover } from '../utils/workflowResolver';
 import { generateSchedules, generateTasksForSchedules, calculateNextReviewDate } from '../services/PeriodicReviewService';
 // 4 Master Data Tables (Separated as requested)
 export const MASTER_DATA_USER = [
-  { id: 'U001', name: 'Admin QA (DCC)', position: 'Officer', level: 1, isDcc: true, depts: ['QA'] },
-  { id: 'U002', name: 'ธนาวุฒิ สมควรกิจดำรง', position: 'Production Supervisor', level: 4, depts: ['PD'] },
-  { id: 'U003', name: 'กัลยาณี พลไกร', position: 'Production Assistant Manager', level: 5, depts: ['PD', 'QA'] },
-  { id: 'U004', name: 'คุณเรย์', position: 'General Manager', level: 6, depts: [] },
-  { id: 'U005', name: 'บีม', position: 'QAQC Supervisor', level: 4, depts: ['QA'] },
-  { id: 'U006', name: 'รัตนพล', position: 'Engineering Supervisor', level: 4, depts: ['EN'] },
-  { id: 'U007', name: 'ชัยวัฒน์', position: 'Engineering Assistant Manager', level: 5, depts: ['EN'] },
-  { id: 'U008', name: 'คุณกิต', position: 'Finance Director', level: 7, depts: [] },
-  { id: 'U009', name: 'คุณนัท', position: 'Managing Director', level: 8, depts: [] }
+  { id: 'U001', name: 'Admin QA (DCC)', position: 'Officer', level: 1, isDcc: true, depts: ['QA'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL', 'NC_CAPA_CREATE', 'NC_CAPA_SCREEN', 'NC_CAPA_ASSIGN_OWNER', 'NC_CAPA_ADMIN', 'NC_CAPA_AUDIT_VIEW'] },
+  { id: 'U002', name: 'ธนาวุฒิ สมควรกิจดำรง', position: 'Production Supervisor', level: 4, depts: ['PD'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_CREATE'] },
+  { id: 'U003', name: 'กัลยาณี พลไกร', position: 'Production Assistant Manager', level: 5, depts: ['PD', 'QA'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_CREATE'] },
+  { id: 'U004', name: 'คุณเรย์', position: 'General Manager', level: 6, depts: [], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL', 'NC_CAPA_AUDIT_VIEW'] },
+  { id: 'U005', name: 'บีม', position: 'QAQC Supervisor', level: 4, depts: ['QA'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL', 'NC_CAPA_CREATE', 'NC_CAPA_SCREEN', 'NC_CAPA_ASSIGN_OWNER'] },
+  { id: 'U006', name: 'รัตนพล', position: 'Engineering Supervisor', level: 4, depts: ['EN'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_CREATE'] },
+  { id: 'U007', name: 'ชัยวัฒน์', position: 'Engineering Assistant Manager', level: 5, depts: ['EN'], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_CREATE'] },
+  { id: 'U008', name: 'คุณกิต', position: 'Finance Director', level: 7, depts: [], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL'] },
+  { id: 'U009', name: 'คุณนัท', position: 'Managing Director', level: 8, depts: [], permissions: ['NC_CAPA_VIEW', 'NC_CAPA_VIEW_ALL', 'NC_CAPA_AUDIT_VIEW'] }
 ];
 
 export const MASTER_DEPARTMENTS = [

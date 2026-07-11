@@ -5,9 +5,9 @@ import Sidebar from './Sidebar';
 const Layout = () => {
   const location = useLocation();
 
-  // Redirect root to dashboard
+  // Redirect root to portal
   if (location.pathname === '/') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/portal" replace />;
   }
 
   return (

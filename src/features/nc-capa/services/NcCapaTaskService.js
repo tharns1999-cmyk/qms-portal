@@ -10,7 +10,7 @@ class NcCapaTaskService {
     
     const records = mockNcRecords || [];
     const myTasks = records.filter(nc => 
-      nc.assignedTo === userId && 
+      (nc.assignedOwnerUserId === userId || nc.reportedByUserId === userId) && 
       nc.status !== NC_STATUS.CLOSED
     );
     

@@ -1,5 +1,6 @@
 import { mockNcRecords } from '../mock/ncCapaMockData';
-import { NC_STATUS, NC_SEVERITY } from '../domain/models';
+import { NC_STATUS, NC_SEVERITY, DccLinkageStatus } from '../domain/models';
+import { ncCapaDccLinkageService } from './NcCapaDccLinkageService';
 
 class NcCapaDashboardService {
   /**
@@ -8,16 +9,30 @@ class NcCapaDashboardService {
   async getKpis() {
     const records = mockNcRecords || [];
     
-    const openCount = records.filter(nc => nc.status !== NC_STATUS.CLOSED).length;
-    const criticalCount = records.filter(nc => nc.severity === NC_SEVERITY.CRITICAL && nc.status !== NC_STATUS.CLOSED).length;
-    // Mock logic for overdue
-    const overdueCount = records.filter(nc => nc.status !== NC_STATUS.CLOSED && new Date(nc.dueDate) < new Date()).length;
-    const pendingRCACount = records.filter(nc => nc.status === NC_STATUS.ROOT_CAUSE_IN_PROGRESS || nc.status === NC_STATUS.ASSIGNED).length;
-    const pendingPlanCount = records.filter(nc => nc.status === NC_STATUS.CAPA_PLAN_REQUIRED || nc.status === NC_STATUS.CAPA_PLAN_RETURNED).length;
-    const executionCount = records.filter(nc => nc.status === NC_STATUS.ACTION_IN_PROGRESS).length;
-    const effectivenessCount = records.filter(nc => nc.status === NC_STATUS.EFFECTIVENESS_CHECK).length;
+    // Intake / Screening
+    const screeningCount = records.filter(nc => nc.status === NC_STATUS.SCREENING).length;
+    const returnedCount = records.filter(nc => nc.status === NC_STATUS.RETURNED_FOR_INFO).length;
     
-    // Calculate action level KPIs
+    // RCA / CAPA Planning
+    const assignedCount = records.filter(nc => nc.status === NC_STATUS.ASSIGNED).length;
+    const pendingRCACount = records.filter(nc => nc.status === NC_STATUS.ROOT_CAUSE_IN_PROGRESS).length;
+    const capaRequiredCount = records.filter(nc => nc.status === NC_STATUS.CAPA_PLAN_REQUIRED).length;
+    const capaReviewCount = records.filter(nc => nc.status === NC_STATUS.CAPA_PLAN_REVIEW || nc.status === NC_STATUS.CAPA_PLAN_RETURNED).length;
+    
+    // Execution / Verification
+    const executionCount = records.filter(nc => nc.status === NC_STATUS.ACTION_IN_PROGRESS).length;
+    
+    // Effectiveness / Closure
+    const effectivenessCount = records.filter(nc => nc.status === NC_STATUS.EFFECTIVENESS_CHECK).length;
+    const closedCount = records.filter(nc => nc.status === NC_STATUS.CLOSED).length;
+    const reopenedCount = records.filter(nc => nc.status === NC_STATUS.REOPENED).length;
+    const additionalActionCount = records.filter(nc => nc.status === NC_STATUS.ADDITIONAL_ACTION_REQUIRED).length;
+    
+    // Risk / Priority
+    const criticalCount = records.filter(nc => nc.severity === NC_SEVERITY.CRITICAL).length;
+    const foodSafetyCriticalCount = records.filter(nc => nc.severity === NC_SEVERITY.FOOD_SAFETY_CRITICAL).length;
+
+    // Actions & Verification
     let pendingVerificationCount = 0;
     records.forEach(nc => {
       if (nc.capaActionPlan && nc.capaActionPlan.actions) {
@@ -25,15 +40,37 @@ class NcCapaDashboardService {
       }
     });
 
+    // DCC Linkage
+    let dccPendingCount = 0;
+    let dccCompletedCount = 0;
+    
+    records.forEach(nc => {
+      const linkage = ncCapaDccLinkageService.getLinkageForNc(nc.id);
+      if (linkage) {
+        if (linkage.targetStatus === DccLinkageStatus.COMPLETED) {
+          dccCompletedCount++;
+        } else if (linkage.targetStatus === DccLinkageStatus.IN_PROGRESS || linkage.targetStatus === DccLinkageStatus.DRAFT) {
+          dccPendingCount++;
+        }
+      }
+    });
+
     return Promise.resolve({
-      open: openCount,
-      overdue: overdueCount,
-      critical: criticalCount,
+      screening: screeningCount,
+      returned: returnedCount,
+      assigned: assignedCount,
       pendingRCA: pendingRCACount,
-      pendingPlan: pendingPlanCount,
+      capaRequired: capaRequiredCount,
+      capaReview: capaReviewCount,
       execution: executionCount,
       pendingVerification: pendingVerificationCount,
       effectiveness: effectivenessCount,
+      closed: closedCount,
+      reopened: reopenedCount,
+      additionalAction: additionalActionCount,
+      critical: criticalCount + foodSafetyCriticalCount, // Combined for simplicity or split if needed
+      dccPending: dccPendingCount,
+      dccCompleted: dccCompletedCount,
       total: records.length
     });
   }

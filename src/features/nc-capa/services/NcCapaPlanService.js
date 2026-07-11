@@ -2,6 +2,8 @@ import { NC_STATUS, CAPAPlanReviewStatus } from '../domain/models';
 import { ncCapaAuditService } from './NcCapaAuditService';
 import { ncCapaTaskService } from './NcCapaTaskService';
 import { ncCapaNotificationService } from './NcCapaNotificationService';
+import { ncCapaUserHelper } from './NcCapaUserHelper';
+import { NC_PERMISSIONS } from '../domain/models';
 
 class NcCapaPlanService {
 
@@ -31,8 +33,11 @@ class NcCapaPlanService {
 
     ncCapaAuditService.logEvent(updated.id, 'CAPA_PLAN_SUBMITTED', actorId, `CAPA Action Plan submitted for review`);
     ncCapaTaskService.createPlanReviewTask(updated);
-    // Hardcode U005 QA/QC for testing, but in a real app this would resolve by role
-    ncCapaNotificationService.notifyCapaPlanSubmitted(updated, 'U005');
+    const targetUser = ncCapaUserHelper.resolveNotificationTargets({
+      permission: NC_PERMISSIONS.PLAN_REVIEW,
+      fallbackUserId: actorId
+    });
+    ncCapaNotificationService.notifyCapaPlanSubmitted(updated, targetUser);
 
     return updated;
   }

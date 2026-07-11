@@ -19,7 +19,7 @@ const NcCapaMyTasks = () => {
 
   if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) {
     return (
-      <div className="p-8 max-w-7xl mx-auto">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-red-600 mb-4">{t('detail', 'accessDenied')}</h1>
         <p className="text-zinc-600">{t('detail', 'restricted')}</p>
       </div>
@@ -27,8 +27,8 @@ const NcCapaMyTasks = () => {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-zinc-900">{t('dashboard', 'myTasks')}</h1>
       </div>
 
@@ -37,17 +37,21 @@ const NcCapaMyTasks = () => {
           <table className="w-full text-left text-sm text-zinc-600">
             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-900">
               <tr>
-                <th className="px-6 py-4 font-semibold">NC Number</th>
-                <th className="px-6 py-4 font-semibold">Task</th>
-                <th className="px-6 py-4 font-semibold">{t('list', 'status')}</th>
-                <th className="px-6 py-4 font-semibold">Due Date</th>
+                <th className="px-6 py-4 font-semibold whitespace-nowrap">NC Number</th>
+                <th className="px-6 py-4 font-semibold whitespace-nowrap">Task</th>
+                <th className="px-6 py-4 font-semibold whitespace-nowrap">{t('list', 'status')}</th>
+                <th className="px-6 py-4 font-semibold whitespace-nowrap">Due Date</th>
               </tr>
             </thead>
             <tbody>
               {tasks.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-zinc-500">
-                    {t('list', 'noData')}
+                  <td colSpan="4" className="px-6 py-12 text-center text-zinc-500">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="text-4xl mb-3">✅</div>
+                      <h3 className="text-lg font-medium text-zinc-900 mb-1">All caught up!</h3>
+                      <p className="text-sm">You have no pending tasks right now.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (

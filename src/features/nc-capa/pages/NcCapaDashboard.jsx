@@ -14,19 +14,13 @@ const NcCapaDashboard = () => {
   const [kpis, setKpis] = useState(null);
   
   useEffect(() => {
-    // Check permission - if totally denied, we could redirect or show denied state
-    // But dashboard is usually viewable by those with VIEW permission
-    if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) {
-      // For this phase, if they have no view permission, show access denied
-      return; 
-    }
-
+    if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) return;
     ncCapaDashboardService.getKpis().then(setKpis);
   }, [currentUser]);
 
   if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) {
     return (
-      <div className="p-8 max-w-7xl mx-auto">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-red-600 mb-4">{t('detail', 'accessDenied')}</h1>
         <p className="text-zinc-600">{t('detail', 'restricted')}</p>
       </div>
@@ -35,9 +29,16 @@ const NcCapaDashboard = () => {
 
   const canCreate = ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.CREATE);
 
+  const KpiCard = ({ title, value, colorClass = "text-zinc-900" }) => (
+    <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow">
+      <h3 className="text-zinc-500 font-medium mb-1 text-sm">{title}</h3>
+      <p className={`text-3xl font-bold ${colorClass}`}>{value !== undefined ? value : '-'}</p>
+    </div>
+  );
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <h1 className="text-2xl font-bold text-zinc-900">{t('dashboard', 'title')}</h1>
         {canCreate && (
           <button 
@@ -49,40 +50,65 @@ const NcCapaDashboard = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/nc-capa/list')}>
-          <h3 className="text-zinc-500 font-medium mb-2">{t('dashboard', 'openNc')}</h3>
-          <p className="text-3xl font-bold text-zinc-900">{kpis ? kpis.open : '-'}</p>
+      <div className="space-y-8 mb-8">
+        
+        {/* Intake / Screening Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">Intake & Screening</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="New / Screening" value={kpis?.screening} colorClass="text-zinc-900" />
+            <KpiCard title="Returned for Info" value={kpis?.returned} colorClass="text-orange-600" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">Pending RCA</h3>
-          <p className="text-3xl font-bold text-blue-600">{kpis ? kpis.pendingRCA : '-'}</p>
+
+        {/* RCA / CAPA Planning Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">RCA & CAPA Planning</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="Assigned" value={kpis?.assigned} colorClass="text-blue-600" />
+            <KpiCard title="Pending RCA" value={kpis?.pendingRCA} colorClass="text-blue-600" />
+            <KpiCard title="CAPA Plan Required" value={kpis?.capaRequired} colorClass="text-indigo-600" />
+            <KpiCard title="CAPA Plan Review" value={kpis?.capaReview} colorClass="text-indigo-600" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">Pending Plan</h3>
-          <p className="text-3xl font-bold text-indigo-600">{kpis ? kpis.pendingPlan : '-'}</p>
+
+        {/* Execution / Verification Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">Execution & QA Verification</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="Action In Progress" value={kpis?.execution} colorClass="text-cyan-600" />
+            <KpiCard title="Pending QA Verify" value={kpis?.pendingVerification} colorClass="text-purple-600" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">In Execution</h3>
-          <p className="text-3xl font-bold text-cyan-600">{kpis ? kpis.execution : '-'}</p>
+
+        {/* Effectiveness / Closure Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">Effectiveness & Closure</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="Pending Effect. Check" value={kpis?.effectiveness} colorClass="text-teal-600" />
+            <KpiCard title="Closed" value={kpis?.closed} colorClass="text-green-600" />
+            <KpiCard title="Reopened" value={kpis?.reopened} colorClass="text-rose-600" />
+            <KpiCard title="Additional Action Req." value={kpis?.additionalAction} colorClass="text-amber-600" />
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">Pending QA Verify</h3>
-          <p className="text-3xl font-bold text-purple-600">{kpis ? kpis.pendingVerification : '-'}</p>
+        {/* DCC Linkage Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">DCC Linkage</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="DCC Link Pending" value={kpis?.dccPending} colorClass="text-indigo-500" />
+            <KpiCard title="DCC Link Completed" value={kpis?.dccCompleted} colorClass="text-green-600" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">Pending Effect. Check</h3>
-          <p className="text-3xl font-bold text-teal-600">{kpis ? kpis.effectiveness : '-'}</p>
+
+        {/* Risk / Priority Group */}
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-800 mb-4 border-b pb-2">Risk & Priority</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard title="Critical" value={kpis?.critical} colorClass="text-red-600" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">{t('dashboard', 'overdue')}</h3>
-          <p className="text-3xl font-bold text-rose-600">{kpis ? kpis.overdue : '-'}</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-          <h3 className="text-zinc-500 font-medium mb-2">{t('dashboard', 'critical')}</h3>
-          <p className="text-3xl font-bold text-amber-600">{kpis ? kpis.critical : '-'}</p>
-        </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -105,7 +131,6 @@ const NcCapaDashboard = () => {
             <h2 className="font-semibold text-zinc-900">{t('dashboard', 'recentActivity')}</h2>
           </div>
           <div className="p-8 text-center text-zinc-500">
-            {/* Mock recent activity placeholder */}
             No recent activity
           </div>
         </div>

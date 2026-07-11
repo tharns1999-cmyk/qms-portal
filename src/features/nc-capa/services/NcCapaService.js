@@ -1,5 +1,5 @@
 import { mockNcRecords } from '../mock/ncCapaMockData';
-import { EMPTY_NC_DRAFT, NC_STATUS } from '../domain/models';
+import { EMPTY_NC_DRAFT, NC_STATUS, NC_PERMISSIONS } from '../domain/models';
 import { ncCapaNumberService } from './NcCapaNumberService';
 import { ncCapaNotificationService } from './NcCapaNotificationService';
 import { ncCapaAuditService } from './NcCapaAuditService';
@@ -9,6 +9,7 @@ import { ncCapaPlanService } from './NcCapaPlanService';
 import { ncCapaPlanReviewService } from './NcCapaPlanReviewService';
 import { ncCapaActionExecutionService } from './NcCapaActionExecutionService';
 import { ncCapaActionVerificationService } from './NcCapaActionVerificationService';
+import { ncCapaUserHelper } from './NcCapaUserHelper';
 
 class NcCapaService {
   constructor() {
@@ -89,7 +90,11 @@ class NcCapaService {
     ncCapaTaskService.createScreeningTask(newRecord);
     
     // QA/QC role hardcode just for mock notification target
-    ncCapaNotificationService.notifyNCScreening(newRecord, 'U005'); 
+    const targetUser = ncCapaUserHelper.resolveNotificationTargets({
+      permission: NC_PERMISSIONS.SCREEN,
+      fallbackUserId: actorId
+    });
+    ncCapaNotificationService.notifyNCScreening(newRecord, targetUser); 
 
     return newRecord;
   }
@@ -109,7 +114,11 @@ class NcCapaService {
 
     ncCapaAuditService.logEvent(updated.id, 'RESUBMIT', actorId, `NC Resubmitted after return`);
     ncCapaTaskService.createScreeningTask(updated);
-    ncCapaNotificationService.notifyNCScreening(updated, 'U005');
+    const targetUser = ncCapaUserHelper.resolveNotificationTargets({
+      permission: NC_PERMISSIONS.SCREEN,
+      fallbackUserId: actorId
+    });
+    ncCapaNotificationService.notifyNCScreening(updated, targetUser);
 
     return updated;
   }

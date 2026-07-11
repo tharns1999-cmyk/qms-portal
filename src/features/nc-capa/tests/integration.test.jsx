@@ -21,9 +21,9 @@ describe('NC/CAPA Integration and Services', () => {
     // In Phase 11C mock data, we have 8 records, all open, but we added nc-9 for 11E which is also open
     // getKpis counts everything !== CLOSED
     expect(kpis.total).toBe(9);
-    expect(kpis.open).toBe(9); 
-    expect(kpis.critical).toBe(3);
-    expect(kpis.overdue).toBe(0); // No due dates in Phase 11B mock data
+    // In Phase 11G we replaced 'open' and 'overdue' with more specific KPIs
+    expect(kpis.screening).toBe(1); // NC-2023-0001
+    expect(kpis.critical).toBe(3); // 2 CRITICAL + 1 FOOD_SAFETY_CRITICAL
   });
 
   it('My tasks returns correct records for assigned user', async () => {

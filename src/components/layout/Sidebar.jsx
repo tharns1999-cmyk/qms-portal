@@ -2,10 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle, AlertTriangle } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import Button from '../ui/Button';
 
 dayjs.extend(relativeTime);
 
@@ -242,6 +241,7 @@ const Sidebar = () => {
         )}
         <NavItem to="/external-docs" icon={Globe} label="External Docs" />
         <NavItem to="/periodic-reviews" icon={Calendar} label="Periodic Reviews" />
+        <NavItem to="/nc-capa" icon={AlertTriangle} label="NC / CAPA" />
       </nav>
 
       {/* BOTTOM SECTION: User Profile */}

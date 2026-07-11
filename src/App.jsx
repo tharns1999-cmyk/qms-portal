@@ -37,6 +37,15 @@ import { AdminHealth, NotFound } from './pages/Placeholders';
 import MasterList from './pages/MasterList/MasterList';
 import DistributionDemo from './pages/Placeholders/DistributionDemo';
 
+// NC/CAPA Module
+import {
+  NcCapaDashboard,
+  NcCapaList,
+  NcCapaNew,
+  NcCapaMyTasks,
+  NcCapaDetail
+} from './features/nc-capa';
+
 function App() {
   const initializePeriodicReviews = useStore(state => state.initializePeriodicReviews);
 
@@ -82,6 +91,13 @@ function App() {
           <Route path="periodic-reviews/schedule" element={<MasterReviewSchedule />} />
           <Route path="periodic-reviews/my-tasks" element={<MyReviewTasks />} />
           <Route path="periodic-reviews/:reviewId" element={<PeriodicReviewDetail />} />
+
+          {/* NC/CAPA Routes */}
+          <Route path="nc-capa" element={<NcCapaDashboard />} />
+          <Route path="nc-capa/list" element={<NcCapaList />} />
+          <Route path="nc-capa/new" element={<NcCapaNew />} />
+          <Route path="nc-capa/my-tasks" element={<NcCapaMyTasks />} />
+          <Route path="nc-capa/:ncId" element={<NcCapaDetail />} />
 
           {/* Prototypes */}
           <Route path="demo-distribution" element={<DistributionDemo />} />

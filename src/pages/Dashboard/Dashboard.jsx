@@ -342,6 +342,9 @@ const Dashboard = () => {
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/controlled-copy?tab=ACTION_REQUIRED')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   จัดการทั้งหมด <ChevronRight size={20} strokeWidth={1.25}/> Document Distribution Log
                 </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/nc-capa')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-amber-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
+                  <AlertTriangle size={20} strokeWidth={1.25}/> ระบบ NC/CAPA
+                </motion.button>
               </>
             ) : currentUser.level <= 3 ? (
               <>
@@ -351,6 +354,9 @@ const Dashboard = () => {
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/dar/new/revision')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-blue-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   <FileEdit size={20} strokeWidth={1.25}/> ขอแก้ไขเอกสาร (Revision)
                 </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/nc-capa')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-amber-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
+                  <AlertTriangle size={20} strokeWidth={1.25}/> ระบบ NC/CAPA
+                </motion.button>
               </>
             ) : (
               <>
@@ -359,6 +365,9 @@ const Dashboard = () => {
                 </motion.button>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/library')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
                   <Library size={20} strokeWidth={1.25}/> ดูคลังเอกสารแผนก
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/nc-capa')} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-amber-700 rounded-xl font-medium text-sm border border-slate-300 transition-colors">
+                  <AlertTriangle size={20} strokeWidth={1.25}/> ระบบ NC/CAPA
                 </motion.button>
               </>
             )}

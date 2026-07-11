@@ -8,6 +8,9 @@ import { ncCapaAuditService } from '../services/NcCapaAuditService';
 import { NC_PERMISSIONS, NC_STATUS, CAPARequirementDecision } from '../domain/models';
 import { useNcCapaTranslation } from '../locales/ncCapaTranslations';
 import { CheckCircle, History, ShieldAlert, User, Search, RefreshCw, XCircle } from 'lucide-react';
+import NcCapaRootCauseTab from '../components/NcCapaRootCauseTab';
+import NcCapaActionPlanTab from '../components/NcCapaActionPlanTab';
+import NcCapaPlanReviewPanel from '../components/NcCapaPlanReviewPanel';
 
 const NcCapaDetail = () => {
   const { ncId } = useParams();
@@ -147,6 +150,44 @@ const NcCapaDetail = () => {
     } finally {
       setIsResubmitting(false);
     }
+  };
+
+  const handleRcaSaveDraft = async (rcaData) => {
+    await ncCapaService.saveRootCauseAnalysisDraft(record.id, rcaData);
+    useStore.getState().addNotification('RCA draft saved', 'success');
+    await loadData();
+  };
+
+  const handleRcaSubmit = async (rcaData) => {
+    await ncCapaService.submitRootCauseAnalysis(record.id, rcaData, currentUser.id);
+    useStore.getState().addNotification('Root Cause Analysis submitted', 'success');
+    await loadData();
+    setActiveTab('CAPA Action');
+  };
+
+  const handleCapaSaveDraft = async (planData) => {
+    await ncCapaService.saveCapaPlanDraft(record.id, planData);
+    useStore.getState().addNotification('CAPA Plan draft saved', 'success');
+    await loadData();
+  };
+
+  const handleCapaSubmit = async (planData) => {
+    await ncCapaService.submitCapaPlan(record.id, planData, currentUser.id);
+    useStore.getState().addNotification('CAPA Plan submitted for review', 'success');
+    await loadData();
+    setActiveTab('Overview');
+  };
+
+  const handlePlanApprove = async (reviewData) => {
+    await ncCapaService.approveCapaPlan(record.id, reviewData, currentUser.id);
+    useStore.getState().addNotification('CAPA Plan Approved', 'success');
+    await loadData();
+  };
+
+  const handlePlanReturn = async (reviewData) => {
+    await ncCapaService.returnCapaPlan(record.id, reviewData, currentUser.id);
+    useStore.getState().addNotification('CAPA Plan Returned for correction', 'warning');
+    await loadData();
   };
 
   const getStatusColor = (status) => {
@@ -404,9 +445,30 @@ const NcCapaDetail = () => {
     );
   };
 
-  const tabs = ['Overview', 'Detail', 'Screening', 'History', 'Audit'];
-  // Phase 11B shell tabs
-  const futureTabs = ['Root Cause', 'CAPA Action', 'Evidence', 'QA Verification'];
+  const renderPlanReviewPanel = () => {
+    if (record.status !== NC_STATUS.CAPA_PLAN_REVIEW) return null;
+    
+    // Check permission to review plan
+    if (!currentUser.permissions.includes('NC_CAPA_PLAN_REVIEW')) {
+      return (
+        <div className="p-4 bg-indigo-50 rounded-lg text-sm text-indigo-800 border border-indigo-200 mb-6">
+          This CAPA Plan is currently pending QA/QC review.
+        </div>
+      );
+    }
+
+    return (
+      <NcCapaPlanReviewPanel 
+        record={record} 
+        currentUser={currentUser} 
+        onApprove={handlePlanApprove} 
+        onReturn={handlePlanReturn} 
+      />
+    );
+  };
+
+  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'History', 'Audit'];
+  const futureTabs = ['Evidence', 'QA Verification'];
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24">
@@ -433,6 +495,7 @@ const NcCapaDetail = () => {
 
       {renderScreeningActionPanel()}
       {renderResubmitPanel()}
+      {renderPlanReviewPanel()}
 
       <div className="flex overflow-x-auto border-b border-zinc-200 mb-6 pb-[1px] scrollbar-hide">
         {tabs.map(tab => (
@@ -566,6 +629,26 @@ const NcCapaDetail = () => {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'Root Cause' && (
+          <NcCapaRootCauseTab 
+            record={record} 
+            currentUser={currentUser}
+            onSaveDraft={handleRcaSaveDraft}
+            onSubmit={handleRcaSubmit}
+            isReadOnly={record.status !== NC_STATUS.ASSIGNED && record.status !== NC_STATUS.ROOT_CAUSE_IN_PROGRESS}
+          />
+        )}
+
+        {activeTab === 'CAPA Action' && (
+          <NcCapaActionPlanTab 
+            record={record} 
+            currentUser={currentUser}
+            onSaveDraft={handleCapaSaveDraft}
+            onSubmit={handleCapaSubmit}
+            isReadOnly={record.status !== NC_STATUS.CAPA_PLAN_REQUIRED && record.status !== NC_STATUS.CAPA_PLAN_RETURNED}
+          />
         )}
 
         {activeTab === 'History' && (

@@ -4,6 +4,9 @@ import { ncCapaNumberService } from './NcCapaNumberService';
 import { ncCapaNotificationService } from './NcCapaNotificationService';
 import { ncCapaAuditService } from './NcCapaAuditService';
 import { ncCapaTaskService } from './NcCapaTaskService';
+import { ncCapaRcaService } from './NcCapaRcaService';
+import { ncCapaPlanService } from './NcCapaPlanService';
+import { ncCapaPlanReviewService } from './NcCapaPlanReviewService';
 
 class NcCapaService {
   constructor() {
@@ -16,8 +19,14 @@ class NcCapaService {
         ncCapaTaskService.createScreeningTask(nc);
       } else if (nc.status === NC_STATUS.RETURNED_FOR_INFO) {
         ncCapaTaskService.createReturnedInfoTask(nc);
-      } else if (nc.status === NC_STATUS.ASSIGNED) {
+      } else if (nc.status === NC_STATUS.ASSIGNED || nc.status === NC_STATUS.ROOT_CAUSE_IN_PROGRESS) {
         ncCapaTaskService.createOwnerAssignmentTask(nc);
+      } else if (nc.status === NC_STATUS.CAPA_PLAN_REQUIRED || nc.status === NC_STATUS.CAPA_PLAN_RETURNED) {
+        ncCapaTaskService.createCapaPlanTask(nc);
+      } else if (nc.status === NC_STATUS.CAPA_PLAN_REVIEW) {
+        ncCapaTaskService.createPlanReviewTask(nc);
+      } else if (nc.status === NC_STATUS.ACTION_IN_PROGRESS) {
+        ncCapaTaskService.createActionExecutionShellTasks(nc);
       } else if (nc.status === NC_STATUS.QA_VERIFICATION) {
         ncCapaTaskService.createQaVerificationTask(nc);
       }
@@ -101,6 +110,51 @@ class NcCapaService {
     ncCapaNotificationService.notifyNCScreening(updated, 'U005');
 
     return updated;
+  }
+
+  // Orchestrate RCA
+  async saveRootCauseAnalysisDraft(ncId, rcaData) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaRcaService.saveDraft(nc, rcaData);
+    return this.updateNc(updated);
+  }
+
+  async submitRootCauseAnalysis(ncId, rcaData, actorId) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaRcaService.submit(nc, rcaData, actorId);
+    return this.updateNc(updated);
+  }
+
+  // Orchestrate CAPA Plan
+  async saveCapaPlanDraft(ncId, planData) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaPlanService.saveDraft(nc, planData);
+    return this.updateNc(updated);
+  }
+
+  async submitCapaPlan(ncId, planData, actorId) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaPlanService.submit(nc, planData, actorId);
+    return this.updateNc(updated);
+  }
+
+  // Orchestrate CAPA Plan Review
+  async approveCapaPlan(ncId, reviewData, actorId) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaPlanReviewService.approve(nc, reviewData, actorId);
+    return this.updateNc(updated);
+  }
+
+  async returnCapaPlan(ncId, reviewData, actorId) {
+    const nc = await this.getById(ncId);
+    if (!nc) throw new Error("NC not found");
+    const updated = ncCapaPlanReviewService.returnForCorrection(nc, reviewData, actorId);
+    return this.updateNc(updated);
   }
 
   // Mock State Reset for testing

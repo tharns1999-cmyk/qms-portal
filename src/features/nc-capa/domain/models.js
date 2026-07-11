@@ -6,6 +6,10 @@ export const NC_STATUS = {
   REJECTED_NOT_NC: 'REJECTED_NOT_NC',
   ASSIGNED: 'ASSIGNED',
   ROOT_CAUSE_IN_PROGRESS: 'ROOT_CAUSE_IN_PROGRESS',
+  CAPA_PLAN_REQUIRED: 'CAPA_PLAN_REQUIRED',
+  CAPA_PLAN_REVIEW: 'CAPA_PLAN_REVIEW',
+  CAPA_PLAN_RETURNED: 'CAPA_PLAN_RETURNED',
+  ACTION_IN_PROGRESS: 'ACTION_IN_PROGRESS',
   QA_VERIFICATION: 'QA_VERIFICATION',
   OPEN: 'OPEN',
   IN_PROGRESS: 'IN_PROGRESS',
@@ -37,8 +41,60 @@ export const NC_PERMISSIONS = {
   CREATE: 'NC_CAPA_CREATE',
   SCREEN: 'NC_CAPA_SCREEN',
   ASSIGN_OWNER: 'NC_CAPA_ASSIGN_OWNER',
+  OWNER_ACTION: 'NC_CAPA_OWNER_ACTION',
+  RCA_COMPLETE: 'NC_CAPA_RCA_COMPLETE',
+  PLAN_CREATE: 'NC_CAPA_PLAN_CREATE',
+  PLAN_REVIEW: 'NC_CAPA_PLAN_REVIEW',
   ADMIN: 'NC_CAPA_ADMIN',
   AUDIT_VIEW: 'NC_CAPA_AUDIT_VIEW'
+};
+
+export const RootCauseMethod = {
+  FIVE_WHY: 'FIVE_WHY',
+  CAUSE_CATEGORY: 'CAUSE_CATEGORY',
+  FIVE_WHY_AND_CATEGORY: 'FIVE_WHY_AND_CATEGORY'
+};
+
+export const CauseCategory = {
+  MAN: 'MAN',
+  MACHINE: 'MACHINE',
+  MATERIAL: 'MATERIAL',
+  METHOD: 'METHOD',
+  MEASUREMENT: 'MEASUREMENT',
+  ENVIRONMENT: 'ENVIRONMENT',
+  MANAGEMENT: 'MANAGEMENT'
+};
+
+export const CAPAActionType = {
+  CORRECTION: 'CORRECTION',
+  CORRECTIVE_ACTION: 'CORRECTIVE_ACTION',
+  PREVENTIVE_ACTION: 'PREVENTIVE_ACTION'
+};
+
+export const CAPAPlanReviewStatus = {
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  RETURNED_FOR_CORRECTION: 'RETURNED_FOR_CORRECTION',
+  APPROVED: 'APPROVED'
+};
+
+export const CAPAActionStatus = {
+  PLANNED: 'PLANNED',
+  PENDING_EXECUTION: 'PENDING_EXECUTION'
+};
+
+export const DocumentImpact = {
+  NO_DOCUMENT_IMPACT: 'NO_DOCUMENT_IMPACT',
+  NEW_DOCUMENT_REQUIRED: 'NEW_DOCUMENT_REQUIRED',
+  DOCUMENT_REVISION_REQUIRED: 'DOCUMENT_REVISION_REQUIRED',
+  DOCUMENT_OBSOLETE_REQUIRED: 'DOCUMENT_OBSOLETE_REQUIRED',
+  PERIODIC_REVIEW_REQUIRED: 'PERIODIC_REVIEW_REQUIRED'
+};
+
+export const TrainingImpact = {
+  NO_TRAINING_IMPACT: 'NO_TRAINING_IMPACT',
+  TRAINING_REQUIRED: 'TRAINING_REQUIRED',
+  AWARENESS_REQUIRED: 'AWARENESS_REQUIRED'
 };
 
 export const EMPTY_NC_DRAFT = {
@@ -78,5 +134,28 @@ export const EMPTY_NC_DRAFT = {
   updatedAt: null,
   submittedAt: null,
   returnedAt: null,
-  rejectedAt: null
+  rejectedAt: null,
+  rootCauseAnalysis: {
+    method: '',
+    problemStatement: '',
+    why1: '',
+    why2: '',
+    why3: '',
+    why4: '',
+    why5: '',
+    causeCategories: [],
+    categoryExplanation: '',
+    rootCauseSummary: '',
+    createdByUserId: '',
+    submittedAt: null
+  },
+  capaActionPlan: {
+    actions: [],
+    planSummary: '',
+    documentImpactAssessment: '',
+    trainingImpactAssessment: '',
+    reviewStatus: CAPAPlanReviewStatus.DRAFT,
+    reviewComment: '',
+    submittedAt: null
+  }
 };

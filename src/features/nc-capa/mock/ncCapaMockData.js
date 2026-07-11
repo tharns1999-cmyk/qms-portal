@@ -1,4 +1,4 @@
-import { NC_STATUS, NC_SEVERITY, NCScreeningDecision } from '../domain/models';
+import { NC_STATUS, NC_SEVERITY, NCScreeningDecision, CAPAPlanReviewStatus } from '../domain/models';
 
 export const mockNcRecords = [
   {
@@ -8,7 +8,7 @@ export const mockNcRecords = [
     description: 'A significant defect was observed during final inspection of Batch A.',
     sourceType: 'INSPECTION',
     detectedDate: '2023-10-01',
-    departmentId: 'D02', // PD
+    departmentId: 'PD',
     reportedByUserId: 'U002',
     status: NC_STATUS.SCREENING,
     severity: NC_SEVERITY.HIGH,
@@ -27,7 +27,7 @@ export const mockNcRecords = [
     description: 'The required QA checklist is missing from the recent audit package.',
     sourceType: 'INTERNAL_AUDIT',
     detectedDate: '2023-10-05',
-    departmentId: 'D01', // QA
+    departmentId: 'QA',
     reportedByUserId: 'U003',
     status: NC_STATUS.RETURNED_FOR_INFO,
     severity: NC_SEVERITY.MEDIUM,
@@ -44,15 +44,209 @@ export const mockNcRecords = [
     description: 'Operator observed bypassing safety guards on Machine 4.',
     sourceType: 'INSPECTION',
     detectedDate: '2023-10-08',
-    departmentId: 'D02', // PD
+    departmentId: 'PD',
     reportedByUserId: 'U004',
     status: NC_STATUS.ASSIGNED,
     severity: NC_SEVERITY.CRITICAL,
     capaRequired: 'CAPA_REQUIRED',
     assignedOwnerUserId: 'U002',
-    assignedDepartmentId: 'D02',
+    assignedDepartmentId: 'PD',
     screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
     createdAt: '2023-10-08T14:15:00Z',
     submittedAt: '2023-10-08T14:20:00Z'
+  },
+  {
+    id: 'nc-4',
+    ncNumber: 'NC-2023-0004',
+    title: 'Calibration Out of Tolerance',
+    description: 'Scale 3 in packing failed daily verification.',
+    sourceType: 'INSPECTION',
+    detectedDate: '2023-10-10',
+    departmentId: 'QA',
+    reportedByUserId: 'U005',
+    status: NC_STATUS.ROOT_CAUSE_IN_PROGRESS,
+    severity: NC_SEVERITY.MEDIUM,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U005',
+    assignedDepartmentId: 'QA',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-10T10:15:00Z',
+    submittedAt: '2023-10-10T10:20:00Z',
+    rootCauseAnalysis: {
+      method: 'FIVE_WHY',
+      problemStatement: 'Scale 3 reads 10g lower than standard.',
+      why1: 'Load cell drifted',
+      why2: 'Water entered the casing',
+      why3: '',
+      why4: '',
+      why5: '',
+      causeCategories: [],
+      categoryExplanation: '',
+      rootCauseSummary: '',
+      createdByUserId: 'U005',
+      submittedAt: null
+    }
+  },
+  {
+    id: 'nc-5',
+    ncNumber: 'NC-2023-0005',
+    title: 'Wrong Packaging Material Used',
+    description: 'Line 2 used export packaging for domestic run.',
+    sourceType: 'COMPLAINT',
+    detectedDate: '2023-10-12',
+    departmentId: 'PD',
+    reportedByUserId: 'U003',
+    status: NC_STATUS.CAPA_PLAN_REQUIRED,
+    severity: NC_SEVERITY.HIGH,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U002',
+    assignedDepartmentId: 'PD',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-12T08:15:00Z',
+    submittedAt: '2023-10-12T08:20:00Z',
+    rootCauseAnalysis: {
+      method: 'CAUSE_CATEGORY',
+      problemStatement: 'Wrong packaging applied.',
+      why1: '',
+      why2: '',
+      why3: '',
+      why4: '',
+      why5: '',
+      causeCategories: ['MAN', 'METHOD'],
+      categoryExplanation: 'Operator didn\'t check the job ticket. Job ticket was printed ambiguously.',
+      rootCauseSummary: 'Operator error due to ambiguous job ticket instructions.',
+      createdByUserId: 'U002',
+      submittedAt: '2023-10-13T09:00:00Z'
+    }
+  },
+  {
+    id: 'nc-6',
+    ncNumber: 'NC-2023-0006',
+    title: 'Temperature Excursion in Storage',
+    description: 'Storage area B reached 30C for 4 hours.',
+    sourceType: 'INSPECTION',
+    detectedDate: '2023-10-15',
+    departmentId: 'EN',
+    reportedByUserId: 'U006',
+    status: NC_STATUS.CAPA_PLAN_REVIEW,
+    severity: NC_SEVERITY.CRITICAL,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U006',
+    assignedDepartmentId: 'EN',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-15T08:15:00Z',
+    submittedAt: '2023-10-15T08:20:00Z',
+    rootCauseAnalysis: {
+      method: 'FIVE_WHY_AND_CATEGORY',
+      problemStatement: 'Temp reached 30C.',
+      why1: 'Compressor failed',
+      why2: 'No PM done',
+      why3: 'PM schedule missed',
+      why4: 'Lack of manpower',
+      why5: 'Poor resource allocation',
+      causeCategories: ['MACHINE', 'MANAGEMENT'],
+      categoryExplanation: 'Machine failure due to poor management resource allocation.',
+      rootCauseSummary: 'Compressor failure due to missed PM from poor resource allocation.',
+      createdByUserId: 'U006',
+      submittedAt: '2023-10-16T09:00:00Z'
+    },
+    capaActionPlan: {
+      actions: [
+        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Repair compressor', responsibleUserId: 'U006', departmentId: 'EN', dueDate: '2023-10-20', evidenceRequired: true, priority: 'HIGH', acceptanceCriteria: 'Temp normal' }
+      ],
+      planSummary: 'Repair and update PM schedule',
+      documentImpactAssessment: 'NO_DOCUMENT_IMPACT',
+      trainingImpactAssessment: 'NO_TRAINING_IMPACT',
+      reviewStatus: CAPAPlanReviewStatus.SUBMITTED,
+      reviewComment: '',
+      submittedAt: '2023-10-17T10:00:00Z'
+    }
+  },
+  {
+    id: 'nc-7',
+    ncNumber: 'NC-2023-0007',
+    title: 'Incorrect Label Info',
+    description: 'Allergen warning missing.',
+    sourceType: 'INSPECTION',
+    detectedDate: '2023-10-18',
+    departmentId: 'QA',
+    reportedByUserId: 'U005',
+    status: NC_STATUS.CAPA_PLAN_RETURNED,
+    severity: NC_SEVERITY.CRITICAL,
+    foodSafetyImpact: true,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U005',
+    assignedDepartmentId: 'QA',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-18T08:15:00Z',
+    submittedAt: '2023-10-18T08:20:00Z',
+    rootCauseAnalysis: {
+      method: 'FIVE_WHY',
+      problemStatement: 'Allergen missing.',
+      why1: 'Old template used',
+      why2: 'Template not updated in system',
+      why3: 'Process failure',
+      why4: '-',
+      why5: '-',
+      causeCategories: [],
+      categoryExplanation: '',
+      rootCauseSummary: 'Old template used due to process failure.',
+      createdByUserId: 'U005',
+      submittedAt: '2023-10-19T09:00:00Z'
+    },
+    capaActionPlan: {
+      actions: [
+        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Update template', responsibleUserId: 'U005', departmentId: 'QA', dueDate: '2023-10-20', evidenceRequired: true, priority: 'HIGH', acceptanceCriteria: 'New template active' }
+      ],
+      planSummary: 'Update the template',
+      documentImpactAssessment: 'NO_DOCUMENT_IMPACT',
+      trainingImpactAssessment: 'NO_TRAINING_IMPACT',
+      reviewStatus: CAPAPlanReviewStatus.RETURNED_FOR_CORRECTION,
+      reviewComment: 'Please add a preventive action since this is a food safety critical issue.',
+      submittedAt: '2023-10-19T10:00:00Z'
+    }
+  },
+  {
+    id: 'nc-8',
+    ncNumber: 'NC-2023-0008',
+    title: 'Action In Progress Shell',
+    description: 'Testing action in progress state.',
+    sourceType: 'INSPECTION',
+    detectedDate: '2023-10-20',
+    departmentId: 'PD',
+    reportedByUserId: 'U002',
+    status: NC_STATUS.ACTION_IN_PROGRESS,
+    severity: NC_SEVERITY.LOW,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U002',
+    assignedDepartmentId: 'PD',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-20T08:15:00Z',
+    submittedAt: '2023-10-20T08:20:00Z',
+    rootCauseAnalysis: {
+      method: 'FIVE_WHY',
+      problemStatement: 'Problem',
+      why1: 'Why1',
+      why2: 'Why2',
+      why3: 'Why3',
+      why4: 'Why4',
+      why5: 'Why5',
+      causeCategories: [],
+      categoryExplanation: '',
+      rootCauseSummary: 'Summary',
+      createdByUserId: 'U002',
+      submittedAt: '2023-10-21T09:00:00Z'
+    },
+    capaActionPlan: {
+      actions: [
+        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Fix', responsibleUserId: 'U002', departmentId: 'PD', dueDate: '2023-10-30', evidenceRequired: true, priority: 'LOW', acceptanceCriteria: 'Fixed', status: 'PENDING_EXECUTION' }
+      ],
+      planSummary: 'Fix it',
+      documentImpactAssessment: 'NO_DOCUMENT_IMPACT',
+      trainingImpactAssessment: 'NO_TRAINING_IMPACT',
+      reviewStatus: CAPAPlanReviewStatus.APPROVED,
+      reviewComment: 'Looks good.',
+      submittedAt: '2023-10-21T10:00:00Z'
+    }
   }
 ];

@@ -8,12 +8,10 @@ class NcCapaTaskService {
   async getMyTasks(userId, permissions = []) {
     if (!userId) return [];
     
-    const hasScreeningPerm = permissions.includes('NC_CAPA_SCREEN');
-    
     const myTasks = this.tasks.filter(t => {
       if (t.status !== 'PENDING') return false;
       if (t.assignedUserId === userId) return true;
-      if (t.role === 'NC_CAPA_SCREEN' && hasScreeningPerm) return true;
+      if (t.role && permissions.includes(t.role)) return true;
       return false;
     });
     
@@ -59,19 +57,78 @@ class NcCapaTaskService {
   createOwnerAssignmentTask(nc) {
     this._closeTasksForNc(nc.id);
     this.tasks.push({
-      id: `TASK-OWN-${Date.now()}`,
+      id: `TASK-RCA-${Date.now()}`,
       ncId: nc.id,
       ncNumber: nc.ncNumber,
-      title: `Owner Assigned (RCA Needed): ${nc.title}`,
+      title: `Root Cause Analysis Needed: ${nc.title}`,
       severity: nc.severity,
       departmentId: nc.assignedDepartmentId,
       dueDate: nc.updatedAt,
       status: 'PENDING',
       assignedUserId: nc.assignedOwnerUserId,
-      role: null,
+      role: 'NC_CAPA_OWNER_ACTION',
       actionLink: `/nc-capa/${nc.id}`
     });
-    console.log(`[TaskService] Created NC_OWNER_ASSIGNMENT_TASK for ${nc.ncNumber}`);
+    console.log(`[TaskService] Created NC_OWNER_RCA_TASK for ${nc.ncNumber}`);
+  }
+
+  createCapaPlanTask(nc) {
+    this._closeTasksForNc(nc.id);
+    this.tasks.push({
+      id: `TASK-CPA-${Date.now()}`,
+      ncId: nc.id,
+      ncNumber: nc.ncNumber,
+      title: `CAPA Action Plan Needed: ${nc.title}`,
+      severity: nc.severity,
+      departmentId: nc.assignedDepartmentId,
+      dueDate: nc.updatedAt, // Should be +N days in real app
+      status: 'PENDING',
+      assignedUserId: nc.assignedOwnerUserId,
+      role: 'NC_CAPA_PLAN_CREATE',
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_CAPA_PLAN_TASK for ${nc.ncNumber}`);
+  }
+
+  createPlanReviewTask(nc) {
+    this._closeTasksForNc(nc.id);
+    this.tasks.push({
+      id: `TASK-CPR-${Date.now()}`,
+      ncId: nc.id,
+      ncNumber: nc.ncNumber,
+      title: `CAPA Plan Review: ${nc.title}`,
+      severity: nc.severity,
+      departmentId: nc.assignedDepartmentId,
+      dueDate: nc.updatedAt,
+      status: 'PENDING',
+      assignedUserId: null,
+      role: 'NC_CAPA_PLAN_REVIEW',
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_CAPA_PLAN_REVIEW_TASK for ${nc.ncNumber}`);
+  }
+
+  createActionExecutionShellTasks(nc) {
+    this._closeTasksForNc(nc.id);
+    
+    if (nc.capaActionPlan && nc.capaActionPlan.actions) {
+      nc.capaActionPlan.actions.forEach((action, idx) => {
+        this.tasks.push({
+          id: `TASK-EXE-${Date.now()}-${idx}`,
+          ncId: nc.id,
+          ncNumber: nc.ncNumber,
+          title: `Action Execution: ${action.description.substring(0, 30)}...`,
+          severity: nc.severity,
+          departmentId: action.departmentId,
+          dueDate: action.dueDate,
+          status: 'PENDING',
+          assignedUserId: action.responsibleUserId,
+          role: null,
+          actionLink: `/nc-capa/${nc.id}`
+        });
+      });
+      console.log(`[TaskService] Created ${nc.capaActionPlan.actions.length} NC_ACTION_EXECUTION_SHELL_TASK for ${nc.ncNumber}`);
+    }
   }
 
   createQaVerificationTask(nc) {

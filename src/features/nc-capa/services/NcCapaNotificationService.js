@@ -56,6 +56,48 @@ class NcCapaNotificationService {
       `/nc-capa/${nc.id}`
     );
   }
+
+  notifyCapaPlanRequired(nc) {
+    if (nc.assignedOwnerUserId) {
+      this.notifyUser(
+        nc.assignedOwnerUserId,
+        'CAPA Plan Required',
+        `Root Cause Analysis for NC ${nc.ncNumber} submitted. Please create the CAPA Plan.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyCapaPlanSubmitted(nc, qaUserId) {
+    this.notifyUser(
+      qaUserId,
+      'CAPA Plan Submitted',
+      `CAPA Plan for NC ${nc.ncNumber} has been submitted for QA/QC review.`,
+      `/nc-capa/${nc.id}`
+    );
+  }
+
+  notifyCapaPlanReturned(nc) {
+    if (nc.assignedOwnerUserId) {
+      this.notifyUser(
+        nc.assignedOwnerUserId,
+        'CAPA Plan Returned',
+        `CAPA Plan for NC ${nc.ncNumber} was returned by QA/QC for correction.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyCapaPlanApproved(nc) {
+    if (nc.assignedOwnerUserId) {
+      this.notifyUser(
+        nc.assignedOwnerUserId,
+        'CAPA Plan Approved',
+        `CAPA Plan for NC ${nc.ncNumber} was approved. Please begin execution.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
 }
 
 export const ncCapaNotificationService = new NcCapaNotificationService();

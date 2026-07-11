@@ -18,11 +18,11 @@ describe('NC/CAPA Integration and Services', () => {
 
   it('KPI counts are deterministic based on mock data', async () => {
     const kpis = await ncCapaDashboardService.getKpis();
-    // In Phase 11B mock data, we have 1 SCREENING, 1 RETURNED, 1 ASSIGNED
+    // In Phase 11C mock data, we have 8 records, all open
     // getKpis counts everything !== CLOSED
-    expect(kpis.total).toBe(3);
-    expect(kpis.open).toBe(3); 
-    expect(kpis.critical).toBe(1);
+    expect(kpis.total).toBe(8);
+    expect(kpis.open).toBe(8); 
+    expect(kpis.critical).toBe(3);
     expect(kpis.overdue).toBe(0); // No due dates in Phase 11B mock data
   });
 

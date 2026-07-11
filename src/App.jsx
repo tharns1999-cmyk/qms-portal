@@ -60,6 +60,14 @@ const NcCapaNew = lazy(() => import('./features/nc-capa').then(m => ({ default: 
 const NcCapaMyTasks = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaMyTasks })));
 const NcCapaDetail = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaDetail })));
 
+// Quality Event Placeholders
+const CapaPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.CapaPlaceholder })));
+const NcrPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.NcrPlaceholder })));
+const ComplaintPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ComplaintPlaceholder })));
+const ReportsPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ReportsPlaceholder })));
+const MasterDataPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.MasterDataPlaceholder })));
+
+
 // --- Helper Components ---
 
 const SuspenseLoader = () => (
@@ -168,12 +176,27 @@ function App() {
           <Route path="periodic-reviews/my-tasks" element={<Navigate to="/dcc/periodic-reviews/my-tasks" replace />} />
           <Route path="periodic-reviews/:reviewId" element={<AliasRedirect to="/dcc/periodic-reviews/:reviewId" />} />
 
-          {/* NC/CAPA Routes */}
+          {/* NC/CAPA Routes (Kept for backwards compatibility) */}
           <Route path="nc-capa" element={withSuspense(NcCapaDashboard)} />
           <Route path="nc-capa/list" element={withSuspense(NcCapaList)} />
           <Route path="nc-capa/new" element={withSuspense(NcCapaNew)} />
           <Route path="nc-capa/my-tasks" element={withSuspense(NcCapaMyTasks)} />
           <Route path="nc-capa/:ncId" element={withSuspense(NcCapaDetail)} />
+
+          {/* Quality Event Routes (Phase 12 Aliases & Placeholders) */}
+          <Route path="quality-event">
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={withSuspense(NcCapaDashboard)} />
+            <Route path="my-tasks" element={withSuspense(NcCapaMyTasks)} />
+            <Route path="capa" element={withSuspense(CapaPlaceholder)} />
+            <Route path="ncr" element={withSuspense(NcrPlaceholder)} />
+            <Route path="complaint" element={withSuspense(ComplaintPlaceholder)} />
+            <Route path="reports" element={withSuspense(ReportsPlaceholder)} />
+            <Route path="master-data" element={withSuspense(MasterDataPlaceholder)} />
+            <Route path="list" element={withSuspense(NcCapaList)} />
+            <Route path="new" element={withSuspense(NcCapaNew)} />
+            <Route path=":ncId" element={withSuspense(NcCapaDetail)} />
+          </Route>
 
           {/* Future Modules */}
           <Route path="audit" element={withSuspense(() => <ComingSoonModule moduleName="Internal Audit" />)} />

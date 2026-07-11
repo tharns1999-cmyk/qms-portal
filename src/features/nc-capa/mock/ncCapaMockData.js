@@ -239,7 +239,8 @@ export const mockNcRecords = [
     },
     capaActionPlan: {
       actions: [
-        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Fix', responsibleUserId: 'U002', departmentId: 'PD', dueDate: '2023-10-30', evidenceRequired: true, priority: 'LOW', acceptanceCriteria: 'Fixed', status: 'PENDING_EXECUTION' }
+        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Fix main issue', responsibleUserId: 'U002', departmentId: 'PD', dueDate: '2023-10-30', evidenceRequired: true, priority: 'LOW', acceptanceCriteria: 'Fixed', status: 'IN_PROGRESS', progressPercent: 50 },
+        { id: 'a2', type: 'PREVENTIVE_ACTION', description: 'Update documentation', responsibleUserId: 'U005', departmentId: 'QA', dueDate: '2023-10-30', evidenceRequired: true, priority: 'MEDIUM', acceptanceCriteria: 'Doc updated', status: 'EVIDENCE_SUBMITTED', progressPercent: 100, evidenceMetadata: { id: 'EVID-1', filename: 'doc.pdf', mimeType: 'application/pdf', sizeBytes: 102400, uploadedAt: '2023-10-22T10:00:00Z', validationStatus: 'VALID_METADATA' } }
       ],
       planSummary: 'Fix it',
       documentImpactAssessment: 'NO_DOCUMENT_IMPACT',

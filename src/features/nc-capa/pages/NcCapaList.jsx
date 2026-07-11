@@ -12,14 +12,21 @@ const NcCapaList = () => {
   const { t } = useNcCapaTranslation();
   
   const [records, setRecords] = useState([]);
+  const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => {
     ncCapaService.getList().then(data => {
-      // Filter list based on permissions
-      const visibleRecords = data.filter(nc => !ncCapaAccessService.isRestricted(nc, currentUser));
+      let visibleRecords = data.filter(nc => !ncCapaAccessService.isRestricted(nc, currentUser));
+      
+      if (filterStatus === 'EXECUTION') {
+        visibleRecords = visibleRecords.filter(nc => nc.status === 'ACTION_IN_PROGRESS');
+      } else if (filterStatus === 'VERIFICATION') {
+        visibleRecords = visibleRecords.filter(nc => nc.status === 'ACTION_IN_PROGRESS' || nc.status === 'EFFECTIVENESS_CHECK'); // Some might be in verification
+      }
+      
       setRecords(visibleRecords);
     });
-  }, [currentUser]);
+  }, [currentUser, filterStatus]);
 
   if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) {
     return (
@@ -44,6 +51,21 @@ const NcCapaList = () => {
             {t('dashboard', 'createNc')}
           </button>
         )}
+      </div>
+
+      <div className="mb-4 flex gap-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+        <div>
+          <label className="block text-xs font-medium text-zinc-500 mb-1 uppercase tracking-wider">Status Filter</label>
+          <select 
+            className="w-48 p-2 border border-zinc-300 rounded text-sm bg-zinc-50"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="EXECUTION">Action In Progress</option>
+            <option value="VERIFICATION">Pending Verification</option>
+          </select>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">

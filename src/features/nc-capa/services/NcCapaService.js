@@ -7,6 +7,8 @@ import { ncCapaTaskService } from './NcCapaTaskService';
 import { ncCapaRcaService } from './NcCapaRcaService';
 import { ncCapaPlanService } from './NcCapaPlanService';
 import { ncCapaPlanReviewService } from './NcCapaPlanReviewService';
+import { ncCapaActionExecutionService } from './NcCapaActionExecutionService';
+import { ncCapaActionVerificationService } from './NcCapaActionVerificationService';
 
 class NcCapaService {
   constructor() {
@@ -154,6 +156,23 @@ class NcCapaService {
     const nc = await this.getById(ncId);
     if (!nc) throw new Error("NC not found");
     const updated = ncCapaPlanReviewService.returnForCorrection(nc, reviewData, actorId);
+    return this.updateNc(updated);
+  }
+
+  // Orchestrate Action Execution
+  async updateActionProgress(ncId, actionId, updateData, actorId) {
+    const updated = await ncCapaActionExecutionService.updateActionProgress(ncId, actionId, updateData, actorId);
+    return this.updateNc(updated);
+  }
+
+  async submitActionForVerification(ncId, actionId, actorId) {
+    const updated = await ncCapaActionExecutionService.submitActionForVerification(ncId, actionId, actorId);
+    return this.updateNc(updated);
+  }
+
+  // Orchestrate QA Verification
+  async verifyAction(ncId, actionId, verificationData, actorId) {
+    const updated = await ncCapaActionVerificationService.verifyAction(ncId, actionId, verificationData, actorId);
     return this.updateNc(updated);
   }
 

@@ -269,6 +269,39 @@ const NcCapaActionPlanTab = ({ record, onSaveDraft, onSubmit, isReadOnly }) => {
                     disabled={isReadOnly}
                   />
                 </div>
+
+                <div className="mt-4 flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`evidence-${act.id}`}
+                    className="mr-2"
+                    checked={act.evidenceRequired}
+                    onChange={e => handleUpdateAction(act.id, 'evidenceRequired', e.target.checked)}
+                    disabled={isReadOnly}
+                  />
+                  <label htmlFor={`evidence-${act.id}`} className="text-sm font-medium text-zinc-700">
+                    Evidence Required for Verification
+                  </label>
+                </div>
+
+                {isReadOnly && act.status && (
+                  <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm">
+                    <div>
+                      <span className="text-zinc-500 mr-2">Status:</span>
+                      <span className={`font-semibold ${
+                        act.status === 'VERIFIED' ? 'text-green-600' :
+                        act.status === 'FAILED_VERIFICATION' ? 'text-red-600' :
+                        act.status === 'IN_PROGRESS' ? 'text-blue-600' :
+                        act.status === 'EVIDENCE_SUBMITTED' ? 'text-purple-600' :
+                        'text-zinc-700'
+                      }`}>{act.status.replace(/_/g, ' ')}</span>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500 mr-2">Progress:</span>
+                      <span className="font-semibold">{act.progressPercent || 0}%</span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

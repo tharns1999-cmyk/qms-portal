@@ -49,7 +49,7 @@ const NcCapaDashboard = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/nc-capa/list')}>
           <h3 className="text-zinc-500 font-medium mb-2">{t('dashboard', 'openNc')}</h3>
           <p className="text-3xl font-bold text-zinc-900">{kpis ? kpis.open : '-'}</p>
@@ -61,6 +61,19 @@ const NcCapaDashboard = () => {
         <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
           <h3 className="text-zinc-500 font-medium mb-2">Pending Plan</h3>
           <p className="text-3xl font-bold text-indigo-600">{kpis ? kpis.pendingPlan : '-'}</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+          <h3 className="text-zinc-500 font-medium mb-2">In Execution</h3>
+          <p className="text-3xl font-bold text-cyan-600">{kpis ? kpis.execution : '-'}</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+          <h3 className="text-zinc-500 font-medium mb-2">Pending QA Verify</h3>
+          <p className="text-3xl font-bold text-purple-600">{kpis ? kpis.pendingVerification : '-'}</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+          <h3 className="text-zinc-500 font-medium mb-2">Pending Effect. Check</h3>
+          <p className="text-3xl font-bold text-teal-600">{kpis ? kpis.effectiveness : '-'}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
           <h3 className="text-zinc-500 font-medium mb-2">{t('dashboard', 'overdue')}</h3>

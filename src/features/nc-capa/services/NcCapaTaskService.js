@@ -109,26 +109,94 @@ class NcCapaTaskService {
   }
 
   createActionExecutionShellTasks(nc) {
+    if (!nc.capaActionPlan || !nc.capaActionPlan.actions) return;
+    
+    // Close any previous overarching tasks
     this._closeTasksForNc(nc.id);
     
-    if (nc.capaActionPlan && nc.capaActionPlan.actions) {
-      nc.capaActionPlan.actions.forEach((action, idx) => {
-        this.tasks.push({
-          id: `TASK-EXE-${Date.now()}-${idx}`,
-          ncId: nc.id,
-          ncNumber: nc.ncNumber,
-          title: `Action Execution: ${action.description.substring(0, 30)}...`,
-          severity: nc.severity,
-          departmentId: action.departmentId,
-          dueDate: action.dueDate,
-          status: 'PENDING',
-          assignedUserId: action.responsibleUserId,
-          role: null,
-          actionLink: `/nc-capa/${nc.id}`
-        });
-      });
-      console.log(`[TaskService] Created ${nc.capaActionPlan.actions.length} NC_ACTION_EXECUTION_SHELL_TASK for ${nc.ncNumber}`);
-    }
+    // Create tasks for each action that is in progress or pending
+    nc.capaActionPlan.actions.forEach(action => {
+      if (['PENDING_EXECUTION', 'IN_PROGRESS', 'RETURNED_FOR_CORRECTION'].includes(action.status)) {
+        this.createActionExecutionTask(nc, action);
+      } else if (action.status === 'EVIDENCE_SUBMITTED') {
+        this.createQaVerificationTaskForAction(nc, action);
+      }
+    });
+  }
+
+  createActionExecutionTask(nc, action) {
+    this._closeTasksForAction(nc.id, action.id);
+    this.tasks.push({
+      id: `TASK-EXE-${Date.now()}-${action.id}`,
+      ncId: nc.id,
+      actionId: action.id,
+      ncNumber: nc.ncNumber,
+      title: `Action Execution: ${action.description.substring(0, 30)}...`,
+      severity: nc.severity,
+      departmentId: action.departmentId,
+      dueDate: action.dueDate,
+      status: 'PENDING',
+      assignedUserId: action.responsibleUserId,
+      role: null,
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_ACTION_EXECUTION_TASK for action ${action.id} on ${nc.ncNumber}`);
+  }
+
+  createQaVerificationTaskForAction(nc, action) {
+    this._closeTasksForAction(nc.id, action.id);
+    this.tasks.push({
+      id: `TASK-QAV-${Date.now()}-${action.id}`,
+      ncId: nc.id,
+      actionId: action.id,
+      ncNumber: nc.ncNumber,
+      title: `QA Verification Needed: ${action.description.substring(0, 30)}...`,
+      severity: nc.severity,
+      departmentId: nc.departmentId,
+      dueDate: nc.updatedAt,
+      status: 'PENDING',
+      assignedUserId: null,
+      role: 'NC_CAPA_VERIFY',
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_QA_VERIFICATION_TASK for action ${action.id} on ${nc.ncNumber}`);
+  }
+
+  createActionReturnedTask(nc, action) {
+    this._closeTasksForAction(nc.id, action.id);
+    this.tasks.push({
+      id: `TASK-RET-ACT-${Date.now()}-${action.id}`,
+      ncId: nc.id,
+      actionId: action.id,
+      ncNumber: nc.ncNumber,
+      title: `Action Returned: ${action.description.substring(0, 30)}...`,
+      severity: nc.severity,
+      departmentId: action.departmentId,
+      dueDate: nc.updatedAt, // Should probably be original due date or new due date
+      status: 'PENDING',
+      assignedUserId: action.responsibleUserId,
+      role: null,
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_ACTION_RETURNED_TASK for action ${action.id} on ${nc.ncNumber}`);
+  }
+
+  createEffectivenessCheckShellTask(nc) {
+    this._closeTasksForNc(nc.id);
+    this.tasks.push({
+      id: `TASK-EFF-${Date.now()}`,
+      ncId: nc.id,
+      ncNumber: nc.ncNumber,
+      title: `Effectiveness Check: ${nc.title}`,
+      severity: nc.severity,
+      departmentId: nc.departmentId,
+      dueDate: nc.updatedAt,
+      status: 'PENDING',
+      assignedUserId: null,
+      role: 'NC_CAPA_VERIFY', // Assuming QA does this
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_EFFECTIVENESS_CHECK_SHELL_TASK for ${nc.ncNumber}`);
   }
 
   createQaVerificationTask(nc) {
@@ -156,6 +224,14 @@ class NcCapaTaskService {
   _closeTasksForNc(ncId) {
     this.tasks.forEach(t => {
       if (t.ncId === ncId && t.status === 'PENDING') {
+        t.status = 'COMPLETED';
+      }
+    });
+  }
+
+  _closeTasksForAction(ncId, actionId) {
+    this.tasks.forEach(t => {
+      if (t.ncId === ncId && t.actionId === actionId && t.status === 'PENDING') {
         t.status = 'COMPLETED';
       }
     });

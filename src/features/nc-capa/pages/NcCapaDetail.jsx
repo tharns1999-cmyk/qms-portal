@@ -11,6 +11,8 @@ import { CheckCircle, History, ShieldAlert, User, Search, RefreshCw, XCircle } f
 import NcCapaRootCauseTab from '../components/NcCapaRootCauseTab';
 import NcCapaActionPlanTab from '../components/NcCapaActionPlanTab';
 import NcCapaPlanReviewPanel from '../components/NcCapaPlanReviewPanel';
+import NcCapaEvidenceTab from '../components/NcCapaEvidenceTab';
+import NcCapaQaVerificationTab from '../components/NcCapaQaVerificationTab';
 
 const NcCapaDetail = () => {
   const { ncId } = useParams();
@@ -190,6 +192,24 @@ const NcCapaDetail = () => {
     await loadData();
   };
 
+  const handleUpdateProgress = async (actionId, updateData) => {
+    await ncCapaService.updateActionProgress(record.id, actionId, updateData, currentUser.id);
+    useStore.getState().addNotification('Action progress updated', 'success');
+    await loadData();
+  };
+
+  const handleSubmitForVerification = async (actionId) => {
+    await ncCapaService.submitActionForVerification(record.id, actionId, currentUser.id);
+    useStore.getState().addNotification('Action submitted for QA verification', 'success');
+    await loadData();
+  };
+
+  const handleVerifyAction = async (actionId, verificationData) => {
+    await ncCapaService.verifyAction(record.id, actionId, verificationData, currentUser.id);
+    useStore.getState().addNotification(`Action verification completed: ${verificationData.result.replace(/_/g, ' ')}`, 'success');
+    await loadData();
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'DRAFT': return 'bg-zinc-100 text-zinc-800';
@@ -199,6 +219,8 @@ const NcCapaDetail = () => {
       case 'REJECTED_NOT_NC': return 'bg-red-100 text-red-800';
       case 'ASSIGNED': return 'bg-purple-100 text-purple-800';
       case 'QA_VERIFICATION': return 'bg-yellow-100 text-yellow-800';
+      case 'ACTION_IN_PROGRESS': return 'bg-blue-100 text-blue-800';
+      case 'EFFECTIVENESS_CHECK': return 'bg-teal-100 text-teal-800';
       default: return 'bg-zinc-100 text-zinc-800';
     }
   };
@@ -467,8 +489,8 @@ const NcCapaDetail = () => {
     );
   };
 
-  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'History', 'Audit'];
-  const futureTabs = ['Evidence', 'QA Verification'];
+  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'Evidence', 'QA Verification', 'History', 'Audit'];
+  const futureTabs = [];
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24">
@@ -564,6 +586,36 @@ const NcCapaDetail = () => {
                 </div>
               </div>
             </div>
+            
+            {record.capaActionPlan && record.capaActionPlan.actions && record.capaActionPlan.actions.length > 0 && (
+              <div className="col-span-1 md:col-span-2 mt-4 space-y-4">
+                <h3 className="font-semibold text-lg border-b pb-2">Execution Progress</h3>
+                <div className="bg-zinc-50 p-4 rounded-lg border">
+                  {(() => {
+                    const actions = record.capaActionPlan.actions;
+                    const totalProgress = actions.reduce((sum, a) => sum + (a.progressPercent || 0), 0);
+                    const avgProgress = Math.round(totalProgress / actions.length);
+                    const verifiedCount = actions.filter(a => a.status === 'VERIFIED').length;
+                    
+                    return (
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-zinc-700">Overall Progress</span>
+                          <span className="text-sm font-bold text-blue-600">{avgProgress}%</span>
+                        </div>
+                        <div className="w-full bg-zinc-200 rounded-full h-2.5 mb-4">
+                          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${avgProgress}%` }}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-zinc-500">
+                          <span>{actions.length} Total Actions</span>
+                          <span>{verifiedCount} Verified</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -648,6 +700,23 @@ const NcCapaDetail = () => {
             onSaveDraft={handleCapaSaveDraft}
             onSubmit={handleCapaSubmit}
             isReadOnly={record.status !== NC_STATUS.CAPA_PLAN_REQUIRED && record.status !== NC_STATUS.CAPA_PLAN_RETURNED}
+          />
+        )}
+
+        {activeTab === 'Evidence' && (
+          <NcCapaEvidenceTab 
+            record={record} 
+            onUpdateProgress={handleUpdateProgress}
+            onSubmitForVerification={handleSubmitForVerification}
+            isReadOnly={record.status !== NC_STATUS.ACTION_IN_PROGRESS}
+          />
+        )}
+
+        {activeTab === 'QA Verification' && (
+          <NcCapaQaVerificationTab 
+            record={record} 
+            onVerifyAction={handleVerifyAction}
+            isReadOnly={record.status === NC_STATUS.CLOSED}
           />
         )}
 

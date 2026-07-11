@@ -98,6 +98,83 @@ class NcCapaNotificationService {
       );
     }
   }
+
+  notifyActionAssigned(nc, action) {
+    if (action.responsibleUserId) {
+      this.notifyUser(
+        action.responsibleUserId,
+        'Action Assigned',
+        `You have been assigned an action for NC ${nc.ncNumber}.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyActionStarted(nc, action) {
+    // Notify NC owner or QA
+    if (nc.assignedOwnerUserId) {
+      this.notifyUser(
+        nc.assignedOwnerUserId,
+        'Action Started',
+        `Execution started for action on NC ${nc.ncNumber}.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyActionSubmitted(nc, action) {
+    // Need to notify QA users with VERIFY permission, we'll mock to reportedByUserId for now, or just generic admin.
+    this.notifyUser(
+      nc.reportedByUserId,
+      'Action Submitted for Verification',
+      `Action on NC ${nc.ncNumber} submitted for verification.`,
+      `/nc-capa/${nc.id}`
+    );
+  }
+
+  notifyActionReturned(nc, action) {
+    if (action.responsibleUserId) {
+      this.notifyUser(
+        action.responsibleUserId,
+        'Action Returned for Correction',
+        `Your action on NC ${nc.ncNumber} was returned for correction.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyActionFailed(nc, action) {
+    if (action.responsibleUserId) {
+      this.notifyUser(
+        action.responsibleUserId,
+        'Action Failed Verification',
+        `Your action on NC ${nc.ncNumber} failed QA verification.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyActionVerified(nc, action) {
+    if (action.responsibleUserId) {
+      this.notifyUser(
+        action.responsibleUserId,
+        'Action Verified',
+        `Your action on NC ${nc.ncNumber} passed QA verification.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
+
+  notifyAllActionsVerified(nc) {
+    if (nc.assignedOwnerUserId) {
+      this.notifyUser(
+        nc.assignedOwnerUserId,
+        'All Actions Verified',
+        `All CAPA actions verified for NC ${nc.ncNumber}. Moved to Effectiveness Check.`,
+        `/nc-capa/${nc.id}`
+      );
+    }
+  }
 }
 
 export const ncCapaNotificationService = new NcCapaNotificationService();

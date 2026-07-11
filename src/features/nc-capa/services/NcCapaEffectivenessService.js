@@ -4,6 +4,7 @@ import { ncCapaNotificationService } from './NcCapaNotificationService';
 import { ncCapaAuditService } from './NcCapaAuditService';
 import { ncCapaAccessService } from './NcCapaAccessService';
 import { mockNcRecords } from '../mock/ncCapaMockData';
+import { ncCapaDccLinkageService } from './NcCapaDccLinkageService';
 
 class NcCapaEffectivenessService {
   /**
@@ -104,6 +105,22 @@ class NcCapaEffectivenessService {
                          ncCapaAccessService.hasPermission(user, NC_PERMISSIONS.ADMIN);
     if (!hasClosePerm) {
       throw new Error('Closure requires NC_CAPA_CLOSE or NC_CAPA_ADMIN permission');
+    }
+
+    // Phase 11F Closure Gate Update: Check DCC Linkage
+    const docImpact = record.capaActionPlan?.documentImpactAssessment;
+    if (docImpact && docImpact !== 'NO_DOCUMENT_IMPACT') {
+      const linkage = ncCapaDccLinkageService.getLinkageForNc(record.id);
+      
+      const requiresOverride = !linkage || linkage.targetStatus === 'IN_PROGRESS' || linkage.targetStatus === 'FAILED' || linkage.targetStatus === 'CANCELLED' || linkage.targetStatus === 'UNAVAILABLE';
+      
+      if (requiresOverride) {
+        if (!checkData.closureOverrideJustification) {
+          throw new Error('Closure blocked: Unresolved document impact. DCC Linkage is incomplete or missing. Override justification required.');
+        }
+        
+        ncCapaAuditService.logEvent(record.id, user.id, 'DCC_CLOSURE_OVERRIDE', `Closure overridden with incomplete DCC workflow. Justification: ${checkData.closureOverrideJustification}`);
+      }
     }
 
     // Idempotency check

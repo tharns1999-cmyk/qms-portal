@@ -295,3 +295,5 @@ export const mockNcRecords = [
     }
   }
 ];
+
+export const mockNcDccLinkages = [];

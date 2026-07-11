@@ -14,6 +14,7 @@ import NcCapaPlanReviewPanel from '../components/NcCapaPlanReviewPanel';
 import NcCapaEvidenceTab from '../components/NcCapaEvidenceTab';
 import NcCapaQaVerificationTab from '../components/NcCapaQaVerificationTab';
 import NcCapaEffectivenessTab from '../components/NcCapaEffectivenessTab';
+import NcCapaDccLinkageTab from '../components/NcCapaDccLinkageTab';
 import { ncCapaEffectivenessService } from '../services/NcCapaEffectivenessService';
 
 const NcCapaDetail = () => {
@@ -503,7 +504,7 @@ const NcCapaDetail = () => {
     );
   };
 
-  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'Evidence', 'QA Verification', 'Effectiveness Check', 'History', 'Audit'];
+  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'Evidence', 'QA Verification', 'Effectiveness Check', 'Linked Documents / DAR', 'History', 'Audit'];
   const futureTabs = [];
 
   return (
@@ -740,6 +741,13 @@ const NcCapaDetail = () => {
             user={currentUser}
             onSubmit={handleEffectivenessSubmit}
             isReadOnly={record.status !== NC_STATUS.EFFECTIVENESS_CHECK}
+          />
+        )}
+
+        {activeTab === 'Linked Documents / DAR' && (
+          <NcCapaDccLinkageTab 
+            record={record}
+            currentUser={currentUser}
           />
         )}
 

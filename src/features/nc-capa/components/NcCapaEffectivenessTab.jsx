@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EffectivenessResult, NC_STATUS, DocumentImpact, TrainingImpact } from '../domain/models';
 import { AlertCircle } from 'lucide-react';
+import { ncCapaDccLinkageService } from '../services/NcCapaDccLinkageService';
 
 const NcCapaEffectivenessTab = ({ record, onSubmit, isReadOnly }) => {
   const [actualCheckDate, setActualCheckDate] = useState(record?.effectivenessCheck?.actualCheckDate?.substring(0, 10) || '');
@@ -12,6 +13,7 @@ const NcCapaEffectivenessTab = ({ record, onSubmit, isReadOnly }) => {
   const [evidenceComment, setEvidenceComment] = useState(record?.effectivenessCheck?.evidenceComment || '');
   const [closureComment, setClosureComment] = useState(record?.effectivenessCheck?.closureComment || '');
   const [reasonComment, setReasonComment] = useState(record?.effectivenessCheck?.reasonComment || '');
+  const [closureOverrideJustification, setClosureOverrideJustification] = useState('');
   const [requiresAdditionalAction, setRequiresAdditionalAction] = useState(false);
 
   const handleSubmit = (e) => {
@@ -25,6 +27,7 @@ const NcCapaEffectivenessTab = ({ record, onSubmit, isReadOnly }) => {
       evidenceComment,
       closureComment,
       reasonComment,
+      closureOverrideJustification,
       requiresAdditionalAction
     });
   };
@@ -37,6 +40,9 @@ const NcCapaEffectivenessTab = ({ record, onSubmit, isReadOnly }) => {
 
   const hasDocumentImpact = record?.capaActionPlan?.documentImpactAssessment && record?.capaActionPlan?.documentImpactAssessment !== DocumentImpact.NO_DOCUMENT_IMPACT;
   const hasTrainingImpact = record?.capaActionPlan?.trainingImpactAssessment && record?.capaActionPlan?.trainingImpactAssessment !== TrainingImpact.NO_TRAINING_IMPACT;
+
+  const linkage = ncCapaDccLinkageService.getLinkageForNc(record?.id);
+  const requiresOverride = hasDocumentImpact && (!linkage || linkage.targetStatus === 'IN_PROGRESS' || linkage.targetStatus === 'FAILED' || linkage.targetStatus === 'CANCELLED' || linkage.targetStatus === 'UNAVAILABLE');
 
   return (
     <div className="bg-white border rounded-lg p-6 mb-6 shadow-sm">
@@ -252,6 +258,36 @@ const NcCapaEffectivenessTab = ({ record, onSubmit, isReadOnly }) => {
               disabled={readOnly}
               data-testid="eff-reason-comment"
             ></textarea>
+          </div>
+        )}
+
+        {result === EffectivenessResult.EFFECTIVE && requiresOverride && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="ml-3 w-full">
+                <h3 className="text-sm font-medium text-orange-800">Closure Blocked: Incomplete DCC Workflow</h3>
+                <div className="mt-2 text-sm text-orange-700">
+                  <p>The document impact has not been resolved. You must provide an override justification to force close this NC/CAPA.</p>
+                </div>
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-orange-800 mb-1">
+                    Override Justification <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border-orange-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm p-2 border"
+                    rows="2"
+                    value={closureOverrideJustification}
+                    onChange={(e) => setClosureOverrideJustification(e.target.value)}
+                    required
+                    disabled={readOnly}
+                    data-testid="eff-closure-override"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

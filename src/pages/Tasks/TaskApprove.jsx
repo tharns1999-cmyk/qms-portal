@@ -6,6 +6,7 @@ import { FileText, CheckCircle, XCircle, Ban, ChevronLeft, Download, MessageSqua
 import { motion } from 'framer-motion';
 import { getDarReason, getDarDetail, getDarDocInfo } from '../../utils/darHelper';
 import ActionConfirmModal from '../../components/common/ActionConfirmModal';
+import Button from '../../components/ui/Button';
 
 const TaskApprove = () => {
   const { id } = useParams();
@@ -176,30 +177,33 @@ const TaskApprove = () => {
             placeholder="Type your comment/reason here..."
           />
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="danger"
               disabled={!hasReadToBottom}
               onClick={() => handleAction('REJECT')}
-              className="flex-1 bg-white border-2 border-red-500 text-red-600  hover:bg-red-50 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+              className="flex-1 text-sm"
               title="ไม่อนุมัติและยกเลิกคำขอนี้ทันที"
             >
-              <Ban size={20} strokeWidth={1.25}/> Reject
-            </button>
-            <button
+              <Ban size={20} strokeWidth={1.25} className="mr-1"/> Reject
+            </Button>
+            <Button
+              variant="warning"
               disabled={!hasReadToBottom}
               onClick={() => handleAction('RETURN')}
-              className="flex-1 bg-white border-2 border-yellow-500 text-yellow-600  hover:bg-yellow-50 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+              className="flex-1 text-sm"
               title="ส่งกลับไปให้ Requester แก้ไข"
             >
-              <XCircle size={20} strokeWidth={1.25}/> Return
-            </button>
-            <button
+              <XCircle size={20} strokeWidth={1.25} className="mr-1"/> Return
+            </Button>
+            <Button
+              variant="success"
               disabled={!hasReadToBottom}
               onClick={() => handleAction('APPROVE')}
-              className="flex-[1.5] bg-purple-600 text-white hover:bg-purple-700 py-2.5 rounded-lg font-bold flex justify-center items-center gap-1 transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-sm"
+              className="flex-[1.5] text-sm"
               title="อนุมัติคำขอ"
             >
-              <CheckCircle size={20} strokeWidth={1.25}/> Approve
-            </button>
+              <CheckCircle size={20} strokeWidth={1.25} className="mr-1"/> Approve
+            </Button>
           </div>
           {!hasReadToBottom && (
             <p className="text-[11px] text-red-500  text-center mt-2 font-medium">⚠️ กรุณาเลื่อนอ่านเอกสารทางขวาให้จบเพื่อปลดล็อคปุ่ม</p>

@@ -7,6 +7,7 @@ import UserSelector from '../../components/UserSelector';
 import DistributionSetup from '../../components/workflow/DistributionSetup';
 import RelatedStandardsSelector from '../../components/workflow/RelatedStandardsSelector';
 import ActionConfirmModal from '../../components/common/ActionConfirmModal';
+import Button from '../../components/ui/Button';
 
 const DarRevisionForm = () => {
   const navigate = useNavigate();
@@ -564,27 +565,27 @@ const DarRevisionForm = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="premium-glass px-6 py-4 flex justify-end gap-3 rounded-2xl mx-auto mt-8">
-          <button 
+        <div className="bg-white border-t border-zinc-100 px-6 py-4 flex justify-end gap-3 mt-8">
+          <Button 
+            variant="ghost"
             type="button" 
             onClick={() => navigate('/dashboard')}
-            className="btn-ios-secondary text-gray-500"
           >
-            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
-          </button>
-          <button 
+            <X size={20} strokeWidth={1.25} className="mr-1"/> ยกเลิก (Cancel)
+          </Button>
+          <Button 
+            variant="secondary"
             type="button" 
             onClick={handleDraft}
-            className="px-6 py-2.5 bg-gray-800 text-white rounded-xl font-medium transition-all duration-300 ease-out active:scale-95 shadow-sm hover:shadow-md hover:bg-gray-700 hover:-translate-y-[1px]"
           >
             บันทึกแบบร่าง (Draft)
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant="primary"
             type="submit" 
-            className="px-8 py-2.5 btn-ios-primary text-lg !bg-orange-500 hover:!bg-orange-600"
           >
             ส่งคำขอ Revision (Submit)
-          </button>
+          </Button>
         </div>
       </form>
 

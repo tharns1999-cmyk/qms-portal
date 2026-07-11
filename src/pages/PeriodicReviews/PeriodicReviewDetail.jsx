@@ -14,7 +14,8 @@ const PeriodicReviewDetail = () => {
   const [activeTab, setActiveTab] = useState('checklist');
   const [outcome, setOutcome] = useState('');
   const [comment, setComment] = useState('');
-  const [checklistChecks, setChecklistChecks] = useState({});
+  const [checklistAnswers, setChecklistAnswers] = useState({});
+  const [checklistRemarks, setChecklistRemarks] = useState({});
 
   const schedule = periodicReviewSchedules?.find(s => s.id === reviewId);
   const records = periodicReviewRecords?.filter(r => r.scheduleId === reviewId) || [];
@@ -69,11 +70,17 @@ const PeriodicReviewDetail = () => {
     }
     
     // Validation for Checklist
-    const requiredChecks = isInternal ? 3 : 2; 
-    if (Object.keys(checklistChecks).length < requiredChecks || Object.values(checklistChecks).some(v => v === false)) {
-      if (!window.confirm('คุณยังตรวจสอบ Checklist ไม่ครบ หรือมีบางข้อที่ตอบว่า "ไม่ใช่" ยืนยันที่จะดำเนินการต่อหรือไม่?')) {
-        return;
-      }
+    const allAnswered = checklistItems.every(item => checklistAnswers[item.id]);
+    const hasNoWithoutRemark = checklistItems.some(item => checklistAnswers[item.id] === 'no' && (!checklistRemarks[item.id] || checklistRemarks[item.id].trim() === ''));
+
+    if (!allAnswered) {
+      toast.error('กรุณาตอบคำถามให้ครบทุกข้อ (Please answer all checklist items)');
+      return;
+    }
+
+    if (hasNoWithoutRemark) {
+      toast.error('กรุณาระบุเหตุผลสำหรับข้อที่ตอบ "ไม่ใช่" (Please provide remarks for "No" answers)');
+      return;
     }
 
     submitPeriodicReview(schedule.id, outcome, comment);
@@ -91,18 +98,13 @@ const PeriodicReviewDetail = () => {
     }
   };
 
-  const internalChecklist = [
-    { id: 'c1', text: 'เนื้อหาในเอกสารยังสอดคล้องกับการปฏิบัติงานจริง' },
-    { id: 'c2', text: 'เอกสารอ้างอิงและฟอร์มที่ใช้ในเอกสารนี้ยังเป็นเวอร์ชันปัจจุบัน' },
-    { id: 'c3', text: 'สอดคล้องกับข้อกำหนด (ISO, GHP, HACCP, กฎหมาย) ปัจจุบัน' }
+  const checklistItems = [
+    { id: 'c1', text: 'เอกสารนี้ยังมีความจำเป็นและมีการใช้งานในแผนก/บริษัทอยู่' },
+    { id: 'c2', text: 'ขั้นตอนการปฏิบัติงาน ค่าพารามิเตอร์ และเครื่องจักรที่ระบุ ตรงกับการทำงานจริงในไลน์ผลิตปัจจุบัน' },
+    { id: 'c3', text: 'เนื้อหาอัปเดตและสอดคล้องกับข้อกำหนดมาตรฐานระบบคุณภาพ หรือกฎหมายที่เกี่ยวข้องล่าสุด' },
+    { id: 'c4', text: 'แบบฟอร์มบันทึกการปฏิบัติงาน (เช่น แบบฟอร์ม FM) ที่อ้างอิงในเอกสาร เป็นเวอร์ชันล่าสุดที่ประกาศใช้ทั้งหมด' },
+    { id: 'c5', text: 'ชื่อตำแหน่งหรือแผนกผู้รับผิดชอบที่ระบุ ตรงกับโครงสร้างองค์กรในปัจจุบัน' }
   ];
-
-  const externalChecklist = [
-    { id: 'c4', text: 'เอกสารนี้ยังมีการใช้งานในแผนก/บริษัทอยู่' },
-    { id: 'c5', text: 'ตรวจสอบแล้วว่าเอกสารนี้เป็นเวอร์ชันล่าสุดจากแหล่งที่มา' }
-  ];
-
-  const checklistItems = isInternal ? internalChecklist : externalChecklist;
 
   const TabButton = ({ id, icon: Icon, label }) => (
     <button
@@ -193,19 +195,54 @@ const PeriodicReviewDetail = () => {
                       รายการตรวจสอบ (Checklist)
                     </h3>
                     
-                    <div className="space-y-3 mb-8">
+                    <div className="space-y-4 mb-8">
                       {checklistItems.map((item) => (
-                        <div key={item.id} className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
-                          <input 
-                            type="checkbox" 
-                            id={item.id}
-                            className="mt-1 w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
-                            checked={checklistChecks[item.id] || false}
-                            onChange={(e) => setChecklistChecks(prev => ({ ...prev, [item.id]: e.target.checked }))}
-                          />
-                          <label htmlFor={item.id} className="text-sm text-slate-700 font-medium cursor-pointer flex-1">
-                            {item.text}
-                          </label>
+                        <div key={item.id} className="p-5 rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-sm">
+                          <p className="text-zinc-800 font-medium mb-4">{item.text}</p>
+                          <div className="flex items-center gap-6">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                              <input 
+                                type="radio" 
+                                name={`check-${item.id}`}
+                                value="yes"
+                                checked={checklistAnswers[item.id] === 'yes'}
+                                onChange={() => setChecklistAnswers(prev => ({ ...prev, [item.id]: 'yes' }))}
+                                className="w-4 h-4 accent-zinc-900 cursor-pointer"
+                              />
+                              <span className="text-sm text-zinc-600 font-medium group-hover:text-zinc-900 transition-colors">ใช่ / Yes</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                              <input 
+                                type="radio" 
+                                name={`check-${item.id}`}
+                                value="no"
+                                checked={checklistAnswers[item.id] === 'no'}
+                                onChange={() => setChecklistAnswers(prev => ({ ...prev, [item.id]: 'no' }))}
+                                className="w-4 h-4 accent-zinc-900 cursor-pointer"
+                              />
+                              <span className="text-sm text-zinc-600 font-medium group-hover:text-zinc-900 transition-colors">ไม่ใช่ / No</span>
+                            </label>
+                          </div>
+                          
+                          <AnimatePresence>
+                            {checklistAnswers[item.id] === 'no' && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="overflow-hidden"
+                              >
+                                <textarea
+                                  placeholder="ระบุเหตุผล/ข้อเสนอแนะ (Remark)..."
+                                  value={checklistRemarks[item.id] || ''}
+                                  onChange={(e) => setChecklistRemarks(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                  className="w-full p-3 border border-zinc-200 rounded-md focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all resize-none text-sm bg-zinc-50/50"
+                                  rows={2}
+                                />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ))}
                     </div>

@@ -1,5 +1,8 @@
 node_modules/
 dist/
+test-results/
+coverage/
+playwright-report/
 .env
 .env.local
 .DS_Store

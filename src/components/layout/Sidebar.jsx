@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, UserCircle, Bell, Calendar } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import Button from '../ui/Button';
 
 dayjs.extend(relativeTime);
 
@@ -67,34 +68,40 @@ const Sidebar = () => {
   }, []);
 
   const NavItem = ({ to, icon: IconComponent, label, badgeCount }) => (
-    <NavLink to={to} className="relative flex items-center mx-3 my-1 py-3 rounded-xl overflow-hidden transition-colors duration-300 group hover:bg-slate-100/60">
+    <NavLink to={to} className="relative flex items-center mx-3 my-1 py-2.5 rounded-lg group">
       {({ isActive }) => (
         <>
           {isActive && (
             <motion.div
-              layoutId="sidebar-active"
-              className="absolute inset-0 bg-white shadow-sm border border-slate-200/50 rounded-xl z-0"
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              layoutId="sidebar-active-indicator"
+              className="absolute inset-0 bg-zinc-100/80 rounded-lg z-0"
+              initial={false}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
-          <div className={`relative z-10 w-14 flex items-center justify-center shrink-0 transition-colors duration-300 ${isActive ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-900'}`}>
-            <IconComponent className="w-[22px] h-[22px]" />
+          <div className={`relative z-10 w-12 flex items-center justify-center shrink-0 transition-colors duration-200 ${isActive ? 'text-zinc-900' : 'text-zinc-500 group-hover:text-zinc-900'}`}>
+            <IconComponent className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
           </div>
-          <motion.span 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isExpanded ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-            className={`relative z-10 whitespace-nowrap text-[14.5px] tracking-tight flex-1 flex items-center justify-between ${isActive ? 'text-slate-900 font-semibold' : 'text-slate-600 font-medium group-hover:text-slate-900'}`}
-          >
-            {label}
-            {badgeCount > 0 && isExpanded && (
-              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ml-2">
-                {badgeCount}
-              </span>
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span 
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -5 }}
+                transition={{ duration: 0.15 }}
+                className={`relative z-10 whitespace-nowrap text-[14px] flex-1 flex items-center justify-between pr-3 ${isActive ? 'text-zinc-900 font-semibold' : 'text-zinc-600 font-medium group-hover:text-zinc-900'}`}
+              >
+                {label}
+                {badgeCount > 0 && (
+                  <span className="bg-zinc-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                    {badgeCount}
+                  </span>
+                )}
+              </motion.span>
             )}
-          </motion.span>
+          </AnimatePresence>
           {badgeCount > 0 && !isExpanded && (
-             <div className="absolute right-2 top-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
+             <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-zinc-900 rounded-full" />
           )}
         </>
       )}
@@ -103,15 +110,12 @@ const Sidebar = () => {
 
   return (
     <div 
-      className={`bg-[#FAFAFA] border-r border-slate-200 flex flex-col h-full transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative z-40 ${isExpanded ? 'w-[280px]' : 'w-20'}`}
+      className={`bg-white border-r border-zinc-200 flex flex-col h-full transition-all duration-300 relative z-40 ${isExpanded ? 'w-[260px]' : 'w-[72px]'}`}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* TOP SECTION: Logo, System Name, Notification */}
-      <div className="flex flex-col items-center pt-6 pb-2 border-b border-slate-200/60 mx-3">
-        {/* Logo & Title */}
+      {/* TOP SECTION: Logo & System Name */}
+      <div className="flex flex-col items-center pt-5 pb-3 mx-3">
         <div className="flex items-center w-full h-12 mb-2 overflow-hidden">
           <div className="w-14 flex items-center justify-center shrink-0">
             <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain translate-x-[2px]" />
@@ -119,158 +123,169 @@ const Sidebar = () => {
           <AnimatePresence>
             {isExpanded && (
               <motion.h1 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="text-xl font-bold text-gray-800 whitespace-nowrap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-[15px] font-bold text-zinc-900 whitespace-nowrap tracking-tight ml-1"
               >
                 QMS Portal
               </motion.h1>
             )}
           </AnimatePresence>
         </div>
+      </div>
 
-        {/* Notification Bell */}
-        <div className="w-full mb-2" ref={notiRef}>
-          <div className="relative w-full">
-            <button 
-              onClick={() => setShowNoti(!showNoti)}
-              className="py-3 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-all duration-300 ease-out active:scale-95 relative flex items-center w-full overflow-hidden"
-            >
-              <div className="relative z-10 w-14 flex items-center justify-center shrink-0">
-                <Bell className="w-[22px] h-[22px]" strokeWidth={1.25}/>
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-2 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </div>
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.span 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="whitespace-nowrap font-medium text-[14.5px] tracking-tight flex-1 text-left"
-                  >
-                    Notifications
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </button>
-
-            {/* Notification Dropdown */}
-            {showNoti && (
-              <div className="absolute left-[110%] top-0 mt-0 w-80 bg-white border border-slate-200/80 shadow-xl rounded-2xl overflow-hidden z-[100] origin-top-left animate-in fade-in slide-in-from-left-2 duration-300 ease-out">
-                <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                  <h3 className="font-semibold text-slate-700">Notifications</h3>
+      {/* NOTIFICATION SECTION */}
+      <div className="w-full mt-2 mx-3 pb-2" ref={notiRef}>
+        <div className="relative w-full pr-6">
+          <button 
+            type="button"
+            onClick={() => setShowNoti(!showNoti)}
+            className="py-2.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/50 rounded-lg transition-colors duration-200 relative flex items-center w-full overflow-hidden"
+          >
+            <div className="relative z-10 w-12 flex items-center justify-center shrink-0">
+              <Bell className="w-[18px] h-[18px]" strokeWidth={2}/>
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full" />
+              )}
+            </div>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="whitespace-nowrap font-medium text-[14px] flex-1 text-left flex justify-between items-center pr-3"
+                >
+                  Notifications
                   {unreadCount > 0 && (
-                    <span onClick={() => markAllNotificationsAsRead(currentUser.id)} className="text-xs text-blue-600  cursor-pointer hover:underline font-medium transition-colors">Mark all as read</span>
+                    <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+
+          {/* Notification Dropdown */}
+          <AnimatePresence>
+            {showNoti && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="absolute left-full top-0 mt-0 w-80 bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden z-50 origin-top-left"
+              >
+                <div className="px-4 py-3 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                  <h3 className="font-semibold text-zinc-900 text-sm">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span onClick={() => markAllNotificationsAsRead(currentUser.id)} className="text-[11px] text-zinc-500 cursor-pointer hover:text-zinc-900 font-medium transition-colors">Mark all as read</span>
                   )}
                 </div>
-                <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                <div className="max-h-80 overflow-y-auto">
                   {userNotis.length > 0 ? (
                     userNotis.map(noti => (
                       <div 
                         key={noti.id} 
                         onClick={() => handleNotificationClick(noti)}
-                        className={`p-4 border-b border-slate-50  hover:bg-slate-50/80  cursor-pointer transition-colors duration-200 ${!noti.isRead ? 'bg-blue-50/40 ' : ''}`}
+                        className={`p-4 border-b border-zinc-50 hover:bg-zinc-50 cursor-pointer transition-colors duration-200 ${!noti.isRead ? 'bg-zinc-50/50' : ''}`}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className={`text-sm ${!noti.isRead ? 'font-bold text-gray-900 ' : 'font-medium text-gray-600 '}`}>{noti.title}</h4>
-                          <span className="text-xs text-gray-400  whitespace-nowrap ml-2">{dayjs(noti.timestamp).fromNow()}</span>
+                          <h4 className={`text-sm ${!noti.isRead ? 'font-semibold text-zinc-900' : 'font-medium text-zinc-600'}`}>{noti.title}</h4>
+                          <span className="text-[10px] text-zinc-400 whitespace-nowrap ml-2">{dayjs(noti.timestamp).fromNow()}</span>
                         </div>
-                        <p className="text-xs text-gray-500  line-clamp-2">{noti.message}</p>
+                        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{noti.message}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-gray-500  text-sm">ไม่มีการแจ้งเตือน</div>
+                    <div className="p-8 text-center text-zinc-400 text-sm">No new notifications</div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </div>
 
+      <div className="mx-4 mb-2 border-b border-zinc-100"></div>
+
       {/* CENTER SECTION: Navigation */}
-      <nav className="flex-1 py-4 space-y-1 overflow-x-hidden overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 py-2 space-y-0.5 overflow-x-hidden overflow-y-auto hide-scrollbar">
         <NavItem to="/dashboard" icon={Home} label="Dashboard" />
         
         {isRequester && (
           <>
-            <NavItem to="/dar/new" icon={FilePlus} label="สร้าง DAR" />
-            <NavItem to="/dar/list" icon={List} label="รายการ DAR" />
+            <NavItem to="/dar/new" icon={FilePlus} label="Create DAR" />
+            <NavItem to="/dar/list" icon={List} label="My DARs" />
           </>
         )}
         
         {isReviewerOrApprover && (
-          <NavItem to="/tasks" icon={CheckSquare} label="กล่องงาน (Task Inbox)" badgeCount={myTaskCount} />
+          <NavItem to="/tasks" icon={CheckSquare} label="Task Inbox" badgeCount={myTaskCount} />
         )}
         
         {isAdmin && (
-          <>
-            <NavItem to="/admin/action-log" icon={History} label="Action Log" />
-          </>
+          <NavItem to="/admin/action-log" icon={History} label="Action Log" />
         )}
         
         {isMasterListAccess && (
-          <NavItem to="/master-list" icon={Database} label="ทะเบียนเอกสารควบคุม" />
+          <NavItem to="/master-list" icon={Database} label="Master List" />
         )}
-        <NavItem to="/library" icon={Library} label="คลังเอกสาร" />
+        <NavItem to="/library" icon={Library} label="Document Library" />
         
         {currentUser.isDcc && (
           <NavItem to="/controlled-copy" icon={Copy} label="Controlled Copy" badgeCount={ccTaskCount} />
         )}
-        <NavItem to="/external-docs" icon={Globe} label="External Documents" />
-        <NavItem to="/periodic-reviews" icon={Calendar} label="การทบทวนเอกสารตามรอบ" />
+        <NavItem to="/external-docs" icon={Globe} label="External Docs" />
+        <NavItem to="/periodic-reviews" icon={Calendar} label="Periodic Reviews" />
       </nav>
 
-      {/* BOTTOM SECTION: User Profile & Actions */}
-      <div className="mt-auto flex flex-col mx-3 pb-6">
-        <div className="border-t border-slate-200/60 pt-4 px-2">
-          {/* User Switcher / Info */}
-          <div className="flex flex-col gap-3 overflow-hidden">
-            <div className="flex items-center gap-3 h-10 w-full cursor-pointer hover:opacity-80 transition-opacity">
+      {/* BOTTOM SECTION: User Profile */}
+      <div className="mt-auto flex flex-col mx-3 pb-5">
+        <div className="border-t border-zinc-100 pt-3 px-2">
+          <div className="flex flex-col gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 h-10 w-full cursor-pointer hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                <UserCircle className="text-indigo-600" size={32} strokeWidth={1.25}/>
+                <UserCircle className="text-zinc-400" size={28} strokeWidth={1.5}/>
               </div>
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
                     className="flex flex-col justify-center overflow-hidden flex-1"
                   >
-                    <p className="text-sm font-bold text-gray-800 leading-tight truncate" title={currentUser.name}>{currentUser.name}</p>
-                    <p className="text-[11px] text-gray-500 leading-tight truncate mt-0.5" title={`${currentUser.position} - ${currentUser.department}`}>
-                      {currentUser.position} • {currentUser.department}
+                    <p className="text-[13px] font-semibold text-zinc-900 leading-tight truncate">{currentUser.name}</p>
+                    <p className="text-[11px] text-zinc-500 leading-tight truncate mt-0.5">
+                      {currentUser.position}
                     </p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
             
-            {/* User Switcher Select */}
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="w-full mt-1 overflow-hidden"
+                  className="w-full overflow-hidden"
                 >
                   <select 
-                    className="input-ios text-[12px] text-gray-600 w-full bg-slate-50 border-slate-200"
+                    className="w-full h-8 px-2 text-[11px] text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-900"
                     value={currentUser?.id || ''}
                     onChange={(e) => setCurrentUser(e.target.value)}
                   >
                     {(masterUsers || []).map(user => (
                       <option key={user.id} value={user.id}>
-                        Switch: {user.name} ({user.department})
+                        Switch: {user.name}
                       </option>
                     ))}
                   </select>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Calendar, X, Settings, Trash2, ShieldAlert, FileText } from 'lucide-react';
 import UserSelector from '../../components/UserSelector';
 import ActionConfirmModal from '../../components/common/ActionConfirmModal';
+import Button from '../../components/ui/Button';
 
 const DarObsoleteForm = () => {
   const navigate = useNavigate();
@@ -372,27 +373,27 @@ const DarObsoleteForm = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="premium-glass px-6 py-4 flex justify-end gap-3 rounded-2xl mx-auto mt-8">
-          <button 
+        <div className="bg-white border-t border-zinc-100 px-6 py-4 flex justify-end gap-3 mt-8">
+          <Button 
+            variant="ghost"
             type="button" 
             onClick={() => navigate('/dashboard')}
-            className="btn-ios-secondary text-gray-500"
           >
-            <X size={20} strokeWidth={1.25}/> ยกเลิก (Cancel)
-          </button>
-          <button 
+            <X size={20} strokeWidth={1.25} className="mr-1"/> ยกเลิก (Cancel)
+          </Button>
+          <Button 
+            variant="secondary"
             type="button" 
             onClick={handleDraft}
-            className="px-6 py-2.5 bg-gray-800 text-white rounded-xl font-medium transition-all duration-300 ease-out active:scale-95 shadow-sm hover:shadow-md hover:bg-gray-700 hover:-translate-y-[1px]"
           >
             บันทึกแบบร่าง (Draft)
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant="danger"
             type="submit" 
-            className="px-8 py-2.5 btn-ios-primary text-lg !bg-red-600 hover:!bg-red-700"
           >
-            <Trash2 size={20} strokeWidth={1.25}/> ส่งคำขอยกเลิก (Submit)
-          </button>
+            <Trash2 size={20} strokeWidth={1.25} className="mr-1"/> ส่งคำขอยกเลิก (Submit)
+          </Button>
         </div>
       </form>
 

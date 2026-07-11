@@ -14,7 +14,7 @@ const NcCapaMyTasks = () => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    ncCapaTaskService.getMyTasks(currentUser?.id).then(setTasks);
+    ncCapaTaskService.getMyTasks(currentUser?.id, currentUser?.permissions || []).then(setTasks);
   }, [currentUser]);
 
   if (!ncCapaAccessService.hasPermission(currentUser, NC_PERMISSIONS.VIEW)) {
@@ -38,7 +38,7 @@ const NcCapaMyTasks = () => {
             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-900">
               <tr>
                 <th className="px-6 py-4 font-semibold">NC Number</th>
-                <th className="px-6 py-4 font-semibold">Title</th>
+                <th className="px-6 py-4 font-semibold">Task</th>
                 <th className="px-6 py-4 font-semibold">{t('list', 'status')}</th>
                 <th className="px-6 py-4 font-semibold">Due Date</th>
               </tr>
@@ -51,20 +51,20 @@ const NcCapaMyTasks = () => {
                   </td>
                 </tr>
               ) : (
-                tasks.map(nc => (
+                tasks.map(task => (
                   <tr 
-                    key={nc.id} 
-                    onClick={() => navigate(`/nc-capa/${nc.id}`)}
+                    key={task.id} 
+                    onClick={() => navigate(task.actionLink)}
                     className="border-b border-zinc-100 hover:bg-zinc-50 cursor-pointer transition-colors"
                   >
-                    <td className="px-6 py-4 font-medium text-zinc-900">{nc.ncNumber}</td>
-                    <td className="px-6 py-4">{nc.title}</td>
+                    <td className="px-6 py-4 font-medium text-zinc-900">{task.ncNumber}</td>
+                    <td className="px-6 py-4">{task.title}</td>
                     <td className="px-6 py-4">
                       <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                        {t('status', nc.status)}
+                        {t('status', task.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{nc.dueDate ? new Date(nc.dueDate).toLocaleDateString() : '-'}</td>
+                    <td className="px-6 py-4">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
                   </tr>
                 ))
               )}

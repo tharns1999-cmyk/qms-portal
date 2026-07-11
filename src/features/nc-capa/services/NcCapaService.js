@@ -9,10 +9,31 @@ class NcCapaService {
   constructor() {
     this.records = [...mockNcRecords];
     this.drafts = new Map(); // Keep drafts in memory
+    
+    // Seed initial tasks based on mock records
+    this.records.forEach(nc => {
+      if (nc.status === NC_STATUS.SCREENING) {
+        ncCapaTaskService.createScreeningTask(nc);
+      } else if (nc.status === NC_STATUS.RETURNED_FOR_INFO) {
+        ncCapaTaskService.createReturnedInfoTask(nc);
+      } else if (nc.status === NC_STATUS.ASSIGNED) {
+        ncCapaTaskService.createOwnerAssignmentTask(nc);
+      } else if (nc.status === NC_STATUS.QA_VERIFICATION) {
+        ncCapaTaskService.createQaVerificationTask(nc);
+      }
+    });
   }
 
   async getList() {
     return Promise.resolve([...this.records]);
+  }
+
+  async updateNc(updatedNc) {
+    const index = this.records.findIndex(r => r.id === updatedNc.id);
+    if (index !== -1) {
+      this.records[index] = updatedNc;
+    }
+    return Promise.resolve(updatedNc);
   }
 
   async getById(id) {

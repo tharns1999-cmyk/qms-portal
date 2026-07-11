@@ -1,10 +1,12 @@
 import { NC_STATUS, NCScreeningDecision, CAPARequirementDecision } from '../domain/models';
 import { ncCapaAuditService } from './NcCapaAuditService';
 import { ncCapaNotificationService } from './NcCapaNotificationService';
+import { ncCapaService } from './NcCapaService';
+import { ncCapaTaskService } from './NcCapaTaskService';
 
 class NcCapaScreeningService {
   
-  acceptAsNc(nc, params, actorId) {
+  async acceptAsNc(nc, params, actorId) {
     const { severity, capaRequired, comment, assignedDepartmentId, assignedOwnerUserId } = params;
     
     // Explicit CAPA Required Decision validation
@@ -22,19 +24,22 @@ class NcCapaScreeningService {
       // Phase 11B: Move to ASSIGNED shell state instead of closing
       updatedNc.status = NC_STATUS.ASSIGNED;
       
+      ncCapaTaskService.createOwnerAssignmentTask(updatedNc);
       ncCapaNotificationService.notifyNCAssigned(updatedNc);
     } else if (capaRequired === CAPARequirementDecision.CORRECTION_ONLY) {
       updatedNc.status = NC_STATUS.QA_VERIFICATION;
       
+      ncCapaTaskService.createQaVerificationTask(updatedNc);
       ncCapaNotificationService.notifyCorrectionOnly(updatedNc);
     }
 
     ncCapaAuditService.logEvent(nc.id, 'SCREENING_ACCEPTED', actorId, `Accepted as NC. Severity: ${severity}. CAPA: ${capaRequired}.`, comment);
     
+    await ncCapaService.updateNc(updatedNc);
     return updatedNc;
   }
 
-  returnForInfo(nc, params, actorId) {
+  async returnForInfo(nc, params, actorId) {
     const { returnReason, missingInfoSummary } = params;
     
     if (!returnReason) throw new Error('Return reason is required.');
@@ -47,13 +52,15 @@ class NcCapaScreeningService {
       returnedAt: new Date().toISOString()
     };
 
+    ncCapaTaskService.createReturnedInfoTask(updatedNc);
     ncCapaNotificationService.notifyNCReturned(updatedNc);
     ncCapaAuditService.logEvent(nc.id, 'SCREENING_RETURNED', actorId, `Returned for info. Summary: ${missingInfoSummary}`, returnReason);
 
+    await ncCapaService.updateNc(updatedNc);
     return updatedNc;
   }
 
-  rejectAsNotNc(nc, params, actorId) {
+  async rejectAsNotNc(nc, params, actorId) {
     const { rejectionReason } = params;
 
     if (!rejectionReason) throw new Error('Rejection reason is required.');
@@ -66,9 +73,11 @@ class NcCapaScreeningService {
       rejectedAt: new Date().toISOString()
     };
 
+    ncCapaTaskService.closeAllTasks(nc.id);
     ncCapaNotificationService.notifyNCRejected(updatedNc);
     ncCapaAuditService.logEvent(nc.id, 'SCREENING_REJECTED', actorId, 'Rejected as Not NC.', rejectionReason);
 
+    await ncCapaService.updateNc(updatedNc);
     return updatedNc;
   }
 }

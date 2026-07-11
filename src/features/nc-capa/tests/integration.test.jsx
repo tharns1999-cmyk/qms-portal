@@ -1,8 +1,14 @@
+import { describe, it, expect, beforeAll } from 'vitest';
 import { ncCapaNumberService } from '../services/NcCapaNumberService';
 import { ncCapaDashboardService } from '../services/NcCapaDashboardService';
 import { ncCapaTaskService } from '../services/NcCapaTaskService';
-
+import { ncCapaService } from '../services/NcCapaService';
 describe('NC/CAPA Integration and Services', () => {
+  beforeAll(async () => {
+    // Ensure service is instantiated and tasks are seeded
+    await ncCapaService.getList();
+  });
+
   it('formats NC number correctly', () => {
     const year = new Date().getFullYear();
     // NcCapaNumberService now increments based on current year and stored sequence

@@ -36,6 +36,24 @@ const NcCapaDetail = () => {
   });
   const [screeningError, setScreeningError] = useState('');
 
+  // Resubmit state
+  const [resubmitForm, setResubmitForm] = useState({
+    description: '',
+    immediateCorrection: '',
+    containmentAction: ''
+  });
+  const [isResubmitting, setIsResubmitting] = useState(false);
+
+  useEffect(() => {
+    if (record) {
+      setResubmitForm({
+        description: record.description || '',
+        immediateCorrection: record.immediateCorrection || '',
+        containmentAction: record.containmentAction || ''
+      });
+    }
+  }, [record]);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -115,6 +133,19 @@ const NcCapaDetail = () => {
       setScreeningAction('');
     } catch (err) {
       setScreeningError(err.message);
+    }
+  };
+
+  const handleResubmit = async () => {
+    try {
+      setIsResubmitting(true);
+      await ncCapaService.resubmitReturnedNc(record, resubmitForm, currentUser.id);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      useStore.getState().addNotification('Error resubmitting NC', 'error');
+    } finally {
+      setIsResubmitting(false);
     }
   };
 
@@ -309,6 +340,70 @@ const NcCapaDetail = () => {
     );
   };
 
+  const renderResubmitPanel = () => {
+    if (record.status !== NC_STATUS.RETURNED_FOR_INFO) return null;
+    if (record.reportedByUserId !== currentUser.id) {
+      return <div className="p-4 bg-orange-50 rounded-lg text-sm text-orange-800 border border-orange-200 mb-6">This NC was returned for more information. Waiting for the reporter to resubmit.</div>;
+    }
+
+    return (
+      <div className="bg-white rounded-xl border-2 border-orange-200 shadow-sm overflow-hidden mb-6">
+        <div className="bg-orange-50 px-6 py-4 border-b border-orange-100 flex items-center justify-between">
+          <div className="flex items-center">
+            <RefreshCw size={20} className="text-orange-600 mr-2" />
+            <h3 className="font-bold text-orange-900">Action Required: Resubmit NC</h3>
+          </div>
+          <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded">Required</span>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div className="bg-orange-50 p-4 rounded text-sm text-orange-900 border border-orange-100">
+            <strong>Return Reason:</strong> {record.screeningComment}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Update Problem Description</label>
+            <textarea 
+              className="w-full p-2 border rounded" rows="3"
+              value={resubmitForm.description}
+              onChange={e => setResubmitForm({...resubmitForm, description: e.target.value})}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Update Immediate Correction</label>
+            <textarea 
+              className="w-full p-2 border rounded" rows="2"
+              value={resubmitForm.immediateCorrection}
+              onChange={e => setResubmitForm({...resubmitForm, immediateCorrection: e.target.value})}
+            />
+          </div>
+
+          {!record.containmentNotRequired && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Update Containment Action</label>
+              <textarea 
+                className="w-full p-2 border rounded" rows="2"
+                value={resubmitForm.containmentAction}
+                onChange={e => setResubmitForm({...resubmitForm, containmentAction: e.target.value})}
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4">
+            <button 
+              onClick={handleResubmit}
+              disabled={isResubmitting}
+              className="px-6 py-2 bg-orange-600 text-white rounded font-medium hover:bg-orange-700 disabled:opacity-50"
+            >
+              {isResubmitting ? 'Resubmitting...' : 'Resubmit NC'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const tabs = ['Overview', 'Detail', 'Screening', 'History', 'Audit'];
   // Phase 11B shell tabs
   const futureTabs = ['Root Cause', 'CAPA Action', 'Evidence', 'QA Verification'];
@@ -337,6 +432,7 @@ const NcCapaDetail = () => {
       </div>
 
       {renderScreeningActionPanel()}
+      {renderResubmitPanel()}
 
       <div className="flex overflow-x-auto border-b border-zinc-200 mb-6 pb-[1px] scrollbar-hide">
         {tabs.map(tab => (

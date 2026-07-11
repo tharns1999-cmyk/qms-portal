@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNcCapaTranslation } from '../locales/ncCapaTranslations';
 import { VerificationResult, CAPAActionStatus } from '../domain/models';
 import useStore from '../../../store/useStore';
 import { CheckCircle, XCircle, RefreshCcw, FileText, CheckSquare, MessageSquare, AlertTriangle } from 'lucide-react';
 
 const NcCapaQaVerificationTab = ({ record, onVerifyAction, isReadOnly }) => {
-  const { t } = useNcCapaTranslation();
-  const { currentUser, masterUsers, checkPermission } = useStore();
+  const { masterUsers, checkPermission } = useStore();
   
   const [activeActionId, setActiveActionId] = useState(null);
   const [form, setForm] = useState({

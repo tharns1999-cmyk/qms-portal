@@ -249,5 +249,49 @@ export const mockNcRecords = [
       reviewComment: 'Looks good.',
       submittedAt: '2023-10-21T10:00:00Z'
     }
+  },
+  {
+    id: 'nc-9',
+    ncNumber: 'NC-2023-0009',
+    title: 'Effectiveness Check Pending',
+    description: 'Testing effectiveness check.',
+    sourceType: 'INSPECTION',
+    detectedDate: '2023-10-25',
+    departmentId: 'PD',
+    reportedByUserId: 'U002',
+    status: NC_STATUS.EFFECTIVENESS_CHECK,
+    severity: NC_SEVERITY.HIGH,
+    capaRequired: 'CAPA_REQUIRED',
+    assignedOwnerUserId: 'U002',
+    assignedDepartmentId: 'PD',
+    screeningResult: NCScreeningDecision.ACCEPT_AS_NC,
+    createdAt: '2023-10-25T08:15:00Z',
+    submittedAt: '2023-10-25T08:20:00Z',
+    rootCauseAnalysis: {
+      method: 'FIVE_WHY',
+      problemStatement: 'Problem',
+      why1: 'Why1',
+      why2: 'Why2',
+      why3: '',
+      why4: '',
+      why5: '',
+      causeCategories: [],
+      categoryExplanation: '',
+      rootCauseSummary: 'Summary',
+      createdByUserId: 'U002',
+      submittedAt: '2023-10-26T09:00:00Z'
+    },
+    capaActionPlan: {
+      actions: [
+        { id: 'a1', type: 'CORRECTIVE_ACTION', description: 'Fix main issue', responsibleUserId: 'U002', departmentId: 'PD', dueDate: '2023-10-30', evidenceRequired: true, priority: 'LOW', acceptanceCriteria: 'Fixed', status: 'VERIFIED', progressPercent: 100, verifiedAt: '2023-10-27T10:00:00Z' },
+        { id: 'a2', type: 'PREVENTIVE_ACTION', description: 'Update documentation', responsibleUserId: 'U005', departmentId: 'QA', dueDate: '2023-10-30', evidenceRequired: true, priority: 'MEDIUM', acceptanceCriteria: 'Doc updated', status: 'VERIFIED', progressPercent: 100, verifiedAt: '2023-10-28T10:00:00Z' }
+      ],
+      planSummary: 'Fix it',
+      documentImpactAssessment: 'NO_DOCUMENT_IMPACT',
+      trainingImpactAssessment: 'NO_TRAINING_IMPACT',
+      reviewStatus: CAPAPlanReviewStatus.APPROVED,
+      reviewComment: 'Looks good.',
+      submittedAt: '2023-10-26T10:00:00Z'
+    }
   }
 ];

@@ -193,10 +193,46 @@ class NcCapaTaskService {
       dueDate: nc.updatedAt,
       status: 'PENDING',
       assignedUserId: null,
-      role: 'NC_CAPA_VERIFY', // Assuming QA does this
+      role: 'NC_CAPA_EFFECTIVENESS_CHECK', // Assuming QA/Admin does this
       actionLink: `/nc-capa/${nc.id}`
     });
     console.log(`[TaskService] Created NC_EFFECTIVENESS_CHECK_SHELL_TASK for ${nc.ncNumber}`);
+  }
+
+  createEffectivenessAdditionalActionTask(nc) {
+    this._closeTasksForNc(nc.id);
+    this.tasks.push({
+      id: `TASK-ADD-ACT-${Date.now()}`,
+      ncId: nc.id,
+      ncNumber: nc.ncNumber,
+      title: `Additional Action Required: ${nc.title}`,
+      severity: nc.severity,
+      departmentId: nc.assignedDepartmentId,
+      dueDate: nc.updatedAt,
+      status: 'PENDING',
+      assignedUserId: nc.assignedOwnerUserId,
+      role: 'NC_CAPA_OWNER_ACTION',
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_ADDITIONAL_ACTION_TASK for ${nc.ncNumber}`);
+  }
+
+  createCapaReopenedTask(nc) {
+    this._closeTasksForNc(nc.id);
+    this.tasks.push({
+      id: `TASK-REO-${Date.now()}`,
+      ncId: nc.id,
+      ncNumber: nc.ncNumber,
+      title: `CAPA Reopened: ${nc.title}`,
+      severity: nc.severity,
+      departmentId: nc.assignedDepartmentId,
+      dueDate: nc.updatedAt,
+      status: 'PENDING',
+      assignedUserId: nc.assignedOwnerUserId,
+      role: 'NC_CAPA_OWNER_ACTION',
+      actionLink: `/nc-capa/${nc.id}`
+    });
+    console.log(`[TaskService] Created NC_REOPENED_TASK for ${nc.ncNumber}`);
   }
 
   createQaVerificationTask(nc) {

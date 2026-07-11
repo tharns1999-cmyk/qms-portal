@@ -13,6 +13,8 @@ import NcCapaActionPlanTab from '../components/NcCapaActionPlanTab';
 import NcCapaPlanReviewPanel from '../components/NcCapaPlanReviewPanel';
 import NcCapaEvidenceTab from '../components/NcCapaEvidenceTab';
 import NcCapaQaVerificationTab from '../components/NcCapaQaVerificationTab';
+import NcCapaEffectivenessTab from '../components/NcCapaEffectivenessTab';
+import { ncCapaEffectivenessService } from '../services/NcCapaEffectivenessService';
 
 const NcCapaDetail = () => {
   const { ncId } = useParams();
@@ -208,6 +210,18 @@ const NcCapaDetail = () => {
     await ncCapaService.verifyAction(record.id, actionId, verificationData, currentUser.id);
     useStore.getState().addNotification(`Action verification completed: ${verificationData.result.replace(/_/g, ' ')}`, 'success');
     await loadData();
+  };
+
+  const handleEffectivenessSubmit = async (checkData) => {
+    try {
+      await ncCapaEffectivenessService.submitEffectivenessCheck(record.id, checkData, currentUser);
+      useStore.getState().addNotification('Effectiveness check submitted successfully', 'success');
+      await loadData();
+      setActiveTab('Overview');
+    } catch (err) {
+      console.error(err);
+      useStore.getState().addNotification(err.message, 'error');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -489,7 +503,7 @@ const NcCapaDetail = () => {
     );
   };
 
-  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'Evidence', 'QA Verification', 'History', 'Audit'];
+  const tabs = ['Overview', 'Detail', 'Screening', 'Root Cause', 'CAPA Action', 'Evidence', 'QA Verification', 'Effectiveness Check', 'History', 'Audit'];
   const futureTabs = [];
 
   return (
@@ -717,6 +731,15 @@ const NcCapaDetail = () => {
             record={record} 
             onVerifyAction={handleVerifyAction}
             isReadOnly={record.status === NC_STATUS.CLOSED}
+          />
+        )}
+
+        {activeTab === 'Effectiveness Check' && (
+          <NcCapaEffectivenessTab 
+            record={record}
+            user={currentUser}
+            onSubmit={handleEffectivenessSubmit}
+            isReadOnly={record.status !== NC_STATUS.EFFECTIVENESS_CHECK}
           />
         )}
 

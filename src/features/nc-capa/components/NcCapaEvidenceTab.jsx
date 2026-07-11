@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNcCapaTranslation } from '../locales/ncCapaTranslations';
-import { CAPAActionStatus, EvidenceValidationStatus } from '../domain/models';
+import { EvidenceValidationStatus } from '../domain/models';
 import useStore from '../../../store/useStore';
 import { CheckCircle, AlertCircle, FileText, Upload, X, Play, RefreshCw, MessageSquare } from 'lucide-react';
 
 const NcCapaEvidenceTab = ({ record, onUpdateProgress, onSubmitForVerification, isReadOnly }) => {
-  const { t } = useNcCapaTranslation();
-  const { currentUser, masterUsers } = useStore();
+  const { masterUsers, currentUser } = useStore();
   
   const [editingActionId, setEditingActionId] = useState(null);
   const [form, setForm] = useState({

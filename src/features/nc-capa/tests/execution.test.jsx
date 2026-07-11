@@ -65,7 +65,7 @@ describe('NC/CAPA Execution and Verification Tabs', () => {
         isReadOnly={false}
       />
     );
-    expect(screen.getByText(/QA Verification/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'QA Verification' })).toBeInTheDocument();
     expect(screen.getByText(/Pending QA Verification/i)).toBeInTheDocument();
     expect(screen.getByText(/test.pdf/i)).toBeInTheDocument();
   });

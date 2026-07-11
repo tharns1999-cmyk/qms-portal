@@ -9,6 +9,10 @@ class NcCapaNotificationService {
     useStore.getState().addNotification(userId, title, message, link, relatedTaskId);
   }
 
+  createNotification(userId, message, ncId) {
+    this.notifyUser(userId, 'Notification', message, `/nc-capa/${ncId}`);
+  }
+
   notifyNCScreening(nc, qaUserId) {
     this.notifyUser(
       qaUserId,
@@ -110,7 +114,7 @@ class NcCapaNotificationService {
     }
   }
 
-  notifyActionStarted(nc, action) {
+  notifyActionStarted(nc) {
     // Notify NC owner or QA
     if (nc.assignedOwnerUserId) {
       this.notifyUser(
@@ -122,7 +126,7 @@ class NcCapaNotificationService {
     }
   }
 
-  notifyActionSubmitted(nc, action) {
+  notifyActionSubmitted(nc) {
     // Need to notify QA users with VERIFY permission, we'll mock to reportedByUserId for now, or just generic admin.
     this.notifyUser(
       nc.reportedByUserId,

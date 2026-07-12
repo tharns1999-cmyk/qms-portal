@@ -65,7 +65,9 @@ const CapaList = lazy(() => import('./features/quality-event/pages/CapaList'));
 const CapaNew = lazy(() => import('./features/quality-event/pages/CapaNew'));
 const CapaDetail = lazy(() => import('./features/quality-event/pages/CapaDetail'));
 const QualityEventDashboard = lazy(() => import('./features/quality-event/pages/QualityEventDashboard'));
-const NcrPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.NcrPlaceholder })));
+const NcrList = lazy(() => import('./features/quality-event/pages/NcrList'));
+const NcrNew = lazy(() => import('./features/quality-event/pages/NcrNew'));
+const NcrDetail = lazy(() => import('./features/quality-event/pages/NcrDetail'));
 const ComplaintPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ComplaintPlaceholder })));
 const ReportsPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ReportsPlaceholder })));
 const MasterDataPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.MasterDataPlaceholder })));
@@ -194,7 +196,9 @@ function App() {
             <Route path="capa" element={withSuspense(CapaList)} />
             <Route path="capa/new" element={withSuspense(CapaNew)} />
             <Route path="capa/:id" element={withSuspense(CapaDetail)} />
-            <Route path="ncr" element={withSuspense(NcrPlaceholder)} />
+            <Route path="ncr" element={withSuspense(NcrList)} />
+            <Route path="ncr/new" element={withSuspense(NcrNew)} />
+            <Route path="ncr/:id" element={withSuspense(NcrDetail)} />
             <Route path="complaint" element={withSuspense(ComplaintPlaceholder)} />
             <Route path="reports" element={withSuspense(ReportsPlaceholder)} />
             <Route path="master-data" element={withSuspense(MasterDataPlaceholder)} />

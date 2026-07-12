@@ -8,7 +8,7 @@ import NcCapaActionPlanTab from '../../nc-capa/components/NcCapaActionPlanTab';
 import NcCapaEvidenceTab from '../../nc-capa/components/NcCapaEvidenceTab';
 import NcCapaQaVerificationTab from '../../nc-capa/components/NcCapaQaVerificationTab';
 import NcCapaEffectivenessTab from '../../nc-capa/components/NcCapaEffectivenessTab';
-import { ShieldAlert, CheckCircle, RefreshCw, ArrowRightCircle } from 'lucide-react';
+import { ShieldAlert, CheckCircle, ArrowRightCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CapaDetail = () => {

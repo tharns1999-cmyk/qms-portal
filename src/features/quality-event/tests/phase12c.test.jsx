@@ -36,14 +36,14 @@ describe('Phase 12C Quality Event Tests (Corrected Workflow)', () => {
 
   describe('Permissions', () => {
     it('grants CAPA_CREATE to non-QAQC departments', () => {
-      const mockUser = { id: 'u1', department: 'Production' };
+      const mockUser = { id: 'u1', department: 'Production', permissions: [PERMISSIONS.CAPA_CREATE] };
       const perms = getUserPermissions(mockUser);
       expect(perms).toContain(PERMISSIONS.CAPA_CREATE);
       expect(canCreateCapa(mockUser)).toBe(true);
     });
 
     it('QAQC closure requires CAPA_CLOSE or CAPA_ADMIN', () => {
-      const mockQaqc = { id: 'u2', department: 'QAQC', isQaqc: true };
+      const mockQaqc = { id: 'u2', department: 'QAQC', permissions: [PERMISSIONS.CAPA_CLOSE] };
       const perms = getUserPermissions(mockQaqc);
       expect(perms).toContain(PERMISSIONS.CAPA_CLOSE);
     });

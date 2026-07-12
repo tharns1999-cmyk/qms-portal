@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import useStore from '../../../store/useStore';
 import { hasPermission, PERMISSIONS } from '../../../utils/permissionHelper';
 import { ClipboardList, AlertTriangle, Clock, Users, CheckCircle } from 'lucide-react';
@@ -29,36 +29,10 @@ const DepartmentDashboard = () => {
 
       <div className="bg-white border rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b flex gap-4">
-          <button className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-2 -mb-4">My Tasks</button>
-          <button className="text-sm font-medium text-zinc-500 hover:text-zinc-700 pb-2">My Department</button>
-          <button className="text-sm font-medium text-zinc-500 hover:text-zinc-700 pb-2">CAPA I Issued</button>
-          <button className="text-sm font-medium text-zinc-500 hover:text-zinc-700 pb-2">Assigned by QAQC</button>
+          <button className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-2 -mb-4">My Assigned Tasks</button>
         </div>
-        <div className="p-6">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-zinc-50 border-b text-zinc-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Priority</th>
-                <th className="px-4 py-3 font-medium">Document</th>
-                <th className="px-4 py-3 font-medium">Task</th>
-                <th className="px-4 py-3 font-medium">Source/Target Dept</th>
-                <th className="px-4 py-3 font-medium">Due Date</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              <tr>
-                <td className="px-4 py-3"><span className="px-2 py-1 bg-red-50 text-red-700 rounded text-xs font-medium">HIGH</span></td>
-                <td className="px-4 py-3 font-medium text-blue-600">CAR-2026-0001</td>
-                <td className="px-4 py-3">Submit RCA & Action Plan</td>
-                <td className="px-4 py-3">From: QAQC</td>
-                <td className="px-4 py-3 text-red-600 font-medium">2026-07-15</td>
-                <td className="px-4 py-3"><span className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs">Response In Progress</span></td>
-                <td className="px-4 py-3"><button className="text-blue-600 font-medium hover:underline">Open Task</button></td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="p-6 text-sm text-zinc-500 italic text-center">
+          Assigned tasks will appear here.
         </div>
       </div>
     </div>
@@ -141,8 +115,8 @@ const ManagementDashboard = () => {
 const QualityEventDashboard = () => {
   const { currentUser } = useStore();
   
-  const isQaqc = hasPermission(currentUser, PERMISSIONS.QUALITY_EVENT_MANAGEMENT_VIEW) && currentUser.department === 'QAQC';
-  const isManagement = hasPermission(currentUser, PERMISSIONS.MANAGEMENT_DASHBOARD_VIEW) || currentUser.role === 'Plant Manager';
+  const isManagement = hasPermission(currentUser, PERMISSIONS.QUALITY_EVENT_MANAGEMENT_VIEW);
+  const isQaqc = hasPermission(currentUser, PERMISSIONS.NCR_VIEW_ALL) || hasPermission(currentUser, PERMISSIONS.HOLD_VIEW_ALL);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50">

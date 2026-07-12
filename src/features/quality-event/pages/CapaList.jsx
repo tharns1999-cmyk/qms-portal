@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useStore from '../../../store/useStore';
 import { qualityEventCapaService } from '../services/QualityEventCapaService';
 import { Plus, Search, Filter } from 'lucide-react';
 import dayjs from 'dayjs';

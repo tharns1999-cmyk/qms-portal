@@ -2,12 +2,9 @@ import { mockCapaRecords } from '../mock/qualityEventCapaMockData';
 import { qualityEventNumberService } from './QualityEventNumberService';
 import { ncCapaTaskService } from '../../nc-capa/services/NcCapaTaskService';
 import { ncCapaAuditService } from '../../nc-capa/services/NcCapaAuditService';
-import { ncCapaNotificationService } from '../../nc-capa/services/NcCapaNotificationService';
 import { ncCapaRcaService } from '../../nc-capa/services/NcCapaRcaService';
-import { ncCapaPlanService } from '../../nc-capa/services/NcCapaPlanService';
-import { ncCapaPlanReviewService } from '../../nc-capa/services/NcCapaPlanReviewService';
-import { ncCapaActionExecutionService } from '../../nc-capa/services/NcCapaActionExecutionService';
-import { ncCapaActionVerificationService } from '../../nc-capa/services/NcCapaActionVerificationService';
+
+
 
 export const CAPA_STATUS = {
   DRAFT: 'DRAFT',

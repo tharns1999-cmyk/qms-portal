@@ -1,0 +1,90 @@
+export const mockApprovalMatrix = {
+  RELEASE_LOW: ["HOLD_RELEASE_APPROVE"],
+  RELEASE_HIGH: ["HOLD_RELEASE_APPROVE", "QUALITY_EVENT_MANAGEMENT_APPROVE"],
+  REJECT: ["HOLD_DISPOSITION_APPROVE"],
+  DESTROY: ["HOLD_DISPOSITION_APPROVE", "QUALITY_EVENT_MANAGEMENT_APPROVE"],
+  FOOD_SAFETY_CRITICAL: ["HOLD_DISPOSITION_APPROVE", "QUALITY_EVENT_MANAGEMENT_APPROVE"],
+  OTHER: ["HOLD_DISPOSITION_APPROVE"]
+};
+
+export const mockNcrRecords = [
+  {
+    id: 'NCR-2026-0001',
+    recordNo: 'NCR-2026-0001',
+    holdNo: null,
+    ncrStatus: 'ASSIGNED_TO_DEPARTMENT',
+    holdStatus: 'NOT_REQUIRED',
+    formCode: 'FM-QC-130 R01',
+    recordType: 'NCR',
+    itemCategory: 'RAW_MATERIAL',
+    materialOrProductStatus: 'RM_NOT_PROCESSED',
+    materialName: 'Sugar (MitrPhol)',
+    lotNo: 'L260701-A',
+    quantity: '500',
+    unit: 'kg',
+    supplier: 'Supplier A',
+    problemDescription: 'Found black specks in sugar bag.',
+    dateFound: '2026-07-01',
+    timeFound: '09:00',
+    foundByUserId: 'U005',
+    foundByDepartmentId: 'QA',
+    responsibleDepartmentId: 'PC', // Purchasing
+    responsibleUserId: 'U002', // Typically purchasing, mocked as U002 for now
+    foodSafetyRelated: false,
+    severity: 'MEDIUM',
+    responseDueDate: '2026-07-04T09:00:00Z',
+    createdAt: '2026-07-01T08:00:00Z',
+    submittedAt: '2026-07-01T08:30:00Z',
+    auditTrail: []
+  },
+  {
+    id: 'NCR-2026-0002',
+    recordNo: 'NCR-2026-0002',
+    holdNo: 'HOLD-2026-0001',
+    ncrStatus: 'DEPARTMENT_RESPONDING',
+    holdStatus: 'HOLD_ACTIVE',
+    formCode: 'FM-QC-130 R01',
+    recordType: 'NCR_WITH_HOLD',
+    itemCategory: 'PRODUCT',
+    materialOrProductStatus: 'FG_PROCESS_COMPLETED',
+    productName: 'Mango Sticky Rice 200g',
+    lotNo: 'FG260705',
+    quantity: '1000',
+    unit: 'boxes',
+    problemDescription: 'Seal leak detected after blast freezer.',
+    dateFound: '2026-07-05',
+    timeFound: '14:00',
+    foundByDepartmentId: 'QA',
+    responsibleDepartmentId: 'PD', // Production
+    foodSafetyRelated: true,
+    severity: 'CRITICAL',
+    responseDueDate: '2026-07-08T14:00:00Z',
+    createdAt: '2026-07-05T13:00:00Z',
+    submittedAt: '2026-07-05T13:30:00Z',
+    auditTrail: []
+  },
+  {
+    id: 'HOLD-2026-0002',
+    recordNo: null,
+    holdNo: 'HOLD-2026-0002',
+    ncrStatus: 'QAQC_OPENED', // No NCR technically, but state implies it's open
+    holdStatus: 'HOLD_ACTIVE',
+    formCode: 'FM-QC-130 R01',
+    recordType: 'HOLD_RELEASE',
+    itemCategory: 'PACKAGING',
+    materialOrProductStatus: 'RM_NOT_PROCESSED',
+    packagingName: 'Plastic Tray T01',
+    lotNo: 'PKG2607-X',
+    quantity: '5000',
+    unit: 'pcs',
+    problemDescription: 'Pending COA from supplier.',
+    dateFound: '2026-07-10',
+    foundByDepartmentId: 'QA',
+    responsibleDepartmentId: 'QA', 
+    foodSafetyRelated: false,
+    severity: 'LOW',
+    createdAt: '2026-07-10T10:00:00Z',
+    submittedAt: '2026-07-10T10:30:00Z',
+    auditTrail: []
+  }
+];

@@ -61,7 +61,10 @@ const NcCapaMyTasks = lazy(() => import('./features/nc-capa').then(m => ({ defau
 const NcCapaDetail = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaDetail })));
 
 // Quality Event Placeholders
-const CapaPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.CapaPlaceholder })));
+const CapaList = lazy(() => import('./features/quality-event/pages/CapaList'));
+const CapaNew = lazy(() => import('./features/quality-event/pages/CapaNew'));
+const CapaDetail = lazy(() => import('./features/quality-event/pages/CapaDetail'));
+const QualityEventDashboard = lazy(() => import('./features/quality-event/pages/QualityEventDashboard'));
 const NcrPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.NcrPlaceholder })));
 const ComplaintPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ComplaintPlaceholder })));
 const ReportsPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ReportsPlaceholder })));
@@ -186,9 +189,11 @@ function App() {
           {/* Quality Event Routes (Phase 12 Aliases & Placeholders) */}
           <Route path="quality-event">
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={withSuspense(NcCapaDashboard)} />
+            <Route path="dashboard" element={withSuspense(QualityEventDashboard)} />
             <Route path="my-tasks" element={withSuspense(NcCapaMyTasks)} />
-            <Route path="capa" element={withSuspense(CapaPlaceholder)} />
+            <Route path="capa" element={withSuspense(CapaList)} />
+            <Route path="capa/new" element={withSuspense(CapaNew)} />
+            <Route path="capa/:id" element={withSuspense(CapaDetail)} />
             <Route path="ncr" element={withSuspense(NcrPlaceholder)} />
             <Route path="complaint" element={withSuspense(ComplaintPlaceholder)} />
             <Route path="reports" element={withSuspense(ReportsPlaceholder)} />

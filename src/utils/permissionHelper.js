@@ -1,8 +1,6 @@
 export const PERMISSIONS = {
   NCR_CREATE_QAQC_ONLY: 'NCR_CREATE_QAQC_ONLY',
   HOLD_CREATE_QAQC_ONLY: 'HOLD_CREATE_QAQC_ONLY',
-  COMPLAINT_CREATE_QAQC_ONLY: 'COMPLAINT_CREATE_QAQC_ONLY',
-  
   NCR_VIEW: 'NCR_VIEW',
   NCR_VIEW_ALL: 'NCR_VIEW_ALL',
   NCR_ASSIGN_RESPONSIBLE_DEPT: 'NCR_ASSIGN_RESPONSIBLE_DEPT',
@@ -40,8 +38,20 @@ export const PERMISSIONS = {
   CAPA_AUDIT_VIEW: 'CAPA_AUDIT_VIEW',
 
   QUALITY_EVENT_VIEW_RESTRICTED: 'QUALITY_EVENT_VIEW_RESTRICTED',
-  COMPLAINT_VIEW_RESTRICTED: 'COMPLAINT_VIEW_RESTRICTED',
+  COMPLAINT_VIEW: 'COMPLAINT_VIEW',
   COMPLAINT_VIEW_ALL: 'COMPLAINT_VIEW_ALL',
+  COMPLAINT_VIEW_RESTRICTED: 'COMPLAINT_VIEW_RESTRICTED',
+  COMPLAINT_CREATE_QAQC_ONLY: 'COMPLAINT_CREATE_QAQC_ONLY',
+  COMPLAINT_ASSIGN_DEPARTMENT: 'COMPLAINT_ASSIGN_DEPARTMENT',
+  COMPLAINT_INVESTIGATE: 'COMPLAINT_INVESTIGATE',
+  COMPLAINT_REVIEW_INVESTIGATION: 'COMPLAINT_REVIEW_INVESTIGATION',
+  COMPLAINT_CUSTOMER_RESPONSE: 'COMPLAINT_CUSTOMER_RESPONSE',
+  COMPLAINT_APPROVE: 'COMPLAINT_APPROVE',
+  COMPLAINT_CLOSE: 'COMPLAINT_CLOSE',
+  COMPLAINT_REOPEN: 'COMPLAINT_REOPEN',
+  COMPLAINT_AUDIT_VIEW: 'COMPLAINT_AUDIT_VIEW',
+  COMPLAINT_ADMIN: 'COMPLAINT_ADMIN',
+  
   QUALITY_EVENT_MANAGEMENT_VIEW: 'QUALITY_EVENT_MANAGEMENT_VIEW',
   QUALITY_EVENT_MANAGEMENT_APPROVE: 'QUALITY_EVENT_MANAGEMENT_APPROVE'
 };
@@ -104,6 +114,110 @@ export const canCloseNcrHold = (user) => {
   return hasPermission(user, PERMISSIONS.NCR_CLOSE) || hasPermission(user, PERMISSIONS.HOLD_CLOSE);
 };
 
-export const canViewCustomerSensitiveField = (user) => {
-  return hasPermission(user, PERMISSIONS.COMPLAINT_VIEW_ALL);
+export const canViewCustomerSensitiveField = (user, complaint) => {
+  if (!user || !complaint) return false;
+  if (hasAnyPermission(user, [PERMISSIONS.COMPLAINT_VIEW_ALL, PERMISSIONS.COMPLAINT_ADMIN])) return true;
+  
+  const isAssignedToComplaint = user.depts?.includes(complaint.responsibleDepartmentId) || complaint.responsibleUserId === user.id;
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_VIEW_RESTRICTED) && isAssignedToComplaint) return true;
+  
+  const isAssignedToResponse = user.depts?.includes(complaint.responseDepartmentId) || complaint.responseByUserId === user.id;
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_CUSTOMER_RESPONSE) && isAssignedToResponse) return true;
+  
+  return false;
+};
+
+export const canViewHealthMedicalField = (user, _complaint) => {
+  if (!user) return false;
+  return hasAnyPermission(user, [PERMISSIONS.COMPLAINT_VIEW_ALL, PERMISSIONS.COMPLAINT_ADMIN]);
+};
+
+export const canViewComplaint = (user, complaint) => {
+  if (!user || !complaint) return false;
+  if (hasAnyPermission(user, [PERMISSIONS.COMPLAINT_VIEW_ALL, PERMISSIONS.COMPLAINT_ADMIN])) return true;
+  
+  const isAssignedDept = user.depts?.includes(complaint.responsibleDepartmentId);
+  const isResponseDept = user.depts?.includes(complaint.responseDepartmentId);
+  
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_INVESTIGATE) && isAssignedDept) return true;
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_CUSTOMER_RESPONSE) && isResponseDept) return true;
+  if (hasAnyPermission(user, [PERMISSIONS.COMPLAINT_APPROVE, PERMISSIONS.QUALITY_EVENT_MANAGEMENT_APPROVE])) return true;
+  
+  return false;
+};
+
+export const canAssignComplaintDepartment = (user, _complaint) => {
+  return hasAnyPermission(user, [PERMISSIONS.COMPLAINT_ASSIGN_DEPARTMENT, PERMISSIONS.COMPLAINT_ADMIN]);
+};
+
+export const canInvestigateComplaint = (user, complaint) => {
+  if (!user || !complaint) return false;
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_ADMIN)) return true;
+  
+  const hasPerm = hasPermission(user, PERMISSIONS.COMPLAINT_INVESTIGATE);
+  const isAssignedDept = user.depts?.includes(complaint.responsibleDepartmentId);
+  const isAssignedUser = complaint.responsibleUserId === user.id;
+  
+  return hasPerm && (isAssignedDept || isAssignedUser);
+};
+
+export const canReviewComplaintInvestigation = (user, _complaint) => {
+  return hasAnyPermission(user, [PERMISSIONS.COMPLAINT_REVIEW_INVESTIGATION, PERMISSIONS.COMPLAINT_ADMIN]);
+};
+
+export const canRecordCustomerResponse = (user, complaint) => {
+  if (!user || !complaint) return false;
+  if (hasPermission(user, PERMISSIONS.COMPLAINT_ADMIN)) return true;
+  
+  const hasPerm = hasPermission(user, PERMISSIONS.COMPLAINT_CUSTOMER_RESPONSE);
+  const isAssignedUser = complaint.responseByUserId === user.id;
+  const isAssignedDept = user.depts?.includes(complaint.responseDepartmentId);
+  
+  return hasPerm && (isAssignedUser || isAssignedDept);
+};
+
+export const canApproveComplaint = (user, _complaint) => {
+  return hasAnyPermission(user, [
+    PERMISSIONS.COMPLAINT_APPROVE, 
+    PERMISSIONS.QUALITY_EVENT_MANAGEMENT_APPROVE,
+    PERMISSIONS.COMPLAINT_ADMIN
+  ]);
+};
+
+export const canCloseComplaint = (user, _complaint) => {
+  return hasAnyPermission(user, [PERMISSIONS.COMPLAINT_CLOSE, PERMISSIONS.COMPLAINT_ADMIN]);
+};
+
+export const canLinkComplaintRecord = (user, _complaint) => {
+  return hasAnyPermission(user, [PERMISSIONS.COMPLAINT_REVIEW_INVESTIGATION, PERMISSIONS.COMPLAINT_ADMIN]);
+};
+
+export const getSafeComplaintView = (user, complaint) => {
+  if (!complaint) return null;
+  const safeComplaint = { ...complaint };
+  
+  if (!canViewCustomerSensitiveField(user, complaint)) {
+    safeComplaint.customerName = '*** MASKED ***';
+    safeComplaint.customerCompany = '*** MASKED ***';
+    safeComplaint.customerAddress = '*** MASKED ***';
+    safeComplaint.city = '*** MASKED ***';
+    safeComplaint.province = '*** MASKED ***';
+    safeComplaint.postalCode = '*** MASKED ***';
+    safeComplaint.telephone = '*** MASKED ***';
+    safeComplaint.fax = '*** MASKED ***';
+    safeComplaint.email = '*** MASKED ***';
+    safeComplaint.contactPerson = '*** MASKED ***';
+    safeComplaint.customerReference = '*** MASKED ***';
+  }
+
+  if (!canViewHealthMedicalField(user, complaint)) {
+    safeComplaint.illnessOrInjury = '*** MASKED ***';
+    safeComplaint.symptoms = '*** MASKED ***';
+    safeComplaint.seenDoctor = '*** MASKED ***';
+    safeComplaint.spokenToPublicHealth = '*** MASKED ***';
+    safeComplaint.goneToHospital = '*** MASKED ***';
+    safeComplaint.medicalDetails = '*** MASKED ***';
+  }
+  
+  return safeComplaint;
 };

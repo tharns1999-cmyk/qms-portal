@@ -13,7 +13,7 @@ const DepartmentDashboard = () => {
           { title: 'Overdue', value: 0, icon: AlertTriangle, color: 'red' },
           { title: 'Waiting for Other Dept', value: 2, icon: Users, color: 'zinc' }
         ].map(card => (
-          <div key={card.title} className="bg-white p-6 rounded-xl border border-zinc-200">
+          <div key={card.title} className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-zinc-500 mb-1">{card.title}</p>
@@ -27,12 +27,47 @@ const DepartmentDashboard = () => {
         ))}
       </div>
 
-      <div className="bg-white border rounded-xl overflow-hidden">
+      <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b flex gap-4">
-          <button className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-2 -mb-4">My Assigned Tasks</button>
+          <button className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-2 -mb-4">My Assigned Investigations</button>
         </div>
         <div className="p-6 text-sm text-zinc-500 italic text-center">
-          Assigned tasks will appear here.
+          Assigned investigations (CAPA, Complaint) will appear here.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CustomerResponseDashboard = () => {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { title: 'Pending Customer Response', value: 2, icon: ClipboardList, color: 'blue' },
+          { title: 'Awaiting PM Approval', value: 1, icon: Clock, color: 'yellow' },
+          { title: 'Customer Approved', value: 3, icon: CheckCircle, color: 'green' }
+        ].map(card => (
+          <div key={card.title} className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-zinc-500 mb-1">{card.title}</p>
+                <h3 className="text-3xl font-bold text-zinc-900">{card.value}</h3>
+              </div>
+              <div className={`p-3 rounded-lg bg-${card.color}-50 text-${card.color}-600`}>
+                <card.icon size={20} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b flex gap-4">
+          <button className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-2 -mb-4">Pending Customer Actions</button>
+        </div>
+        <div className="p-6 text-sm text-zinc-500 italic text-center">
+          Pending responses will appear here.
         </div>
       </div>
     </div>
@@ -115,18 +150,33 @@ const ManagementDashboard = () => {
 const QualityEventDashboard = () => {
   const { currentUser } = useStore();
   
-  const isManagement = hasPermission(currentUser, PERMISSIONS.QUALITY_EVENT_MANAGEMENT_VIEW);
-  const isQaqc = hasPermission(currentUser, PERMISSIONS.NCR_VIEW_ALL) || hasPermission(currentUser, PERMISSIONS.HOLD_VIEW_ALL);
+  const isManagement = hasPermission(currentUser, PERMISSIONS.QUALITY_EVENT_MANAGEMENT_APPROVE) || hasPermission(currentUser, PERMISSIONS.COMPLAINT_APPROVE);
+  const isQaqc = hasPermission(currentUser, PERMISSIONS.COMPLAINT_VIEW_ALL) || hasPermission(currentUser, PERMISSIONS.NCR_VIEW_ALL);
+  const isCustomerResponse = hasPermission(currentUser, PERMISSIONS.COMPLAINT_CUSTOMER_RESPONSE);
+
+  let DashboardComponent = DepartmentDashboard;
+  let title = 'Department Dashboard';
+
+  if (isManagement) {
+    DashboardComponent = ManagementDashboard;
+    title = 'Management Approval Dashboard';
+  } else if (isQaqc) {
+    DashboardComponent = QaqcDashboard;
+    title = 'QAQC Control Board';
+  } else if (isCustomerResponse) {
+    DashboardComponent = CustomerResponseDashboard;
+    title = 'Customer Response Board';
+  }
 
   return (
     <div className="flex flex-col h-full bg-zinc-50">
       <div className="bg-white px-6 py-4 border-b shrink-0">
-        <h1 className="text-xl font-bold text-zinc-900">Quality Event Dashboard</h1>
+        <h1 className="text-xl font-bold text-zinc-900">{title}</h1>
         <p className="text-sm text-zinc-500">Welcome back, {currentUser.name}</p>
       </div>
       
       <div className="p-6 flex-1 overflow-auto">
-        {isManagement ? <ManagementDashboard /> : isQaqc ? <QaqcDashboard /> : <DepartmentDashboard />}
+        <DashboardComponent />
       </div>
     </div>
   );

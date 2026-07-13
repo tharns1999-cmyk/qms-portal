@@ -5,7 +5,8 @@ class QualityEventNumberService {
       CAR: 0,
       PAR: 0,
       NCR: 0,
-      HOLD: 0
+      HOLD: 0,
+      CC: 0
     };
   }
 
@@ -17,6 +18,7 @@ class QualityEventNumberService {
     else if (recordType === 'PAR') prefix = 'PAR';
     else if (recordType === 'NCR') prefix = 'NCR';
     else if (recordType === 'HOLD') prefix = 'HOLD';
+    else if (recordType === 'CC') prefix = 'CC';
     else prefix = 'CAPA'; // Covers QUALITY_COMPLAINT and CAPA
 
     this.counters[prefix]++;
@@ -30,7 +32,8 @@ class QualityEventNumberService {
       CAR: 0,
       PAR: 0,
       NCR: 0,
-      HOLD: 0
+      HOLD: 0,
+      CC: 0
     };
   }
 }

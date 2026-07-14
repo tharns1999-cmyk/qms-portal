@@ -43,8 +43,6 @@ const TaskApproveReplacement = lazy(() => import('./pages/Tasks/TaskApproveRepla
 
 // DCC Periodic Reviews
 const PeriodicReviewDashboard = lazy(() => import('./pages/PeriodicReviews/PeriodicReviewDashboard'));
-const MasterReviewSchedule = lazy(() => import('./pages/PeriodicReviews/MasterReviewSchedule'));
-const MyReviewTasks = lazy(() => import('./pages/PeriodicReviews/MyReviewTasks'));
 const PeriodicReviewDetail = lazy(() => import('./pages/PeriodicReviews/PeriodicReviewDetail'));
 
 // Placeholders
@@ -124,8 +122,6 @@ function App() {
             <Route path="master-list" element={withSuspense(MasterList)} />
             
             <Route path="periodic-reviews" element={withSuspense(PeriodicReviewDashboard)} />
-            <Route path="periodic-reviews/schedule" element={withSuspense(MasterReviewSchedule)} />
-            <Route path="periodic-reviews/my-tasks" element={withSuspense(MyReviewTasks)} />
             <Route path="periodic-reviews/:reviewId" element={withSuspense(PeriodicReviewDetail)} />
           </Route>
 
@@ -158,8 +154,6 @@ function App() {
           <Route path="master-list" element={<Navigate to="/dcc/master-list" replace />} />
           
           <Route path="periodic-reviews" element={<Navigate to="/dcc/periodic-reviews" replace />} />
-          <Route path="periodic-reviews/schedule" element={<Navigate to="/dcc/periodic-reviews/schedule" replace />} />
-          <Route path="periodic-reviews/my-tasks" element={<Navigate to="/dcc/periodic-reviews/my-tasks" replace />} />
           <Route path="periodic-reviews/:reviewId" element={<AliasRedirect to="/dcc/periodic-reviews/:reviewId" />} />
 
 

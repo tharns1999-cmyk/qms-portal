@@ -330,7 +330,7 @@ const useStore = create(persist((set, _get) => ({
     return { periodicReviewSchedules: schedules, periodicReviewTasks: tasks };
   }),
 
-  submitPeriodicReview: (scheduleId, outcome, comment, linkedActionId = null) => set(state => {
+  submitPeriodicReview: (scheduleId, outcome, comment, linkedActionId = null, linkageStatus = null, idempotencyKey = null) => set(state => {
     const schedules = [...state.periodicReviewSchedules];
     const tasks = [...state.periodicReviewTasks];
     const records = [...(state.periodicReviewRecords || [])];
@@ -346,30 +346,31 @@ const useStore = create(persist((set, _get) => ({
       tasks[taskIndex] = { ...tasks[taskIndex], status: 'COMPLETED', updatedAt: new Date().toISOString() };
     }
 
-    let newStatus = '';
+    let newStatus = 'COMPLETED';
     let requiresLinkedAction = false;
 
-    switch (outcome) {
-      case 'INTERNAL_NO_CHANGE': newStatus = 'COMPLETED_NO_CHANGE'; break;
-      case 'INTERNAL_REVISION_REQUIRED': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
-      case 'INTERNAL_OBSOLETE_REQUIRED': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
-      case 'EXTERNAL_CONFIRM_CURRENT': newStatus = 'COMPLETED_EXTERNAL_CONFIRMED'; break;
-      case 'EXTERNAL_NEW_VERSION': newStatus = 'ACTION_IN_PROGRESS'; requiresLinkedAction = true; break;
-      case 'EXTERNAL_NO_LONGER_APPLICABLE': newStatus = 'COMPLETED_NO_LONGER_APPLICABLE'; break;
-      default: newStatus = 'COMPLETED';
+    if (outcome === 'REVISION_REQUIRED' || outcome === 'OBSOLETE_REQUIRED') {
+      newStatus = 'IN_PROGRESS';
+      requiresLinkedAction = true;
+    } else if (outcome === 'NO_CHANGE') {
+      newStatus = 'COMPLETED';
     }
 
     schedule.status = newStatus;
+    schedule.outcome = outcome; // Save outcome
+    if (linkedActionId) schedule.linkedActionId = linkedActionId;
+    if (linkageStatus) schedule.linkageStatus = linkageStatus;
+    if (idempotencyKey) schedule.idempotencyKey = idempotencyKey;
+    
+    // Clear due state as action is taken
     schedule.dueState = 'NOT_YET_DUE';
     schedule.updatedAt = new Date().toISOString();
     
-    // Calculate new anchor only if it's fully completed (no linked action needed, or linked action completes later)
-    // Actually, anchor never shifts. Next review date is just Anchor + N years.
-    // We update the currentScheduledReviewDate to the next one if it's COMPLETED.
     if (!requiresLinkedAction) {
       schedule.currentScheduledReviewDate = calculateNextReviewDate(schedule.originalReviewAnchorDate, schedule.frequencyMonths, new Date());
       schedule.nextReviewDate = schedule.currentScheduledReviewDate;
-      schedule.status = 'NOT_YET_DUE';
+      // Also reset status back to upcoming for next cycle if it's completed entirely
+      schedule.status = 'UPCOMING';
     }
 
     schedules[scheduleIndex] = schedule;
@@ -397,6 +398,20 @@ const useStore = create(persist((set, _get) => ({
         date: new Date().toISOString()
       }, ...(state.actionLog || [])]
     };
+  }),
+
+  retryPeriodicReviewLinkage: (scheduleId, newLinkedActionId) => set(state => {
+    const schedules = [...state.periodicReviewSchedules];
+    const scheduleIndex = schedules.findIndex(s => s.id === scheduleId);
+    if (scheduleIndex === -1) return state;
+    
+    schedules[scheduleIndex] = { 
+      ...schedules[scheduleIndex], 
+      linkedActionId: newLinkedActionId, 
+      linkageStatus: 'SUCCESS',
+      updatedAt: new Date().toISOString()
+    };
+    return { periodicReviewSchedules: schedules };
   }),
   // Default user is PD Supervisor (U002)
   currentUser: { ...MASTER_DATA_USER[1], department: 'PD', depts: ['PD'] },

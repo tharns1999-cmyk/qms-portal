@@ -182,6 +182,15 @@ export const getDueStateLabel = (state) => {
 
 export const getReviewStatusLabel = (status) => {
   const map = {
+    // New Normalized Statuses
+    'UPCOMING': { label: 'ยังไม่ถึงกำหนด', color: 'bg-gray-100 text-gray-700' },
+    'DUE_SOON': { label: 'ใกล้ครบกำหนด', color: 'bg-yellow-100 text-yellow-800' },
+    'DUE': { label: 'ถึงกำหนดทบทวน', color: 'bg-orange-100 text-orange-800' },
+    'IN_PROGRESS': { label: 'อยู่ระหว่างทบทวน', color: 'bg-blue-100 text-blue-800' },
+    'OVERDUE': { label: 'เกินกำหนด', color: 'bg-red-100 text-red-800' },
+    'COMPLETED': { label: 'ทบทวนเสร็จแล้ว', color: 'bg-green-100 text-green-800' },
+
+    // Fallbacks for legacy states before normalization
     'NOT_YET_DUE': { label: 'ยังไม่ถึงกำหนด', color: 'bg-gray-100 text-gray-700' },
     'ACTION_REQUIRED': { label: 'ต้องดำเนินการ', color: 'bg-yellow-100 text-yellow-800' },
     'ACTION_IN_PROGRESS': { label: 'อยู่ระหว่างดำเนินการ', color: 'bg-blue-100 text-blue-800' },
@@ -194,4 +203,13 @@ export const getReviewStatusLabel = (status) => {
     'CANCELLED_BY_DOCUMENT_STATUS': { label: 'ยกเลิก (สถานะเอกสารเปลี่ยน)', color: 'bg-slate-200 text-slate-500 line-through' }
   };
   return map[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
+};
+
+export const getReviewOutcomeLabel = (outcome) => {
+  const map = {
+    'NO_CHANGE': { label: 'ไม่มีการเปลี่ยนแปลง', color: 'bg-green-100 text-green-800' },
+    'REVISION_REQUIRED': { label: 'ต้องแก้ไขเอกสาร', color: 'bg-yellow-100 text-yellow-800' },
+    'OBSOLETE_REQUIRED': { label: 'ต้องยกเลิกเอกสาร', color: 'bg-red-100 text-red-800' }
+  };
+  return map[outcome] || { label: outcome || '-', color: 'bg-gray-100 text-gray-700' };
 };

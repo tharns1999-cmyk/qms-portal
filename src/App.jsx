@@ -51,28 +51,7 @@ const PeriodicReviewDetail = lazy(() => import('./pages/PeriodicReviews/Periodic
 const AdminHealth = lazy(() => import('./pages/Placeholders').then(m => ({ default: m.AdminHealth })));
 const NotFound = lazy(() => import('./pages/Placeholders').then(m => ({ default: m.NotFound })));
 const DistributionDemo = lazy(() => import('./pages/Placeholders/DistributionDemo'));
-const ComingSoonModule = lazy(() => import('./pages/Placeholders/ComingSoonModule'));
 
-// NC/CAPA Module
-const NcCapaDashboard = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaDashboard })));
-const NcCapaList = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaList })));
-const NcCapaNew = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaNew })));
-const NcCapaMyTasks = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaMyTasks })));
-const NcCapaDetail = lazy(() => import('./features/nc-capa').then(m => ({ default: m.NcCapaDetail })));
-
-// Quality Event Placeholders
-const CapaList = lazy(() => import('./features/quality-event/pages/CapaList'));
-const CapaNew = lazy(() => import('./features/quality-event/pages/CapaNew'));
-const CapaDetail = lazy(() => import('./features/quality-event/pages/CapaDetail'));
-const QualityEventDashboard = lazy(() => import('./features/quality-event/pages/QualityEventDashboard'));
-const NcrList = lazy(() => import('./features/quality-event/pages/NcrList'));
-const NcrNew = lazy(() => import('./features/quality-event/pages/NcrNew'));
-const NcrDetail = lazy(() => import('./features/quality-event/pages/NcrDetail'));
-const ComplaintList = lazy(() => import('./features/quality-event/pages/ComplaintList'));
-const ComplaintNew = lazy(() => import('./features/quality-event/pages/ComplaintNew'));
-const ComplaintDetail = lazy(() => import('./features/quality-event/pages/ComplaintDetail'));
-const ReportsPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.ReportsPlaceholder })));
-const MasterDataPlaceholder = lazy(() => import('./features/quality-event/pages/Placeholders').then(m => ({ default: m.MasterDataPlaceholder })));
 
 
 // --- Helper Components ---
@@ -183,42 +162,9 @@ function App() {
           <Route path="periodic-reviews/my-tasks" element={<Navigate to="/dcc/periodic-reviews/my-tasks" replace />} />
           <Route path="periodic-reviews/:reviewId" element={<AliasRedirect to="/dcc/periodic-reviews/:reviewId" />} />
 
-          {/* NC/CAPA Routes (Kept for backwards compatibility) */}
-          <Route path="nc-capa" element={withSuspense(NcCapaDashboard)} />
-          <Route path="nc-capa/list" element={withSuspense(NcCapaList)} />
-          <Route path="nc-capa/new" element={withSuspense(NcCapaNew)} />
-          <Route path="nc-capa/my-tasks" element={withSuspense(NcCapaMyTasks)} />
-          <Route path="nc-capa/:ncId" element={withSuspense(NcCapaDetail)} />
 
-          {/* Quality Event Routes (Phase 12 Aliases & Placeholders) */}
-          <Route path="quality-event">
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={withSuspense(QualityEventDashboard)} />
-            <Route path="my-tasks" element={withSuspense(NcCapaMyTasks)} />
-            <Route path="capa" element={withSuspense(CapaList)} />
-            <Route path="capa/new" element={withSuspense(CapaNew)} />
-            <Route path="capa/:id" element={withSuspense(CapaDetail)} />
-            <Route path="ncr" element={withSuspense(NcrList)} />
-            <Route path="ncr/new" element={withSuspense(NcrNew)} />
-            <Route path="ncr/:id" element={withSuspense(NcrDetail)} />
-            <Route path="complaint" element={withSuspense(ComplaintList)} />
-            <Route path="complaint/new" element={withSuspense(ComplaintNew)} />
-            <Route path="complaint/:id" element={withSuspense(ComplaintDetail)} />
-            <Route path="reports" element={withSuspense(ReportsPlaceholder)} />
-            <Route path="master-data" element={withSuspense(MasterDataPlaceholder)} />
-            <Route path="list" element={withSuspense(NcCapaList)} />
-            <Route path="new" element={withSuspense(NcCapaNew)} />
-            <Route path=":ncId" element={withSuspense(NcCapaDetail)} />
-          </Route>
 
-          {/* Future Modules */}
-          <Route path="audit" element={withSuspense(() => <ComingSoonModule moduleName="Internal Audit" />)} />
-          <Route path="training" element={withSuspense(() => <ComingSoonModule moduleName="Training Management" />)} />
-          <Route path="change-control" element={withSuspense(() => <ComingSoonModule moduleName="Change Control" />)} />
-          <Route path="supplier" element={withSuspense(() => <ComingSoonModule moduleName="Supplier Management" />)} />
-          <Route path="complaints" element={withSuspense(() => <ComingSoonModule moduleName="Customer Complaint" />)} />
-          <Route path="calibration" element={withSuspense(() => <ComingSoonModule moduleName="Calibration / Equipment" />)} />
-          
+
           {/* Prototypes */}
           <Route path="demo-distribution" element={withSuspense(DistributionDemo)} />
 

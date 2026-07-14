@@ -3,19 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../../../store/useStore';
 import { moduleRegistry, MODULE_STATUS } from '../moduleRegistry';
 import { usePortalTranslation } from '../locales/portalTranslations';
-import { ncCapaAccessService } from '../../nc-capa/services/NcCapaAccessService';
+
 
 const PortalLandingPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useStore();
   const { t } = usePortalTranslation();
 
-  // Basic permission check - just for UI display
-  const hasModuleAccess = (module) => {
-    if (module.moduleId === 'nc-capa') {
-      return ncCapaAccessService.hasPermission(currentUser, 'NC_CAPA_VIEW') || 
-             ncCapaAccessService.hasPermission(currentUser, 'NC_CAPA_VIEW_ALL');
-    }
+  const hasModuleAccess = () => {
     // For DCC, assume access if they are logged in for this prototype,
     // or you could check if they have any roles.
     return true; 

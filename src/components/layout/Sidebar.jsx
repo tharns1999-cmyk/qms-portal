@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle, AlertTriangle, PieChart, FileText } from 'lucide-react';
+import { Home, FilePlus, List, CheckSquare, Library, Copy, Globe, Database, History, Bell, Calendar, UserCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -24,10 +24,7 @@ const Sidebar = () => {
   
   const path = location.pathname;
   const isPortal = path === '/portal' || path === '/';
-  const isNcCapa = path.startsWith('/nc-capa') || path.startsWith('/quality-event');
-  // Everything else that is not portal or nc-capa is considered DCC context for now
-  // Includes /dcc, /dashboard, /dar, etc (old routes)
-  const isDcc = !isPortal && !isNcCapa;
+  const isDcc = !isPortal;
 
   const isRequester = (requestUsers || []).some(u => u.id === currentUser.id);
   const isReviewerOrApprover = (reviewUsers || []).some(u => u.id === currentUser.id) || (approveUsers || []).some(u => u.id === currentUser.id);
@@ -264,27 +261,7 @@ const Sidebar = () => {
           </>
         )}
 
-        {isNcCapa && (
-          <>
-            <div className={`px-5 pt-3 pb-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isExpanded && 'hidden'}`}>
-              Quality Event Management
-            </div>
-            <NavItem to="/quality-event/dashboard" icon={AlertTriangle} label="Dashboard" />
-            <NavItem to="/quality-event/my-tasks" icon={CheckSquare} label="My Tasks" />
-            <NavItem to="/quality-event/capa" icon={FileText} label="CAPA" />
-            <NavItem to="/quality-event/ncr" icon={AlertTriangle} label="NCR / HOLD / RELEASE" />
-            <NavItem to="/quality-event/complaint" icon={FileText} label="Customer Complaint" />
-            <NavItem to="/quality-event/reports" icon={PieChart} label="Reports" />
-            <NavItem to="/quality-event/master-data" icon={Database} label="Master Data" />
-            
-            {/* Kept for backwards compatibility */}
-            <div className={`px-5 pt-3 pb-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isExpanded && 'hidden'}`}>
-              (Legacy Prototype)
-            </div>
-            <NavItem to="/nc-capa/list" icon={List} label="NC/CAPA List" />
-            <NavItem to="/nc-capa/new" icon={FilePlus} label="Create NC" />
-          </>
-        )}
+
       </nav>
 
       {/* BOTTOM SECTION: User Profile */}

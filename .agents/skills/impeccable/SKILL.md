@@ -174,3 +174,1074 @@ Valid `<command>` is any command from the table above. Report the script's resul
 ## Hooks
 
 `$impeccable hooks <on|off|status|ignore-rule|ignore-file|ignore-value|reset>` manages the design detector hook for this project. The hook auto-runs the detector after direct UI file edits and surfaces findings as system reminders. Full flow is in [reference/hooks.md](reference/hooks.md); load it when the user invokes `$impeccable hooks` with any argument.
+
+# SKILL.md — QMS-Portal Project Development Guide
+
+> ไฟล์นี้เป็น Project Skill / Project Instruction สำหรับ AI หรือ AI IDE ที่ช่วยวิเคราะห์ ออกแบบ พัฒนา ทดสอบ และขยายระบบ **QMS-Portal**
+>
+> จุดประสงค์หลักคือทำให้ AI เข้าใจภาพรวมของระบบ สถาปัตยกรรม เทคโนโลยี มาตรฐานการพัฒนา รูปแบบโมดูล และข้อควรระวัง โดยไม่ผูกระบบไว้กับโมดูลใดโมดูลหนึ่งมากเกินไป เพื่อให้สามารถเพิ่มโมดูลใหม่ในอนาคตได้ง่าย
+
+---
+
+## 1. Project Overview
+
+### Project Name
+
+**QMS-Portal**
+
+### Project Purpose
+
+QMS-Portal คือระบบศูนย์กลางสำหรับบริหารงานด้าน Quality Management System ของโรงงาน โดยออกแบบให้เป็นระบบแบบหลายโมดูล และสามารถเพิ่มโมดูลใหม่ได้ในอนาคต เช่น
+
+- Document Control
+- Quality Event
+- CAPA
+- NCR / HOLD / RELEASE
+- Customer Complaint
+- Audit Management
+- Supplier Quality
+- Training Management
+- Calibration
+- Change Control
+- Risk Management
+- Deviation
+- Recall / Withdrawal
+- Management Review
+- E-Form / Record Management
+- Dashboard / Report
+- Master Data
+
+รายการข้างต้นเป็นเพียงตัวอย่าง ไม่ใช่ขอบเขตที่ตายตัว
+
+### Core Design Principle
+
+ระบบต้องถูกออกแบบให้เป็น **Modular QMS Platform** ไม่ใช่แอปเฉพาะกิจสำหรับ workflow เดียว
+
+ทุกโมดูลควรสามารถ:
+
+- พัฒนาแยกจากกัน
+- มี route ของตัวเอง
+- มี permission ของตัวเอง
+- มี service / data model / test ของตัวเอง
+- เชื่อมโยงกับโมดูลอื่นผ่าน interface ที่ชัดเจน
+- ไม่แก้ไขสถานะหรือ workflow ของโมดูลอื่นโดยตรง
+- เพิ่มหรือลบได้โดยไม่ทำให้ระบบหลักเสีย
+
+---
+
+## 2. Project Structure
+
+### High-Level Architecture
+
+```text
+QMS-Portal
+├── Portal Shell / Module Hub
+├── Shared Layout
+├── Shared Design System
+├── Authentication / Current User
+├── Permission & Access Control
+├── Shared Notification Layer
+├── Shared Audit Trail
+├── Shared Master Data
+├── Shared Reporting Layer
+├── Feature Modules
+│   ├── DCC
+│   ├── Quality Event
+│   ├── Future Module A
+│   ├── Future Module B
+│   └── Future Module N
+└── Legacy Compatibility Routes
+```
+
+### Module Independence Rule
+
+แต่ละโมดูลต้องมี ownership ของข้อมูลและ workflow ของตัวเอง
+
+ตัวอย่าง:
+
+```text
+DCC controls document lifecycle
+Quality Event controls quality issue lifecycle
+Training controls training lifecycle
+Audit controls audit lifecycle
+```
+
+ห้ามโมดูลหนึ่งเปลี่ยน status ของอีกโมดูลโดยตรง
+
+การเชื่อมโยงข้ามโมดูลต้องใช้แนวทาง เช่น
+
+- linked record
+- reference ID
+- service interface
+- event notification
+- shared read-only summary
+- draft/shell creation
+
+---
+
+## 3. Repository and Development Environment
+
+### Repository
+
+```text
+https://github.com/tharns1999-cmyk/New_DCC.git
+```
+
+### Local Project Path
+
+```text
+C:\Users\User\Desktop\qms-portal
+```
+
+### Current Technology Stack
+
+```text
+Frontend Framework:
+- React
+- Vite
+- JavaScript / JSX
+
+Styling / UI:
+- Tailwind CSS
+- framer-motion
+- lucide-react
+
+State / Data:
+- Current project store and mock service pattern
+- Local mock data for prototype phases
+
+Testing / Quality:
+- Vitest
+- Project lint command / oxlint
+- npm run lint
+- npm run build
+- npm run test
+
+Version Control:
+- Git
+- GitHub
+```
+
+### Stack Stability Rule
+
+อย่าเปลี่ยน Technology Stack หลักโดยไม่จำเป็น
+
+ห้ามทำสิ่งต่อไปนี้โดยพลการ:
+
+- สร้าง Vite app ใหม่
+- ย้ายไป framework ใหม่
+- เปลี่ยน JavaScript เป็น TypeScript ทั้งโปรเจกต์โดยไม่ได้รับอนุมัติ
+- เปลี่ยน state management ทั้งระบบ
+- เปลี่ยน routing structure
+- สร้าง repository ใหม่
+- เพิ่ม dependency ขนาดใหญ่โดยไม่จำเป็น
+
+ก่อนเพิ่ม library ใหม่ ต้องอธิบาย:
+
+1. ใช้แก้ปัญหาอะไร
+2. ทำไมของเดิมทำไม่ได้
+3. ผลกระทบต่อ bundle size
+4. ผลกระทบต่อ maintenance
+5. มี alternative ที่เบากว่าหรือไม่
+
+---
+
+## 4. Route Architecture
+
+### Core Routes
+
+```text
+/portal
+  Portal Module Hub
+
+/dcc
+/dcc/*
+  DCC Module
+
+/quality-event
+/quality-event/*
+  Quality Event Module
+
+/nc-capa
+/nc-capa/*
+  Legacy / compatibility route group
+```
+
+### Future Module Route Pattern
+
+โมดูลใหม่ควรใช้ pattern:
+
+```text
+/<module-key>
+/<module-key>/dashboard
+/<module-key>/list
+/<module-key>/new
+/<module-key>/:id
+/<module-key>/my-tasks
+/<module-key>/reports
+/<module-key>/master-data
+```
+
+ตัวอย่าง:
+
+```text
+/audit
+/audit/dashboard
+/audit/new
+/audit/:id
+```
+
+### Route Guardrails
+
+- route ต้องไม่ชนกัน
+- direct refresh ต้องทำงาน
+- invalid ID ต้องแสดง Not Found
+- unauthorized access ต้องแสดง Access Denied
+- ห้าม silent redirect โดยไม่มีคำอธิบาย
+- sidebar active state ต้องถูกต้อง
+- breadcrumb ต้องตรง route
+- legacy route ต้องยังใช้งานได้ หากยังไม่อนุมัติให้ลบ
+
+---
+
+## 5. Recommended Module Folder Pattern
+
+ทุกโมดูลใหม่ควรใช้โครงสร้างใกล้เคียงนี้:
+
+```text
+src/features/<module-key>/
+├── components/
+├── pages/
+├── services/
+├── mock/
+├── hooks/
+├── utils/
+├── locales/
+├── constants/
+├── tests/
+└── index.js
+```
+
+### Responsibilities
+
+```text
+components/
+Reusable UI within the module
+
+pages/
+Route-level screens
+
+services/
+Business logic, transitions, validation, access enforcement
+
+mock/
+Mock users, records, master/config data, scenarios
+
+hooks/
+Module-specific hooks
+
+utils/
+Mapping, formatting, helper functions
+
+locales/
+User-facing translations
+
+constants/
+Canonical codes and enums
+
+tests/
+Unit, integration, route, permission, workflow tests
+```
+
+### Separation Rule
+
+Component ไม่ควรเป็นที่เก็บ business logic หลัก
+
+ควรแยกดังนี้:
+
+```text
+UI component
+→ calls helper/service
+→ service validates permission + business rule
+→ service changes data/status
+→ UI renders result
+```
+
+ห้าม hardcode workflow transition ใน JSX
+
+---
+
+## 6. Shared Platform Capabilities
+
+ระบบควรมี shared capability ที่ทุกโมดูลใช้ร่วมกันได้
+
+### 6.1 Authentication
+
+- current user
+- login state
+- logout
+- session state
+- first-login password flow หากเพิ่ม backend ภายหลัง
+
+### 6.2 Permission System
+
+ใช้ permission code เป็นหลัก
+
+ตัวอย่าง:
+
+```text
+MODULE_VIEW
+MODULE_VIEW_ALL
+MODULE_CREATE
+MODULE_EDIT
+MODULE_ASSIGN
+MODULE_APPROVE
+MODULE_CLOSE
+MODULE_ADMIN
+MODULE_AUDIT_VIEW
+```
+
+ห้ามใช้ชื่อ role หรือ department ใน workflow logic โดยตรง
+
+ไม่ใช้:
+
+```text
+isQaqc
+isManagement
+user.department === "QAQC"
+user.role === "Plant Manager"
+hardcoded user IDs
+```
+
+ใช้:
+
+```js
+hasPermission(user, "MODULE_CREATE")
+```
+
+และควรเช็ก assignment ร่วมด้วยเมื่อเป็น action ต่อ record
+
+```text
+permission + assignment + record state
+```
+
+### 6.3 Assignment
+
+รองรับ:
+
+- assigned user
+- assigned department
+- task owner
+- backup owner
+- watchers / observers
+- escalation owner
+
+### 6.4 Notification
+
+ใน prototype ใช้ mock notification ได้
+
+notification ไม่ควร hardcode user ID
+
+ควร resolve recipient จาก:
+
+- assignment
+- permission group
+- department membership
+- configured escalation matrix
+
+### 6.5 Audit Trail
+
+ทุก action สำคัญต้องมี audit event เช่น
+
+- create
+- submit
+- assign
+- approve
+- reject
+- return
+- update
+- close
+- reopen
+- link
+- unlink
+- override
+- permission-denied attempt เมื่อจำเป็น
+
+Audit entry ควรมี:
+
+```text
+id
+recordType
+recordId
+actionCode
+actorId
+actorName
+actorDepartment
+previousStatus
+newStatus
+comment
+createdAt
+metadata
+```
+
+### 6.6 Master Data
+
+Master data ต้องแยกจาก transaction data
+
+ตัวอย่าง:
+
+- Department
+- Position
+- Role
+- User
+- Permission
+- Document Type
+- Severity
+- Category
+- Reason
+- Approval Matrix
+- SLA Configuration
+- Workflow Configuration
+- Notification Template
+
+### 6.7 Reporting
+
+ทุกโมดูลควรออกแบบให้รองรับ:
+
+- list filter
+- export
+- summary card
+- trend
+- overdue
+- status distribution
+- department breakdown
+- audit trail report
+
+---
+
+## 7. Workflow Design Standard
+
+ทุก workflow ต้องนิยามอย่างน้อย:
+
+```text
+Trigger
+Creator
+Owner
+Reviewer
+Approver
+Assignee
+Status model
+Allowed transition
+Permission
+SLA
+Reminder
+Escalation
+Closure condition
+Reopen condition
+Audit event
+Visibility
+```
+
+### Status Design
+
+ใช้ canonical status code ภาษาอังกฤษใน code
+
+```text
+DRAFT
+SUBMITTED
+ASSIGNED
+IN_PROGRESS
+PENDING_REVIEW
+RETURNED
+APPROVED
+CLOSED
+CANCELLED
+REOPENED
+```
+
+UI แสดงชื่อภาษาไทยผ่าน label mapper
+
+ห้ามใช้ข้อความภาษาไทยเป็น canonical code
+
+### Transition Rule
+
+ทุก transition ต้องตรวจ:
+
+```text
+1. current status
+2. permission
+3. assignment
+4. required fields
+5. closure gate
+6. approval condition
+7. linked record condition
+```
+
+### SLA Pattern
+
+รองรับ:
+
+- submittedAt
+- assignedAt
+- dueDate
+- completedAt
+- daysRemaining
+- overdueDays
+- reminder status
+- escalation status
+
+SLA ต้องคำนวณใน service/helper ไม่คำนวณกระจัดกระจายใน UI
+
+---
+
+## 8. UI / UX Standard
+
+### Language
+
+UI สำหรับผู้ใช้งานโรงงานต้องเป็นภาษาไทยเป็นหลัก
+
+อนุญาตให้ใช้คำย่อ/รหัสที่ผู้ใช้งานคุ้นเคย เช่น
+
+```text
+CAPA
+CAR
+PAR
+NCR
+HOLD
+QAQC
+RM
+WIP
+FG
+Lot No.
+DCC
+DAR
+```
+
+Internal code, route, permission และ status constants ใช้ภาษาอังกฤษได้
+
+### Dashboard Principle
+
+Dashboard ต้องตอบ 3 คำถาม:
+
+1. ฉันต้องทำอะไร
+2. อะไรใกล้ครบกำหนดหรือเกินกำหนด
+3. สถานะของแผนกหรือระบบเป็นอย่างไร
+
+หลีกเลี่ยง KPI card จำนวนมาก
+
+แนะนำ:
+
+- 4–6 cards ต่อ view
+- work queue
+- due soon
+- overdue
+- high risk
+- waiting for another department
+- management trend
+
+### List Page Standard
+
+ควรมี:
+
+- search
+- filter
+- status tabs
+- date range
+- department filter
+- owner/assignee filter
+- pagination หรือ virtualization เมื่อข้อมูลมาก
+- responsive mobile card view
+- no horizontal overflow
+
+### Detail Page Standard
+
+ควรมี:
+
+- record header
+- current status
+- key metadata
+- current task
+- due date
+- permission-aware action panel
+- tabs/sections
+- linked records
+- comments/history
+- audit trail
+
+### Form Standard
+
+- multi-step wizard เมื่อข้อมูลมาก
+- save draft
+- validation per step
+- final review before submit
+- contextual help
+- required field indication
+- no duplicate input
+- dependent field visibility
+
+### Access Denied
+
+ต้องแสดงอย่างชัดเจนเป็นภาษาไทย
+
+```text
+ไม่มีสิทธิ์เข้าถึงข้อมูลนี้
+ข้อมูลนี้ถูกจำกัดสิทธิ์เฉพาะผู้เกี่ยวข้อง
+กรุณาติดต่อผู้ดูแลระบบหรือเจ้าของงาน
+```
+
+ไม่ควร redirect ออกเงียบ ๆ
+
+---
+
+## 9. Localization Standard
+
+ใช้ centralized localization
+
+ตัวอย่าง:
+
+```text
+src/features/<module>/locales/th.js
+src/features/<module>/utils/labelMappers.js
+```
+
+ควรมี helper เช่น
+
+```js
+tModule(key)
+getStatusLabel(code)
+getActionLabel(code)
+getSeverityLabel(code)
+getDocumentTypeLabel(code)
+getValidationMessage(code)
+```
+
+ห้าม hardcodeข้อความซ้ำ ๆ ในหลาย component
+
+UI ภาษาไทย แต่ code ภาษาอังกฤษ
+
+---
+
+## 10. Data and Security Principles
+
+### Access Control
+
+ต้องควบคุมข้อมูลทั้งระดับ:
+
+- route
+- list result
+- detail view
+- field masking
+- action button
+- service action
+- linked record summary
+
+การซ่อน button อย่างเดียวไม่ถือว่าปลอดภัย
+
+### Sensitive Data
+
+หากโมดูลมีข้อมูล sensitive เช่น
+
+- customer information
+- complaint detail
+- medical data
+- employee information
+- confidential document
+
+ต้องมี:
+
+- field-level masking
+- safe view mapper
+- permission check
+- assignment check
+- audit access เมื่อจำเป็น
+
+### Service-Level Enforcement
+
+ทุก action ต้อง validate ใน service แม้ UI จะซ่อนปุ่มแล้ว
+
+ตัวอย่าง:
+
+```text
+UI guard + service guard + data filtering
+```
+
+### Linked Records
+
+Linked records เป็น traceability เท่านั้น
+
+ห้าม:
+
+- auto-close source record
+- auto-approve target record
+- mutate status ข้ามโมดูล
+- bypass workflow
+- leak restricted information
+
+---
+
+## 11. Current Modules as Reference Implementations
+
+ส่วนนี้เป็น reference ของโมดูลที่มีอยู่ ไม่ใช่ template ตายตัวสำหรับทุกโมดูล
+
+### DCC
+
+ใช้สำหรับ:
+
+- document lifecycle
+- new/revision/obsolete
+- controlled copy
+- document library
+- distribution
+- periodic review
+- external document
+
+### Quality Event
+
+ใช้สำหรับ:
+
+- CAPA / CAR / PAR
+- NCR / HOLD / RELEASE
+- Customer Complaint
+- linked record traceability
+
+### Legacy NC-CAPA
+
+route `/nc-capa/*` ต้องไม่ถูกทำลายจนกว่าจะมีแผน migration ที่อนุมัติแล้ว
+
+---
+
+## 12. Adding a New Module
+
+เมื่อเพิ่มโมดูลใหม่ AI ต้องทำตามลำดับนี้
+
+### Step 1: Business Analysis
+
+ระบุ:
+
+- objective
+- scope
+- out of scope
+- actors
+- current process
+- future process
+- pain points
+- business rules
+- forms/documents
+- reports
+- integrations
+
+### Step 2: Workflow Definition
+
+ระบุ:
+
+- status model
+- transitions
+- task owner
+- reviewer
+- approver
+- SLA
+- escalation
+- closure gate
+- reopen rule
+
+### Step 3: Permission Matrix
+
+ระบุ:
+
+- view
+- view all
+- create
+- edit
+- assign
+- respond
+- review
+- approve
+- close
+- reopen
+- admin
+- audit view
+
+### Step 4: Data Model
+
+แยก:
+
+- record fields
+- assignment
+- workflow state
+- comments
+- audit trail
+- linked records
+- attachments metadata
+- SLA fields
+
+### Step 5: UX Structure
+
+กำหนด:
+
+- dashboard
+- list
+- create
+- detail
+- my tasks
+- reports
+- master data
+
+### Step 6: Implementation Plan
+
+ก่อน coding ต้องเสนอ:
+
+- files to create/modify
+- route changes
+- service methods
+- data model
+- mock data
+- permission changes
+- tests
+- regression risks
+
+### Step 7: Implementation
+
+ทำตาม plan ที่ได้รับอนุมัติ
+
+### Step 8: Quality Gate
+
+```powershell
+npm run lint
+npm run build
+npm run test
+```
+
+### Step 9: Walkthrough
+
+ต้องรายงาน:
+
+- files changed
+- route behavior
+- workflow behavior
+- permission behavior
+- tests
+- lint
+- build
+- known limitations
+- regression confirmation
+
+### Step 10: Commit
+
+Commit หลัง walkthrough ผ่านเท่านั้น
+
+---
+
+## 13. Testing Standard
+
+ทุกโมดูลใหม่ควรมี test อย่างน้อยในหมวดต่อไปนี้
+
+### Permission Tests
+
+- unauthorized cannot view
+- unauthorized cannot create
+- permission alone insufficient when assignment required
+- admin/view-all works correctly
+
+### Workflow Tests
+
+- valid transition works
+- invalid transition blocked
+- required field enforced
+- closure gate enforced
+- reopen rule enforced
+
+### Data Tests
+
+- official number generation
+- draft number behavior
+- no duplicate link
+- audit event created
+- sensitive data masked
+
+### UI Tests
+
+- route renders
+- access denied renders
+- Thai labels render
+- status badges render
+- mobile layout no overflow
+
+### Regression Tests
+
+- existing modules still work
+- portal still works
+- DCC remains separate
+- legacy routes remain working
+
+---
+
+## 14. Quality Gate
+
+ทุก phase ต้องผ่าน:
+
+```text
+npm run lint
+npm run build
+npm run test
+```
+
+เกณฑ์:
+
+```text
+0 lint errors
+build success
+all tests passed
+no avoidable app-source warnings
+no React act warning
+no worker crash
+no redirect loop
+no FatalProcessOutOfMemory
+no app console error in normal flow
+```
+
+---
+
+## 15. Git Workflow
+
+หลัง phase ผ่านการ review:
+
+```powershell
+git status
+git add .
+git commit -m "<type>: <clear message>"
+git push
+git status
+```
+
+Commit type แนะนำ:
+
+```text
+feat
+fix
+refactor
+test
+chore
+docs
+```
+
+ตัวอย่าง:
+
+```text
+feat: add audit management module shell
+fix: enforce assignment-based access control
+refactor: centralize Thai status labels
+test: add workflow regression coverage
+```
+
+---
+
+## 16. AI Working Rules
+
+AI ที่ช่วยโปรเจกต์นี้ต้อง:
+
+- เข้าใจระบบในภาพรวมก่อนแก้ code
+- ตรวจของเดิมก่อนสร้างของใหม่
+- reuse component/service เมื่อเหมาะสม
+- ไม่ duplicate architecture
+- ไม่สร้าง module แบบ isolated app
+- ไม่ hardcode role/department/user
+- ไม่ bypass permission
+- ไม่เปลี่ยน workflow โดยไม่ยืนยัน
+- ไม่ทำลาย route เดิม
+- ไม่ลบ legacy โดยไม่มี migration plan
+- ไม่ขอให้ user แก้ไฟล์เอง หาก AI IDE ทำให้ได้
+- ต้องรายงานผล lint/build/test
+- ต้องแยก implementation plan กับ walkthrough ให้ชัดเจน
+
+### Review Vocabulary
+
+เมื่อ review ผลจาก AI IDE ให้ใช้:
+
+```text
+ผ่าน
+ไม่ผ่าน
+เกือบผ่าน แต่ต้องแก้
+```
+
+พร้อมบอก:
+
+1. จุดที่ถูก
+2. จุดที่เสี่ยง
+3. สิ่งที่ต้องแก้
+4. ให้ proceed หรือไม่
+5. commit ได้หรือยัง
+
+---
+
+## 17. Future Backend Readiness
+
+แม้ปัจจุบันหลายส่วนเป็น frontend/mock prototype แต่ code ควรเตรียมพร้อมต่อ backend จริง
+
+แนะนำให้แยก:
+
+```text
+UI
+Service
+Repository/API Adapter
+Validation
+Permission
+Mapper
+Mock Data
+```
+
+หลีกเลี่ยง:
+
+- component อ่าน/เขียน mock array โดยตรงทุกจุด
+- business rule อยู่ใน JSX
+- status transition กระจัดกระจาย
+- permission logicกระจัดกระจาย
+- hardcoded master data ในหลายไฟล์
+
+เมื่อทำ backend ภายหลัง ควรเปลี่ยนเฉพาะ repository/API layer มากที่สุด โดยไม่ต้อง rewrite UI/workflow ทั้งหมด
+
+---
+
+## 18. Definition of Done for a New Module
+
+โมดูลถือว่าเสร็จระดับ prototype-ready เมื่อมี:
+
+- module route
+- sidebar/menu entry
+- permission model
+- dashboard or entry view
+- list page
+- create flow
+- detail page
+- workflow service
+- canonical status codes
+- Thai UI labels
+- access denied state
+- audit trail
+- mock data scenarios
+- tests
+- lint passed
+- build passed
+- all tests passed
+- regression verified
+- walkthrough accepted
+- commit pushed
+
+---
+
+## 19. Final Principle
+
+QMS-Portal ต้องเติบโตแบบ platform
+
+ทุกการพัฒนาใหม่ต้องรักษา 5 เรื่องนี้:
+
+```text
+Modularity
+Permission Safety
+Workflow Integrity
+Thai-first UX
+Future Backend Readiness
+```
+
+อย่าออกแบบโมดูลใหม่ด้วยการ copy แล้วผูก logic แบบเฉพาะหน้า
+
+ให้สร้างโมดูลที่ใช้ pattern ร่วมกัน แต่รักษา business rule ของแต่ละกระบวนการอย่างชัดเจน

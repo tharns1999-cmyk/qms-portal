@@ -15,6 +15,12 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     environment: 'jsdom',
-    setupFiles: ['./src/tests/setup.js']
+    setupFiles: ['./src/tests/setup.js'],
+    coverage: {
+      provider: 'v8',
+      all: true,
+      reporter: ['text', 'html', 'json-summary'],
+      include: ['src/services/PeriodicReviewAccessService.js', 'src/services/PeriodicReviewService.js', 'src/store/useStore.js', 'src/pages/PeriodicReviews/**/*.jsx']
+    }
   }
 })

@@ -14,9 +14,7 @@ describe('PeriodicReviewAccessService', () => {
   
   // Legacy Mock Fallback Users (uses user.depts and user.level)
   const hrManager = { id: 'U3', role: 'USER', isDcc: false, depts: ['HR'], level: 4 };
-  const hrStaff = { id: 'U4', role: 'USER', isDcc: false, depts: ['HR'], level: 2 };
   const itStaff = { id: 'U5', role: 'USER', isDcc: false, depts: ['IT'], level: 2 };
-  const hrDocOwner = { id: 'U6', role: 'USER', isDcc: false, depts: ['HR'], level: 2 };
   
   // New Multi-Department Membership Users
   const multiDeptManager = {

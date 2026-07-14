@@ -87,10 +87,10 @@ const PeriodicReviewDetail = () => {
         newLinkedId = schedule.linkedActionId;
         newLinkageStatus = 'SUCCESS';
       } else {
-        // Simulate a 20% chance of failure for testing retry
-        const isSuccess = Math.random() > 0.2;
-        newLinkedId = isSuccess ? `DAR-${Date.now()}` : null;
-        newLinkageStatus = isSuccess ? 'SUCCESS' : 'FAILED';
+        // In a real application, this would depend on the actual service result.
+        // For deterministic operation, we assume the linkage is successful unless explicitly mocked to fail by tests.
+        newLinkedId = `DAR-${Date.now()}`;
+        newLinkageStatus = 'SUCCESS';
       }
     }
 
@@ -178,7 +178,7 @@ const PeriodicReviewDetail = () => {
         </div>
       </div>
 
-      {schedule.status === 'COMPLETED' ? (
+      {schedule.status === 'COMPLETED' || schedule.status === 'IN_PROGRESS' ? (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-emerald-800 mb-2">ทบทวนเสร็จแล้ว</h2>

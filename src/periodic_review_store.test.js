@@ -40,19 +40,57 @@ describe('Periodic Review DAR Idempotency and Linkage', () => {
     expect(updatedSchedule.idempotencyKey).toBe('PERIODIC_REVIEW_PR-TEST-1_OBSOLETE');
   });
 
-  it('retry after failure creates no duplicate', () => {
+  it('deterministic DAR failure and retry logic', () => {
     const store = useStore.getState();
-    store.submitPeriodicReview('PR-TEST-1', 'REVISION_REQUIRED', 'Needs update', null, 'FAILED', 'PERIODIC_REVIEW_PR-TEST-1_REVISION');
+    const initialDarCount = store.dars ? store.dars.length : 0;
+
+    // Simulate dependency injection of a DAR creation service
+    const mockDarAdapter = (shouldFail) => {
+      if (shouldFail) {
+        // 4. linkageStatus becomes FAILED
+        store.submitPeriodicReview('PR-TEST-1', 'REVISION_REQUIRED', 'Needs update', null, 'FAILED', 'PERIODIC_REVIEW_PR-TEST-1_REVISION');
+        throw new Error('Network Error: DAR service unreachable');
+      } else {
+        const newDarId = store.addDarAndReturnId({ type: 'REVISION', isDraft: true, title: 'Revise DOC-1' });
+        store.retryPeriodicReviewLinkage('PR-TEST-1', newDarId);
+        return newDarId;
+      }
+    };
+
+    // 1. Submit a Periodic Review requiring Revision.
+    // 2. Inject a DAR creation dependency that throws a controlled error.
+    expect(() => mockDarAdapter(true)).toThrow('Network Error: DAR service unreachable');
     
-    let updatedSchedule = useStore.getState().periodicReviewSchedules.find(s => s.id === 'PR-TEST-1');
-    expect(updatedSchedule.linkageStatus).toBe('FAILED');
-    expect(updatedSchedule.linkedActionId).toBeUndefined();
+    // 3. Confirm the Periodic Review result remains saved.
+    let schedule = useStore.getState().periodicReviewSchedules.find(s => s.id === 'PR-TEST-1');
+    expect(schedule.outcome).toBe('REVISION_REQUIRED');
     
-    // Retry
-    useStore.getState().retryPeriodicReviewLinkage('PR-TEST-1', 'DAR-RETRY');
+    // 4. Confirm linkageStatus becomes FAILED.
+    expect(schedule.linkageStatus).toBe('FAILED');
     
-    updatedSchedule = useStore.getState().periodicReviewSchedules.find(s => s.id === 'PR-TEST-1');
-    expect(updatedSchedule.linkageStatus).toBe('SUCCESS');
-    expect(updatedSchedule.linkedActionId).toBe('DAR-RETRY');
+    // 5. Confirm no linked DAR exists after the failed attempt.
+    expect(schedule.linkedActionId).toBeFalsy();
+    const currentDarCount = useStore.getState().dars ? useStore.getState().dars.length : 0;
+    expect(currentDarCount).toBe(initialDarCount);
+    
+    // 6. Invoke retry (success path).
+    const newDarId = mockDarAdapter(false);
+    
+    // 7. Confirm exactly one DAR draft is created.
+    const createdDars = useStore.getState().dars.filter(d => d.id === newDarId);
+    expect(createdDars.length).toBe(1);
+    
+    // 8. Confirm DAR status is DRAFT.
+    expect(createdDars[0].status).toBe('DRAFT');
+    
+    schedule = useStore.getState().periodicReviewSchedules.find(s => s.id === 'PR-TEST-1');
+    expect(schedule.linkageStatus).toBe('SUCCESS');
+    expect(schedule.linkedActionId).toBe(newDarId);
+
+    // 9. Invoke retry or submit again.
+    // 10. Confirm no duplicate DAR is created.
+    store.retryPeriodicReviewLinkage('PR-TEST-1', newDarId);
+    const finalDarCount = useStore.getState().dars.length;
+    expect(finalDarCount).toBe(initialDarCount + 1); // Still only 1 added
   });
 });

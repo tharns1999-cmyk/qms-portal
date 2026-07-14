@@ -279,17 +279,17 @@ const cleanupDccTasks = (tasks, instances, documents) => {
 };
 
 // ================= STORE ================= //
-const useStore = create(persist((set, _get) => ({
+export const getInitialStoreState = () => ({
   masterUsers: MASTER_DATA_USER,
   requestUsers: REQUEST_MASTER_DATA_USER,
   reviewUsers: REVIEW_MASTER_DATA_USER,
   approveUsers: APPROVE_MASTER_DATA_USER,
   masterDepartments: MASTER_DEPARTMENTS,
   docFormats: MOCK_DOC_FORMATS,
-  dars: MOCK_DARS,
-  tasks: MOCK_TASKS,
-  timeline: MOCK_TIMELINE,
-  documents: MOCK_DOCUMENTS,
+  dars: JSON.parse(JSON.stringify(MOCK_DARS)),
+  tasks: JSON.parse(JSON.stringify(MOCK_TASKS)),
+  timeline: JSON.parse(JSON.stringify(MOCK_TIMELINE)),
+  documents: JSON.parse(JSON.stringify(MOCK_DOCUMENTS)),
   externalDocuments: [
     {
       id: 'EXT-MOCK-1',
@@ -314,12 +314,19 @@ const useStore = create(persist((set, _get) => ({
   notifications: [],
   actionLog: [],
   copyRequests: [],
-  controlledCopyInstances: MOCK_CONTROLLED_COPY_INSTANCES,
+  controlledCopyInstances: JSON.parse(JSON.stringify(MOCK_CONTROLLED_COPY_INSTANCES)),
   controlledCopyAuditTrail: [],
   periodicReviewSchedules: [],
   periodicReviewTasks: [],
   periodicReviewRecords: [],
-  mockDateOffset: 0, // Used to simulate passing days for SLA testing
+  mockDateOffset: 0,
+});
+
+const useStore = create(persist((set, _get) => ({
+  ...getInitialStoreState(),
+
+  // EXCLUSIVELY FOR TESTING - Resets store to deterministic initial state
+  resetStore: () => set(getInitialStoreState()),
 
   setMockDateOffset: (days) => set({ mockDateOffset: days }),
 

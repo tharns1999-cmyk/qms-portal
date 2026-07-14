@@ -6,10 +6,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'list',
+  reporter: [['html'], ['list']],
   use: {
     baseURL: 'http://localhost:5176',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    headless: true,
+    timezoneId: 'Asia/Bangkok',
   },
   projects: [
     {

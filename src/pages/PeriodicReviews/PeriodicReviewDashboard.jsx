@@ -30,7 +30,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
   const [activeTab, setActiveTab] = useState('ACTION_REQUIRED'); // ACTION_REQUIRED, DUE_SOON, OVERDUE, COMPLETED, ALL
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDept, setSelectedDept] = useState('ALL');
-  
+
   // Available departments for the user
   const availableDepts = currentUser?.depts || [];
 
@@ -45,7 +45,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
 
   const filteredRecords = useMemo(() => {
     let result = visibleRecords;
-    
+
     // Tab filter
     if (activeTab === 'ACTION_REQUIRED') {
       result = result.filter(r => ['UPCOMING', 'DUE_SOON', 'DUE', 'IN_PROGRESS'].includes(r.status));
@@ -56,7 +56,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
     } else if (activeTab === 'COMPLETED') {
       result = result.filter(r => r.status === 'COMPLETED');
     }
-    
+
     if (selectedDept !== 'ALL') {
       result = result.filter(r => r.ownerDepartmentId === selectedDept);
     }
@@ -64,7 +64,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
       const term = searchTerm.toLowerCase();
       result = result.filter(r => (r.documentNumber || '').toLowerCase().includes(term) || (r.documentName || '').toLowerCase().includes(term));
     }
-    
+
     return result;
   }, [visibleRecords, activeTab, selectedDept, searchTerm]);
 
@@ -95,7 +95,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
             </button>
           ))}
         </div>
-        
+
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-white">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -151,7 +151,7 @@ const OwnerDepartmentView = ({ visibleRecords }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
+                      <button
                         onClick={() => navigate(`/dcc/periodic-reviews/${record.id}`)}
                         className="text-indigo-600 hover:text-indigo-800 font-medium text-xs bg-indigo-50 px-3 py-1.5 rounded-lg inline-flex items-center gap-1"
                       >
@@ -195,7 +195,7 @@ const PeriodicReviewDashboard = () => {
             {view === 'OWNER_DEPT' ? 'งานทบทวนเอกสารของแผนกฉัน' : 'ภาพรวมการทบทวนเอกสารทุกแผนก'}
           </p>
         </div>
-        
+
         {canSeeAll && (
           <div className="bg-slate-100 p-1 rounded-xl flex items-center shadow-inner">
             <button
@@ -219,7 +219,7 @@ const PeriodicReviewDashboard = () => {
       ) : (
         <PeriodicReviewControlBoard />
       )}
-      
+
     </div>
   );
 };

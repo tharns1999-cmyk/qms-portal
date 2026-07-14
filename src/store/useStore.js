@@ -322,7 +322,7 @@ export const getInitialStoreState = () => ({
   mockDateOffset: 0,
 });
 
-const useStore = create(persist((set, _get) => ({
+const useStore = create(persist((set, get) => ({
   ...getInitialStoreState(),
 
   // EXCLUSIVELY FOR TESTING - Resets store to deterministic initial state
@@ -420,6 +420,36 @@ const useStore = create(persist((set, _get) => ({
     };
     return { periodicReviewSchedules: schedules };
   }),
+  // --- Narrow Dependency-Injection Seam for Testing Real Workflow ---
+  // Safe because these methods only orchestrate existing actions and are explicitly designed to take adapter dependencies
+  submitPeriodicReviewWithDarAction: (scheduleId, outcome, comment, darPayload, darAdapter) => {
+    const store = get();
+    const idempotencyKey = `PERIODIC_REVIEW_${scheduleId}_${outcome}`;
+    try {
+      const newLinkedId = darAdapter(darPayload);
+      store.submitPeriodicReview(scheduleId, outcome, comment, newLinkedId, 'SUCCESS', idempotencyKey);
+    } catch (err) {
+      store.submitPeriodicReview(scheduleId, outcome, comment, null, 'FAILED', idempotencyKey);
+    }
+  },
+
+  retryPeriodicReviewLinkageWithDarAction: (scheduleId, darPayload, darAdapter) => {
+    const store = get();
+    const schedule = store.periodicReviewSchedules.find(s => s.id === scheduleId);
+    if (!schedule) return;
+    
+    // Check idempotency visually
+    if (schedule.linkedActionId && schedule.linkageStatus === 'SUCCESS') return;
+
+    try {
+      const newLinkedId = darAdapter(darPayload);
+      store.retryPeriodicReviewLinkage(scheduleId, newLinkedId);
+    } catch (err) {
+      // Intentionally swallow to maintain FAILED state
+    }
+  },
+  // ------------------------------------------------------------------
+
   // Default user is PD Supervisor (U002)
   currentUser: { ...MASTER_DATA_USER[1], department: 'PD', depts: ['PD'] },
 

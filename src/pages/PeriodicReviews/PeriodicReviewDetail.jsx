@@ -75,50 +75,78 @@ const PeriodicReviewDetail = () => {
       toast.error('กรุณาระบุเหตุผล/รายละเอียดการทบทวน');
       return;
     }
-    
-    let newLinkedId = null;
-    let newLinkageStatus = null;
+
+    const postSubmitNavigation = (navOutcome, linkStatus) => {
+      if (linkStatus === 'FAILED') {
+        toast.error('การบันทึกสำเร็จ แต่การเชื่อมโยง DAR ล้มเหลว');
+      } else {
+        toast.success('บันทึกผลการทบทวนเรียบร้อยแล้ว');
+        if (navOutcome === 'REVISION_REQUIRED') {
+          handleLinkedAction('REVISION');
+        } else if (navOutcome === 'OBSOLETE_REQUIRED') {
+          handleLinkedAction('OBSOLETE');
+        } else {
+          navigate('/dcc/periodic-reviews');
+        }
+      }
+    };
+
     const idempotencyKey = outcome === 'REVISION_REQUIRED' 
       ? `PERIODIC_REVIEW_${schedule.id}_REVISION` 
       : (outcome === 'OBSOLETE_REQUIRED' ? `PERIODIC_REVIEW_${schedule.id}_OBSOLETE` : null);
 
     if (idempotencyKey) {
       if (schedule.linkedActionId && schedule.linkageStatus === 'SUCCESS') {
-        newLinkedId = schedule.linkedActionId;
-        newLinkageStatus = 'SUCCESS';
+        // Already created, just re-submit core
+        submitPeriodicReview(schedule.id, outcome, comment, schedule.linkedActionId, 'SUCCESS', idempotencyKey);
+        postSubmitNavigation(outcome, 'SUCCESS');
       } else {
-        // In a real application, this would depend on the actual service result.
-        // For deterministic operation, we assume the linkage is successful unless explicitly mocked to fail by tests.
-        newLinkedId = `DAR-${Date.now()}`;
-        newLinkageStatus = 'SUCCESS';
+        // Generate actual DAR
+        const darPayload = {
+          type: outcome === 'REVISION_REQUIRED' ? 'REVISION' : 'OBSOLETE',
+          title: schedule.documentName || schedule.documentNumber,
+          department: schedule.ownerDepartmentId,
+          isDraft: true,
+          status: 'DRAFT',
+          refDocId: schedule.documentId || schedule.externalDocumentId
+        };
+        const darAdapter = (payload) => useStore.getState().addDarAndReturnId(payload);
+        
+        useStore.getState().submitPeriodicReviewWithDarAction(schedule.id, outcome, comment, darPayload, darAdapter);
+        
+        // Check new status directly from store for accurate navigation
+        const updatedSchedule = useStore.getState().periodicReviewSchedules.find(s => s.id === schedule.id);
+        postSubmitNavigation(outcome, updatedSchedule?.linkageStatus);
       }
-    }
-
-    submitPeriodicReview(schedule.id, outcome, comment, newLinkedId, newLinkageStatus, idempotencyKey);
-    
-    if (newLinkageStatus === 'FAILED') {
-      toast.error('การบันทึกสำเร็จ แต่การเชื่อมโยง DAR ล้มเหลว');
     } else {
-      toast.success('บันทึกผลการทบทวนเรียบร้อยแล้ว');
-      if (outcome === 'REVISION_REQUIRED') {
-        handleLinkedAction('REVISION');
-      } else if (outcome === 'OBSOLETE_REQUIRED') {
-        handleLinkedAction('OBSOLETE');
-      } else {
-        navigate('/dcc/periodic-reviews');
-      }
+      submitPeriodicReview(schedule.id, outcome, comment, null, null, null);
+      postSubmitNavigation(outcome, null);
     }
   };
 
   const handleRetryDarLinkage = () => {
-    const newLinkedId = `DAR-${Date.now()}`;
-    useStore.getState().retryPeriodicReviewLinkage(schedule.id, newLinkedId);
-    toast.success('สร้างคำขอสำเร็จ');
+    const darPayload = {
+      type: schedule.outcome === 'REVISION_REQUIRED' ? 'REVISION' : 'OBSOLETE',
+      title: schedule.documentName || schedule.documentNumber,
+      department: schedule.ownerDepartmentId,
+      isDraft: true,
+      status: 'DRAFT',
+      refDocId: schedule.documentId || schedule.externalDocumentId
+    };
+    const darAdapter = (payload) => useStore.getState().addDarAndReturnId(payload);
     
-    if (schedule.outcome === 'REVISION_REQUIRED') {
-      navigate('/dar/new/revision', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+    useStore.getState().retryPeriodicReviewLinkageWithDarAction(schedule.id, darPayload, darAdapter);
+    
+    const updatedSchedule = useStore.getState().periodicReviewSchedules.find(s => s.id === schedule.id);
+    if (updatedSchedule?.linkageStatus === 'SUCCESS') {
+      toast.success('สร้างคำขอสำเร็จ');
+      if (schedule.outcome === 'REVISION_REQUIRED') {
+        navigate('/dar/new/revision', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+      } else {
+        navigate('/dar/new/obsolete', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+      }
     } else {
-      navigate('/dar/new/obsolete', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+      toast.error('การสร้าง DAR ล้มเหลว กรุณาลองใหม่อีกครั้ง');
     }
   };
 

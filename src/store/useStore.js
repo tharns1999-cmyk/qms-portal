@@ -2,6 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { resolveReviewer, resolveApprover } from '../utils/workflowResolver';
 import { generateSchedules, generateTasksForSchedules, calculateNextReviewDate } from '../services/PeriodicReviewService';
+import { 
+  createOrGetLinkedDarDraft, 
+  validateLinkedDarSource, 
+  resolveLockedSourceDocument, 
+  getLinkedActionStatus, 
+  syncRevisionEffective, 
+  syncObsoleteCompleted 
+} from '../services/PeriodicReviewDarLinkService';
 // 4 Master Data Tables (Separated as requested)
 export const MASTER_DATA_USER = [
   { id: 'U001', name: 'Admin QA (DCC)', position: 'Officer', level: 1, isDcc: true, depts: ['QA'], permissions: [] },
@@ -428,7 +436,7 @@ const useStore = create(persist((set, get) => ({
     try {
       const newLinkedId = darAdapter(darPayload);
       store.submitPeriodicReview(scheduleId, outcome, comment, newLinkedId, 'SUCCESS', idempotencyKey);
-    } catch (err) {
+    } catch {
       store.submitPeriodicReview(scheduleId, outcome, comment, null, 'FAILED', idempotencyKey);
     }
   },
@@ -444,9 +452,35 @@ const useStore = create(persist((set, get) => ({
     try {
       const newLinkedId = darAdapter(darPayload);
       store.retryPeriodicReviewLinkage(scheduleId, newLinkedId);
-    } catch (err) {
+    } catch {
       // Intentionally swallow to maintain FAILED state
     }
+  },
+  // --- Periodic Review DAR Linkage Service Wrappers ---
+  createOrGetLinkedDarDraft: (reviewId, outcome, darPayload) => {
+    const schedule = get().periodicReviewSchedules.find(s => s.id === reviewId);
+    if (!schedule) throw new Error('Schedule not found');
+    return createOrGetLinkedDarDraft(schedule, outcome, darPayload, get);
+  },
+
+  validateLinkedDarSource: (draft) => {
+    return validateLinkedDarSource(draft, get);
+  },
+
+  resolveLockedSourceDocument: (draft) => {
+    return resolveLockedSourceDocument(draft, get);
+  },
+
+  getLinkedActionStatus: (darStatus) => {
+    return getLinkedActionStatus(darStatus);
+  },
+
+  syncRevisionEffective: (dar) => {
+    syncRevisionEffective(dar, get, set);
+  },
+
+  syncObsoleteCompleted: (dar) => {
+    syncObsoleteCompleted(dar, get, set);
   },
   // ------------------------------------------------------------------
 
@@ -1057,7 +1091,9 @@ const useStore = create(persist((set, get) => ({
     tasks: state.tasks.filter(t => t.id !== taskId)
   })),
 
-  processWorkflow: (taskId, action, comment) => set((state) => {
+  processWorkflow: (taskId, action, comment) => {
+    let newlyCompletedDar = null;
+    set((state) => {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return state;
 
@@ -1160,6 +1196,9 @@ const useStore = create(persist((set, get) => ({
     }
 
     const updatedDars = state.dars.map(d => d.id === dar.id ? { ...d, status: newStatus } : d);
+    if (newStatus === 'COMPLETED' && dar.status !== 'COMPLETED') {
+      newlyCompletedDar = { ...dar, status: 'COMPLETED' };
+    }
 
     let timelineActionLabel = action;
     if (action === 'APPROVE') {
@@ -1193,7 +1232,14 @@ const useStore = create(persist((set, get) => ({
     };
 
     return newState;
-  }),
+    });
+
+    if (newlyCompletedDar) {
+      const store = get();
+      store.syncRevisionEffective(newlyCompletedDar);
+      store.syncObsoleteCompleted(newlyCompletedDar);
+    }
+  },
 
   resubmitDar: (darId, updatedData, taskId) => set((state) => {
     const dar = state.dars.find(d => d.id === darId);
@@ -1363,7 +1409,9 @@ const useStore = create(persist((set, get) => ({
     useStore.getState().checkSLA();
   },
 
-  checkSLA: () => set((state) => {
+  checkSLA: () => {
+    let newlyCompletedDars = [];
+    set((state) => {
     const todayStr = state.simulatedDate;
     const activeStatuses = ['DRAFT', 'UNDER_REVIEW', 'PENDING_APPROVAL', 'RETURNED_FOR_REVISION', 'WAITING_ACKNOWLEDGEMENT'];
     const activeExtStatuses = ['PENDING_EXT_REVIEW', 'PENDING_EXT_APPROVAL', 'RETURNED_FOR_REVISION'];
@@ -1437,7 +1485,9 @@ const useStore = create(persist((set, get) => ({
 
     if (waitingEffectiveDars.length > 0) {
       waitingEffectiveDars.forEach(dar => {
-        newDars = newDars.map(d => d.id === dar.id ? { ...d, status: 'COMPLETED' } : d);
+        const completedDar = { ...dar, status: 'COMPLETED' };
+        newlyCompletedDars.push(completedDar);
+        newDars = newDars.map(d => d.id === dar.id ? completedDar : d);
         
         if (dar.type === 'NEW' || dar.type === 'NEW_DOCUMENT') {
           const newDoc = {
@@ -1612,7 +1662,16 @@ const useStore = create(persist((set, get) => ({
       actionLog: newActionLog,
       externalAuditTrail: newExtAuditTrail
     };
-  }),
+    });
+
+    if (newlyCompletedDars.length > 0) {
+      const store = get();
+      newlyCompletedDars.forEach(dar => {
+        store.syncRevisionEffective(dar);
+        store.syncObsoleteCompleted(dar);
+      });
+    }
+  },
 
   addComment: (darId, commentStr, user) => set((state) => {
     const newTimeline = [...state.timeline, {

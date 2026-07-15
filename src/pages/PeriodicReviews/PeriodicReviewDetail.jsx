@@ -9,7 +9,11 @@ import { getReviewStatusLabel, getReviewOutcomeLabel } from '../../services/Peri
 const PeriodicReviewDetail = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
-  const { periodicReviewSchedules, documents, externalDocuments, currentUser, submitPeriodicReview } = useStore();
+  const periodicReviewSchedules = useStore(state => state.periodicReviewSchedules);
+  const documents = useStore(state => state.documents);
+  const externalDocuments = useStore(state => state.externalDocuments);
+  const dars = useStore(state => state.dars);
+  const { currentUser, submitPeriodicReview } = useStore();
   
   const allDocs = [...(documents || []), ...(externalDocuments || [])];
   
@@ -46,23 +50,29 @@ const PeriodicReviewDetail = () => {
   }
 
   const schedule = accessCheck.data;
+  
+  const linkedDar = schedule.linkedActionId ? dars.find(d => d.id === schedule.linkedActionId) : null;
+  const linkedDarStatus = linkedDar ? useStore.getState().getLinkedActionStatus(linkedDar.status) : null;
+  
   const isInternal = schedule.documentCategory === 'INTERNAL';
   const statusLabel = getReviewStatusLabel(schedule.status);
   
   const canPerform = canPerformPeriodicReview(currentUser, schedule, accessCheck.document);
 
-  const handleLinkedAction = (actionType) => {
+  const handleLinkedAction = (actionType, explicitDraftId) => {
     // Navigate to create DAR if draft doesn't exist yet
     // Pass prefill values. For idempotency, the destination handles preventing multiple DARs
     // (We also track linkedActionId on the schedule if it exists)
-    if (schedule.linkedActionId) {
-       toast.success(`กำลังเปิด DAR ที่เชื่อมโยง: ${schedule.linkedActionId}`);
-       navigate(`/dar/draft/${schedule.linkedActionId}`); // Mock route logic for existing draft
+    const draftId = explicitDraftId || schedule.linkedActionId;
+    if (draftId) {
+       toast.success(`กำลังเปิด DAR ที่เชื่อมโยง: ${draftId}`);
+       const basePath = actionType === 'REVISION' ? '/dcc/dar/new/revision' : '/dcc/dar/new/obsolete';
+       navigate(`${basePath}?draftId=${draftId}`);
        return;
     }
     
     toast.success(`กำลังพาไปสร้าง DAR...`);
-    const route = actionType === 'REVISION' ? '/dar/new/revision' : '/dar/new/obsolete';
+    const route = actionType === 'REVISION' ? '/dcc/dar/new/revision' : '/dcc/dar/new/obsolete';
     navigate(route, { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
   };
 
@@ -76,15 +86,15 @@ const PeriodicReviewDetail = () => {
       return;
     }
 
-    const postSubmitNavigation = (navOutcome, linkStatus) => {
+    const postSubmitNavigation = (navOutcome, linkStatus, newDraftId) => {
       if (linkStatus === 'FAILED') {
         toast.error('การบันทึกสำเร็จ แต่การเชื่อมโยง DAR ล้มเหลว');
       } else {
         toast.success('บันทึกผลการทบทวนเรียบร้อยแล้ว');
         if (navOutcome === 'REVISION_REQUIRED') {
-          handleLinkedAction('REVISION');
+          handleLinkedAction('REVISION', newDraftId);
         } else if (navOutcome === 'OBSOLETE_REQUIRED') {
-          handleLinkedAction('OBSOLETE');
+          handleLinkedAction('OBSOLETE', newDraftId);
         } else {
           navigate('/dcc/periodic-reviews');
         }
@@ -99,7 +109,7 @@ const PeriodicReviewDetail = () => {
       if (schedule.linkedActionId && schedule.linkageStatus === 'SUCCESS') {
         // Already created, just re-submit core
         submitPeriodicReview(schedule.id, outcome, comment, schedule.linkedActionId, 'SUCCESS', idempotencyKey);
-        postSubmitNavigation(outcome, 'SUCCESS');
+        postSubmitNavigation(outcome, 'SUCCESS', schedule.linkedActionId);
       } else {
         // Generate actual DAR
         const darPayload = {
@@ -110,17 +120,17 @@ const PeriodicReviewDetail = () => {
           status: 'DRAFT',
           refDocId: schedule.documentId || schedule.externalDocumentId
         };
-        const darAdapter = (payload) => useStore.getState().addDarAndReturnId(payload);
+        const darAdapter = (payload) => useStore.getState().createOrGetLinkedDarDraft(schedule.id, outcome, payload);
         
         useStore.getState().submitPeriodicReviewWithDarAction(schedule.id, outcome, comment, darPayload, darAdapter);
         
         // Check new status directly from store for accurate navigation
         const updatedSchedule = useStore.getState().periodicReviewSchedules.find(s => s.id === schedule.id);
-        postSubmitNavigation(outcome, updatedSchedule?.linkageStatus);
+        postSubmitNavigation(outcome, updatedSchedule?.linkageStatus, updatedSchedule?.linkedActionId);
       }
     } else {
       submitPeriodicReview(schedule.id, outcome, comment, null, null, null);
-      postSubmitNavigation(outcome, null);
+      postSubmitNavigation(outcome, null, null);
     }
   };
 
@@ -133,7 +143,10 @@ const PeriodicReviewDetail = () => {
       status: 'DRAFT',
       refDocId: schedule.documentId || schedule.externalDocumentId
     };
-    const darAdapter = (payload) => useStore.getState().addDarAndReturnId(payload);
+    
+    // In production, we'll orchestrate the store using the new DarLinkService logic
+    // We update this via useStore since useStore will handle the delegation
+    const darAdapter = (payload) => useStore.getState().createOrGetLinkedDarDraft(schedule.id, schedule.outcome, payload);
     
     useStore.getState().retryPeriodicReviewLinkageWithDarAction(schedule.id, darPayload, darAdapter);
     
@@ -141,9 +154,9 @@ const PeriodicReviewDetail = () => {
     if (updatedSchedule?.linkageStatus === 'SUCCESS') {
       toast.success('สร้างคำขอสำเร็จ');
       if (schedule.outcome === 'REVISION_REQUIRED') {
-        navigate('/dar/new/revision', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+        navigate(`/dcc/dar/new/revision?draftId=${updatedSchedule.linkedActionId}`);
       } else {
-        navigate('/dar/new/obsolete', { state: { prefillDocId: schedule.documentId || schedule.externalDocumentId, prefillReviewId: schedule.id } });
+        navigate(`/dcc/dar/new/obsolete?draftId=${updatedSchedule.linkedActionId}`);
       }
     } else {
       toast.error('การสร้าง DAR ล้มเหลว กรุณาลองใหม่อีกครั้ง');
@@ -209,8 +222,11 @@ const PeriodicReviewDetail = () => {
       {schedule.status === 'COMPLETED' || schedule.status === 'IN_PROGRESS' ? (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-emerald-800 mb-2">ทบทวนเสร็จแล้ว</h2>
-          <p className="text-emerald-600">ผลการทบทวน: {getReviewOutcomeLabel(schedule.outcome).label}</p>
+          <h2 className="text-2xl font-bold text-emerald-800 mb-2">การทบทวนเสร็จแล้ว</h2>
+          <p className="text-emerald-600 mb-1">ผลการทบทวน: {getReviewOutcomeLabel(schedule.outcome).label}</p>
+          {linkedDarStatus && (
+            <p className="text-emerald-600 font-medium">สถานะคำขอที่เชื่อมโยง: {linkedDarStatus}</p>
+          )}
           {schedule.linkageStatus === 'FAILED' ? (
             <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
               <div className="flex items-start gap-3">

@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { 
   generateSchedules, 
   generateTasksForSchedules, 
-  getDueState,
-  calculateNextReviewDate 
+  getDueState
 } from './PeriodicReviewService';
 
 describe('PeriodicReviewService', () => {

@@ -3,12 +3,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     tailwindcss(),
     react()
   ],
   build: {
+    outDir: mode === 'uat' ? 'dist-uat' : 'dist',
     chunkSizeWarningLimit: 2000,
   },
   test: {
@@ -23,4 +24,4 @@ export default defineConfig({
       include: ['src/services/PeriodicReviewAccessService.js', 'src/services/PeriodicReviewService.js', 'src/store/useStore.js', 'src/pages/PeriodicReviews/**/*.jsx']
     }
   }
-})
+}))

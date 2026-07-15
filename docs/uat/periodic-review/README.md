@@ -5,8 +5,8 @@ This directory contains the complete User Acceptance Testing (UAT) package for t
 ## A. Start the Application
 1. **Project Directory:** `c:/Users/User/Desktop/qms-portal`
 2. **Dependency Installation Command:** `npm install`
-3. **Application Start Command:** `npm run dev`
-4. **Exact Local URL:** `http://localhost:5173`
+3. **Application Start Command:** `npm run dev:uat` (Must use UAT mode)
+4. **Exact Local URL:** `http://localhost:5173/dcc/uat-tools` (to access the UAT Panel)
 5. **Supported Browser:** Google Chrome (latest)
 
 ## B. Persona Usage
@@ -18,18 +18,14 @@ For every Persona P-001 to P-011:
 - **DO NOT** edit role, isDcc, level, memberships, or authorization manually through DevTools.
 
 ## C. Test Data Loading
-- **Data Source:** The deterministic UAT data does NOT currently exist in the initial mock state for all 18 records.
-- **Status:** There is NO safe environment-specific fixture command to seed this data without modifying production source code (`mockData.js`).
-- **UAT Execution Blocker:** **YES**
-- **Exact Missing Capability:** A UAT deterministic data loader and UAT persona selector that is safe for the UAT environment and isolated from production builds. 
-- **Affected Records:** TD-PR-001 through TD-PR-018 cannot be loaded safely.
+- **Data Source:** The deterministic UAT data is pre-configured and loaded dynamically in UAT mode.
+- **UAT Execution Blocker:** **RESOLVED**
+- **Exact Capability:** Open the UAT Control Panel at `/dcc/uat-tools` or click "Open UAT Control Panel" in the yellow top banner. Click "Reset Data" to seed all 18 TD-PR records instantly. The reference date is locked to 2026-07-20.
 
 ## D. Reset Procedure
-1. Stop the application if required (`Ctrl+C` in terminal).
-2. Open browser Developer Tools -> Application -> Local Storage.
-3. Remove ONLY the key `qms-storage-uat-v6`. (Note: The prototype might use `qms-storage`, clear the relevant zustand persist key).
-4. Reload the application (`F5`).
-5. Verify the initial state is restored (login screen or default persona).
+1. If data becomes corrupted during a test, click the **Reset Data** button in the yellow UAT banner.
+2. To completely clear UAT storage, click the **Clear** button in the banner.
+3. Verify the initial state is restored.
 - **What is cleared:** current persona/session, DAR drafts, Periodic Review schedules, task state, local test progress.
 - **DO NOT clear during:** browser refresh persistence tests, Revision/Obsolete DAR completion tests, retry/idempotency tests.
 

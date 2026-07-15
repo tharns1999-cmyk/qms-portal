@@ -1,92 +1,15 @@
-# DCC Periodic Review UAT Personas
+# Periodic Review UAT Personas
 
-These test personas represent the required deterministic user states for User Acceptance Testing. Do not use hardcoded user-ID rules; permissions must be derived from `departmentMemberships`, `isDcc`, and `ownerDepartmentId`.
-
-## Persona 1: Owner Department General User
-- **User ID**: UAT-GEN-01
-- **Role**: General User
-- **isDcc**: false
-- **Owner Department memberships**: PD (Level 1)
-- **Owned Reviews/Documents**: None explicitly assigned, but belongs to PD.
-- **Expected Visible Records**: Any Periodic Review where `ownerDepartmentId` is PD.
-- **Expected Allowed Actions**: View list, view details.
-- **Expected Denied Actions**: Cannot submit Periodic Review outcomes, cannot see other departments.
-
-## Persona 2: Document Owner
-- **User ID**: UAT-OWN-01
-- **Role**: Document Owner / Asst. Supervisor
-- **isDcc**: false
-- **Owner Department memberships**: PD (Level 3)
-- **Owned Reviews/Documents**: PD-SOP-001 (assigned owner)
-- **Expected Visible Records**: All PD reviews.
-- **Expected Allowed Actions**: Submit outcomes (NO_CHANGE, REVISION_REQUIRED, OBSOLETE_REQUIRED) for PD-SOP-001.
-- **Expected Denied Actions**: Cannot submit outcomes for reviews they do not own unless they meet backup rules.
-
-## Persona 3: Owner Department Supervisor
-- **User ID**: UAT-SUP-01
-- **Role**: Supervisor
-- **isDcc**: false
-- **Owner Department memberships**: PD (Level 4)
-- **Owned Reviews/Documents**: None explicitly assigned.
-- **Expected Visible Records**: All PD reviews.
-- **Expected Allowed Actions**: Can perform backup review submission for any PD record if the document owner is unavailable.
-- **Expected Denied Actions**: Cannot submit reviews for WH or QA.
-
-## Persona 4: Owner Department Asst. Department Manager
-- **User ID**: UAT-MGR-01
-- **Role**: Asst. Department Manager
-- **isDcc**: false
-- **Owner Department memberships**: PD (Level 5)
-- **Owned Reviews/Documents**: None.
-- **Expected Visible Records**: All PD reviews.
-- **Expected Allowed Actions**: Can perform backup review submission for any PD record.
-- **Expected Denied Actions**: Cannot submit reviews for WH or QA.
-
-## Persona 5: Unauthorized Other Department User
-- **User ID**: UAT-OTH-01
-- **Role**: General User
-- **isDcc**: false
-- **Owner Department memberships**: IT (Level 3)
-- **Owned Reviews/Documents**: None.
-- **Expected Visible Records**: Only IT reviews (if any exist). Cannot see PD, WH, or QA reviews.
-- **Expected Allowed Actions**: None for PD/WH reviews.
-- **Expected Denied Actions**: Zero visibility into other departments' metrics or rows.
-
-## Persona 6: Distribution-Department-Only User
-- **User ID**: UAT-DIST-01
-- **Role**: Document Consumer
-- **isDcc**: false
-- **Owner Department memberships**: WH (Level 4)
-- **Owned Reviews/Documents**: None. (WH is listed as a distribution department for PD-SOP-001)
-- **Expected Visible Records**: Only WH reviews.
-- **Expected Allowed Actions**: None for PD-SOP-001.
-- **Expected Denied Actions**: Being on the distribution list does not grant Periodic Review visibility or action rights.
-
-## Persona 7: Multi-Department User
-- **User ID**: UAT-MULTI-01
-- **Role**: Cross-functional Manager
-- **isDcc**: false
-- **Owner Department memberships**: PD (Level 1), WH (Level 4)
-- **Owned Reviews/Documents**: None.
-- **Expected Visible Records**: Both PD and WH reviews.
-- **Expected Allowed Actions**: Can perform backup review for WH (since Level 4), but CANNOT perform backup review for PD (since Level 1).
-- **Expected Denied Actions**: Cannot perform backup review for PD. Cannot see IT records.
-
-## Persona 8: QAQC Monitoring User
-- **User ID**: UAT-QA-01
-- **Role**: QA Staff
-- **isDcc**: false
-- **Owner Department memberships**: QA (Level 3)
-- **Additional Perms**: `canMonitorAllDepartments: true` (or equivalent QAQC role mapping)
-- **Expected Visible Records**: All departments globally (ภาพรวมทุกแผนก).
-- **Expected Allowed Actions**: View all, filter by department, export CSV. Can submit outcomes for QA documents.
-- **Expected Denied Actions**: Cannot submit outcomes for PD or WH documents despite having global visibility.
-
-## Persona 9: DCC Admin
-- **User ID**: UAT-DCC-01
-- **Role**: DCC Controller
-- **isDcc**: true
-- **Owner Department memberships**: DCC (Level 4)
-- **Expected Visible Records**: All departments globally (ภาพรวมทุกแผนก).
-- **Expected Allowed Actions**: View all, filter by department, export CSV. Can submit outcomes for DCC documents.
-- **Expected Denied Actions**: Cannot submit outcomes for PD or WH documents.
+| Persona ID | Test User ID | Display Name | Role | isDcc | Dept | Position | Owned Docs | Expected Reviews (Visible) | Expected DAR Access |
+|---|---|---|---|---|---|---|---|---|---|
+| P-001 | u1 | อรอนงค์ รักษาความดี | User | false | PD | เจ้าหน้าที่ | DOC-PD-001 | DOC-PD-001 | Read/Write |
+| P-002 | u2 | ธนาวุฒิ สมควรกิจดำรง | User | false | PD | หัวหน้าแผนก (Supervisor) | - | DOC-PD-001 | Read/Write (Backup) |
+| P-003 | u3 | วิชัย ใจตรง | User | false | PD | ผู้ช่วยผู้จัดการแผนก | - | DOC-PD-001 | Read/Write (Backup) |
+| P-004 | u4 | สมศรี ตั้งใจทำงาน | User | false | PD | พนักงานทั่วไป | - | DOC-PD-001 | Read Only |
+| P-005 | u5 | บุญช่วย คลังสินค้า | User | false | WH | เจ้าหน้าที่ | DOC-WH-001 | DOC-WH-001 | Read/Write |
+| P-006 | u6 | แจกจ่าย พนักงาน | User | false | WH | เจ้าหน้าที่กระจายเอกสาร | - | DOC-WH-001 | Read Only |
+| P-007 | u7 | วีระชัย หลายแผนก | User | false | PD, QA | หัวหน้าแผนก (QA) | - | DOC-QA-001 | Read/Write (QA), Read Only (PD) |
+| P-008 | u8 | มอนิเตอร์ ตรวจสอบ | User | false | QA | พนักงานตรวจคุณภาพ | - | All Departments | Read Only |
+| P-009 | dcc | สมหญิง ดีซีซี | Admin | true | DCC | ผู้ดูแลระบบ DCC | - | All Departments | Read Only (DAR creation normally disabled) |
+| P-010 | u9 | ปกติ สมัครDAR | User | false | HR | เจ้าหน้าที่ | - | DOC-HR-001 | Read/Write |
+| P-011 | u10 | มองเห็นแต่แก้ไม่ได้ | User | false | EN | พนักงานซ่อมบำรุง | - | DOC-EN-001 | Read Only |

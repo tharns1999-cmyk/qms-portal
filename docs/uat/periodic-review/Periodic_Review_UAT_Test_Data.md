@@ -1,143 +1,22 @@
-# DCC Periodic Review UAT Test Data
+# Periodic Review UAT Test Data
 
-These deterministic records must be seeded in the store/database prior to UAT execution. The relative dates are calculated from `mockDateOffset: 0` (current real day).
-
-## PR-DATA-01: Upcoming Review
-- **Schedule ID**: SCH-001
-- **Document Number**: PD-MN-001
-- **Document Title**: Production Manual
-- **Revision**: 01
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: WH, QA
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 300 days)
-- **Review Due Date**: (Current Date + 65 days)
-- **Status**: ACTION_REQUIRED
-- **Outcome**: null
-- **Linked DAR**: null
-- **Expected Visibility**: PD Users, QAQC Monitors, DCC Admins.
-- **Expected Due State**: UPCOMING
-
-## PR-DATA-02: Due Soon Review (Boundary Test)
-- **Schedule ID**: SCH-002
-- **Document Number**: PD-WI-002
-- **Document Title**: Assembly Work Instruction
-- **Revision**: 02
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: QA
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 335 days)
-- **Review Due Date**: (Current Date + 30 days)
-- **Status**: ACTION_REQUIRED
-- **Outcome**: null
-- **Linked DAR**: null
-- **Expected Visibility**: PD Users, QAQC Monitors, DCC Admins.
-- **Expected Due State**: DUE_SOON
-
-## PR-DATA-03: Due Today Review
-- **Schedule ID**: SCH-003
-- **Document Number**: PD-SOP-003
-- **Document Title**: Machine Operation
-- **Revision**: 00
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: None
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 365 days)
-- **Review Due Date**: (Current Date)
-- **Status**: ACTION_REQUIRED
-- **Outcome**: null
-- **Linked DAR**: null
-- **Expected Visibility**: PD Users, QAQC Monitors, DCC Admins.
-- **Expected Due State**: DUE
-
-## PR-DATA-04: Overdue Review
-- **Schedule ID**: SCH-004
-- **Document Number**: WH-WI-001
-- **Document Title**: Forklift Operation
-- **Revision**: 01
-- **ownerDepartmentId**: WH
-- **Distribution Departments**: PD
-- **Document Owner**: UAT-DIST-01
-- **Last Effective Date**: (Current Date - 400 days)
-- **Review Due Date**: (Current Date - 35 days)
-- **Status**: ACTION_REQUIRED
-- **Outcome**: null
-- **Linked DAR**: null
-- **Expected Visibility**: WH Users, QAQC Monitors, DCC Admins (NOT PD Users despite distribution).
-- **Expected Due State**: OVERDUE
-
-## PR-DATA-05: Completed - NO_CHANGE
-- **Schedule ID**: SCH-005
-- **Document Number**: PD-SOP-004
-- **Document Title**: Cleaning Procedure
-- **Revision**: 02
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: QA
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 370 days)
-- **Review Due Date**: (Current Date - 5 days)
-- **Status**: COMPLETED
-- **Outcome**: NO_CHANGE
-- **Linked DAR**: null
-- **Expected Visibility**: PD, QAQC, DCC.
-
-## PR-DATA-06: In Progress - Linked Revision DAR
-- **Schedule ID**: SCH-006
-- **Document Number**: IT-SOP-001
-- **Document Title**: Network Security
-- **Revision**: 03
-- **ownerDepartmentId**: IT
-- **Distribution Departments**: All
-- **Document Owner**: UAT-OTH-01
-- **Last Effective Date**: (Current Date - 380 days)
-- **Review Due Date**: (Current Date - 15 days)
-- **Status**: IN_PROGRESS
-- **Outcome**: REVISION_REQUIRED
-- **Linked DAR**: DAR-UAT-REV1 (Draft status)
-- **Expected Visibility**: IT, QAQC, DCC.
-
-## PR-DATA-07: In Progress - Linked Obsolete DAR
-- **Schedule ID**: SCH-007
-- **Document Number**: PD-FM-001
-- **Document Title**: Old Inspection Form
-- **Revision**: 05
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: QA
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 365 days)
-- **Review Due Date**: (Current Date)
-- **Status**: IN_PROGRESS
-- **Outcome**: OBSOLETE_REQUIRED
-- **Linked DAR**: DAR-UAT-OBS1 (Draft status)
-- **Expected Visibility**: PD, QAQC, DCC.
-
-## PR-DATA-08: Failed Linkage - Retry Available
-- **Schedule ID**: SCH-008
-- **Document Number**: PD-SOP-005
-- **Document Title**: Material Handling
-- **Revision**: 00
-- **ownerDepartmentId**: PD
-- **Distribution Departments**: WH
-- **Document Owner**: UAT-OWN-01
-- **Last Effective Date**: (Current Date - 365 days)
-- **Review Due Date**: (Current Date)
-- **Status**: IN_PROGRESS
-- **Outcome**: REVISION_REQUIRED
-- **linkageStatus**: FAILED
-- **Linked DAR**: null
-- **Expected Visibility**: PD, QAQC, DCC. Retry button should be visible to owner.
-
-## PR-DATA-09: External Document Review
-- **Schedule ID**: SCH-009
-- **Document Number**: EXT-ISO-9001
-- **Document Title**: ISO 9001:2015 Standard
-- **Revision**: 2015
-- **ownerDepartmentId**: QA
-- **Distribution Departments**: All
-- **Document Owner**: UAT-QA-01
-- **Last Effective Date**: (Current Date - 365 days)
-- **Review Due Date**: (Current Date)
-- **Status**: ACTION_REQUIRED
-- **Outcome**: null
-- **Linked DAR**: null
-- **Expected Visibility**: QA, QAQC, DCC.
+| Test Data ID | Review ID | Document ID | Document Number | Document Title | Current Revision | Document Type | Document Category | Owner Department | Distribution Departments | Document Owner | Actual Effective Date | Review Due Date | Review Status | Review Outcome | Linked DAR ID | Linked DAR Type | Linked DAR Status | Linked Action Status | Expected Next Review Date | Expected Future Schedule Behavior | Expected Visible Personas | Expected Denied Personas | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| TD-PR-001 | PR-001 | DOC-001 | WI-001 | UPCOMING DOC | 01 | INTERNAL | INTERNAL | PD | WH | u1 | 2025-09-01 | 2026-09-01 | UPCOMING | - | - | - | - | - | - | - | P-001, P-002, P-003, P-009 | P-005, P-006 | UPCOMING |
+| TD-PR-002 | PR-002 | DOC-002 | WI-002 | DUE_SOON DOC | 01 | INTERNAL | INTERNAL | PD | QA | u1 | 2025-08-01 | 2026-08-01 | DUE_SOON | - | - | - | - | - | - | - | P-001, P-009 | P-005 | DUE_SOON |
+| TD-PR-003 | PR-003 | DOC-003 | WI-003 | DUE DOC | 02 | INTERNAL | INTERNAL | WH | PD | u5 | 2025-07-15 | 2026-07-15 | DUE | - | - | - | - | - | - | - | P-005, P-009 | P-001 | DUE |
+| TD-PR-004 | PR-004 | DOC-004 | WI-004 | IN_PROGRESS DOC | 01 | INTERNAL | INTERNAL | QA | PD | u7 | 2025-07-01 | 2026-07-01 | IN_PROGRESS | - | - | - | - | - | - | - | P-007, P-008, P-009 | P-001, P-005 | IN_PROGRESS |
+| TD-PR-005 | PR-005 | DOC-005 | WI-005 | OVERDUE DOC | 01 | INTERNAL | INTERNAL | EN | WH | u10 | 2024-05-01 | 2025-05-01 | OVERDUE | - | - | - | - | - | - | - | P-009, P-011 | P-001, P-005 | OVERDUE |
+| TD-PR-006 | PR-006 | DOC-006 | WI-006 | COMPLETED NO_CHANGE | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | NO_CHANGE | - | - | - | - | 2027-06-01 | +1 year schedule | P-001, P-009 | P-005 | NO_CHANGE |
+| TD-PR-007 | PR-007 | DOC-007 | WI-007 | REVISION_REQUIRED PRE-DAR | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | REVISION_REQUIRED | - | - | - | - | - | - | P-001, P-009 | P-005 | Pre-creation |
+| TD-PR-008 | PR-008 | DOC-008 | WI-008 | REVISION DRAFT | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | REVISION_REQUIRED | DAR-REV-008 | REVISION | DRAFT | PENDING | - | - | P-001, P-009 | P-005 | Linked Draft |
+| TD-PR-009 | PR-009 | DOC-009 | WI-009 | REVISION WAITING | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | REVISION_REQUIRED | DAR-REV-009 | REVISION | APPROVED_WAITING_EFFECTIVE | PENDING | - | - | P-001, P-009 | P-005 | Waiting Effective |
+| TD-PR-010 | PR-010 | DOC-010 | WI-010 | REVISION COMPLETED | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | REVISION_REQUIRED | DAR-REV-010 | REVISION | COMPLETED | COMPLETED | 2026-06-01 | exactly +1 year, key PERIODIC_REVIEW_CYCLE:DOC-010:02:2025-06-01 | P-001, P-009 | P-005 | COMPLETED |
+| TD-PR-011 | PR-011 | DOC-011 | WI-011 | OBSOLETE PRE-DAR | 01 | INTERNAL | INTERNAL | WH | - | u5 | 2025-06-01 | 2026-06-01 | COMPLETED | OBSOLETE_REQUIRED | - | - | - | - | - | - | P-005, P-009 | P-001 | Pre-creation |
+| TD-PR-012 | PR-012 | DOC-012 | WI-012 | OBSOLETE DRAFT | 01 | INTERNAL | INTERNAL | WH | - | u5 | 2025-06-01 | 2026-06-01 | COMPLETED | OBSOLETE_REQUIRED | DAR-OBS-012 | OBSOLETE | DRAFT | PENDING | - | - | P-005, P-009 | P-001 | Linked Draft |
+| TD-PR-013 | PR-013 | DOC-013 | WI-013 | OBSOLETE COMPLETED | 01 | INTERNAL | INTERNAL | WH | - | u5 | 2025-06-01 | 2026-06-01 | COMPLETED | OBSOLETE_REQUIRED | DAR-OBS-013 | OBSOLETE | COMPLETED | COMPLETED | NONE | Future open schedules stopped, history kept | P-005, P-009 | P-001 | COMPLETED |
+| TD-PR-014 | PR-014 | DOC-014 | WI-014 | FAILED RETRY | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-06-01 | 2026-06-01 | COMPLETED | REVISION_REQUIRED | - | - | - | FAILED | - | - | P-001, P-009 | P-005 | Failed Linkage |
+| TD-PR-015 | PR-015 | DOC-015 | WI-015 | DIFF DEPT | 01 | INTERNAL | INTERNAL | PD | WH | u1 | 2025-09-01 | 2026-09-01 | UPCOMING | - | - | - | - | - | - | - | P-001, P-002, P-009 | P-005, P-006 | PD/WH diff |
+| TD-PR-016 | PR-016 | DOC-016 | WI-016 | MANUAL REV | 01 | INTERNAL | INTERNAL | PD | - | u1 | 2025-09-01 | 2026-09-01 | UPCOMING | - | DAR-MAN-016 | REVISION | APPROVED_WAITING_EFFECTIVE | - | - | - | P-001, P-009 | P-005 | Manual Rev |
+| TD-PR-017 | PR-017 | DOC-017 | WI-017 | MANUAL OBS | 01 | INTERNAL | INTERNAL | WH | - | u5 | 2025-09-01 | 2026-09-01 | UPCOMING | - | DAR-MAN-017 | OBSOLETE | APPROVED_WAITING_EFFECTIVE | - | - | - | P-005, P-009 | P-001 | Manual Obs |
+| TD-PR-018 | PR-018 | DOC-018 | EXT-018 | EXTERNAL DOC | 01 | EXTERNAL | EXTERNAL | DCC | - | dcc | 2024-07-01 | 2026-07-01 | DUE | - | - | - | - | - | - | - | P-009 | P-001, P-005 | External |

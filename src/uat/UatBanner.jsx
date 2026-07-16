@@ -29,7 +29,7 @@ export function UatBanner() {
           <strong>Persona:</strong> {currentUser?.id} / {currentUser?.name} ({currentUser?.role})
         </span>
         <span className="text-sm">
-          <strong>Depts:</strong> {currentUser?.departmentMemberships?.map(m => m.departmentId).join(', ')}
+          <strong>Depts:</strong> {currentUser?.departmentMemberships?.map(m => m.departmentId)?.join(', ') || currentUser?.depts?.join(', ')}
         </span>
         {isSeeded && (
           <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">

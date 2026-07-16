@@ -2111,7 +2111,7 @@ const useStore = create(persist((set, get) => ({
   setDars: (dars) => set({ dars }),
   setTimeline: (timeline) => set({ timeline })
 }), {
-  name: import.meta.env.MODE === 'uat' ? 'qms-periodic-review-uat-v1' : 'qms-storage-uat-v6',
+  name: 'qms-storage-uat-v6',
   version: 1,
   migrate: (persistedState, version) => {
     if (version === 0 || !version) {

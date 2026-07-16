@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     react()
   ],
   build: {
-    outDir: mode === 'uat' ? 'dist-uat' : 'dist',
+    outDir: 'dist',
     chunkSizeWarningLimit: 2000,
   },
   test: {

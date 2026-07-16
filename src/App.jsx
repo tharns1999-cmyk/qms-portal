@@ -50,15 +50,6 @@ const AdminHealth = lazy(() => import('./pages/Placeholders').then(m => ({ defau
 const NotFound = lazy(() => import('./pages/Placeholders').then(m => ({ default: m.NotFound })));
 const DistributionDemo = lazy(() => import('./pages/Placeholders/DistributionDemo'));
 
-// UAT Tools (Dynamically imported ONLY in UAT mode)
-const UatBanner = import.meta.env.MODE === 'uat' 
-  ? lazy(() => import('./uat/UatBanner').then(m => ({ default: m.UatBanner }))) 
-  : () => null;
-
-const PeriodicReviewUatPanel = import.meta.env.MODE === 'uat'
-  ? lazy(() => import('./uat/PeriodicReviewUatPanel'))
-  : () => null;
-
 
 // --- Helper Components ---
 
@@ -93,11 +84,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      {import.meta.env.MODE === 'uat' && (
-        <Suspense fallback={null}>
-          <UatBanner />
-        </Suspense>
-      )}
+
       <Toaster position="top-right" />
       <SLAEngine />
       <Routes>
@@ -137,9 +124,7 @@ function App() {
             <Route path="periodic-reviews" element={withSuspense(PeriodicReviewDashboard)} />
             <Route path="periodic-reviews/:reviewId" element={withSuspense(PeriodicReviewDetail)} />
 
-            {import.meta.env.MODE === 'uat' && (
-              <Route path="uat-tools" element={withSuspense(PeriodicReviewUatPanel)} />
-            )}
+
           </Route>
 
           {/* Aliases for backwards compatibility */}

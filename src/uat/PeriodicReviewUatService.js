@@ -59,7 +59,7 @@ export class PeriodicReviewUatService {
     initialState.uatReferenceDate = UAT_REFERENCE_DATE;
 
     // 6. Direct Zustand state replacement (bypassing normal action methods)
-    useStore.setState(initialState, true); // true = replace
+    useStore.setState(initialState); // shallow merge preserves action functions
   }
 
   static switchPersona(personaId) {
